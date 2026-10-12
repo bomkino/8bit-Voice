@@ -252,7 +252,7 @@
     },
     sidekick: {
       name: 'Sidekick', tag: 'Cozy', face: 'sidekick',
-      note: 'Bubbly, impatient, talks faster than they think.',
+      note: 'Bubbly, impatient, talks faster than she thinks.',
       voice: { style: 'babble', pitch: 0, speed: 1.05, melody: 0.65, character: 0.55, grit: 0 },
     },
     agent: {
@@ -1694,7 +1694,7 @@
 
   // The made-up language: the same syllable always turns into the same
   // nonsense. Below a third of Clarity it is a bouncier one, all b, m and
-  // open vowels, like a crowd of very small, very happy henchmen.
+  // open vowels, like a crowd of very small, very happy henchfolk.
   const MBOUNCE = { on: ['b', 'b', 'p', 'm', 'm', 'n', 'l', 'd', 't', 'k', 'g', 'p', 'b', 'l', 'y', 'w'], v: ['aa', 'aa', 'ow', 'iy', 'ah', 'eh', 'uw', 'ay', 'ey', 'aa', 'iy', 'ow'], co: ['n', 'l', 's', 'm', 'p'] };
   const MANY = { on: ['b', 'd', 'g', 'k', 'p', 't', 'm', 'n', 'l', 'r', 's', 'z', 'f', 'v', 'sh', 'h', 'w', 'y', 'ch', 'j', 'th'], v: ['iy', 'ih', 'ey', 'eh', 'ae', 'aa', 'ao', 'ow', 'uh', 'uw', 'ah', 'ay', 'aw', 'er', 'oy'], co: ['n', 'm', 's', 't', 'k', 'l', 'r', 'z', 'p', 'd', 'ng', 'f'] };
   function mouthScramble(key, salt, bouncy) {
@@ -2320,7 +2320,7 @@
         while (e < 16 && row[e] === ch) e++;
         // 'e' is an eye and 'E' its glint; both close to skin on a blink
         let col = ch === 'e' ? (o.blink ? f.pal.s : '#14141c') : ch === 'E' ? (o.blink ? f.pal.s : f.pal.w || '#ffffff') : f.pal[ch];
-        if (!(ch === '.' && o.bg === false) && col) {
+        if (!((ch === '.' || ch === 'z') && o.bg === false) && col) {
           ctx.fillStyle = col;
           ctx.fillRect(x + c, y + r, e - c, 1);
         }
@@ -2514,11 +2514,28 @@
     ['Overalls', layer(14, ['..kwwwww', '.kwowwoo'])],
     ['Stripes', layer(14, ['..kodwdo', '.kodwdod'])],
   ];
+  // Small touches on top: which way the face is drawn (a parting or a smirk
+  // on the other side), how hair catches the light, and a backdrop pattern.
+  const MIRROR = [['Off'], ['On']];
+  const SHINE = [['Classic'], ['Matte'], ['Low'], ['Sparkly']];
+  const PATTERNS = [['Plain'], ['Dots'], ['Lines'], ['Sparkles'], ['Haze']];
+  const SPARKLES = new Set([[2, 1], [1, 2], [2, 2], [3, 2], [2, 3], [13, 2], [12, 3], [13, 3], [14, 3], [13, 4], [14, 9], [1, 11], [11, 0]].map(([x, y]) => y * 16 + x));
   const LOOK_PARTS = {
     skin: SKIN_TONES, head: HEADS, hair: HAIRS, hairColor: HAIR_COLORS, cover: COVERS, coverColor: CLOTH_COLORS,
     eyes: EYES, brows: BROWS, mouth: MOUTHS, lips: LIP_COLORS, cheeks: CHEEKS, age: AGES, facial: FACIAL,
     glasses: GLASSES, earrings: EARRINGS, outfit: OUTFITS, outfitColor: CLOTH_COLORS, pin: PINS, bg: BACKDROPS,
+    mirror: MIRROR, shine: SHINE, pattern: PATTERNS,
   };
+  // Backdrop, clothes and headwear colours that sit well together, so a roll
+  // of the dice looks dressed on purpose.
+  const OUTFIT_SETS = [
+    ['Forest', 'Gold', 'Coral'], ['Forest', 'Cream', 'Rust'], ['Plum', 'Coral', 'Gold'], ['Plum', 'Mint', 'Pink'], ['Ocean', 'Gold', 'Red'],
+    ['Ocean', 'Coral', 'Cream'], ['Indigo', 'Pink', 'Mint'], ['Indigo', 'Gold', 'Teal'], ['Wine', 'Cream', 'Gold'], ['Wine', 'Pink', 'Silver'],
+    ['Teal', 'Coral', 'Gold'], ['Teal', 'Cream', 'Red'], ['Slate', 'Red', 'Gold'], ['Slate', 'Mint', 'Purple'], ['Violet', 'Gold', 'Mint'],
+    ['Violet', 'Teal', 'Pink'], ['Umber', 'Teal', 'Cream'], ['Umber', 'Green', 'Gold'], ['Rose', 'Navy', 'Cream'], ['Rose', 'Mint', 'Gold'],
+    ['Night', 'Red', 'Cream'], ['Night', 'Purple', 'Gold'], ['Amber', 'Blue', 'Cream'], ['Amber', 'Navy', 'Red'], ['Moss', 'Rust', 'Gold'],
+    ['Moss', 'Pink', 'Cream'], ['Brick', 'Teal', 'Gold'], ['Brick', 'Cream', 'Navy'],
+  ].map(([bg, o, c]) => [BACKDROPS.findIndex((p) => p[0] === bg), CLOTH_COLORS.findIndex((p) => p[0] === o), CLOTH_COLORS.findIndex((p) => p[0] === c)]);
   const LOOK_KEYS = Object.keys(LOOK_PARTS);
 
   function hexShade(hex, k) {
@@ -2563,13 +2580,15 @@
     const rnd = mulberry(typeof seed === 'number' ? seed : hash32(String(seed)));
     const pick = (n) => Math.floor(rnd() * n);
     const often = (n, pNone) => (rnd() < pNone ? 0 : 1 + pick(n - 1));
+    const set = OUTFIT_SETS[pick(OUTFIT_SETS.length)];
+    const matched = rnd() < 0.8;
     const L = {
       skin: rnd() < 0.12 ? 12 + pick(6) : pick(12),
       head: pick(HEADS.length),
-      hair: pick(HAIRS.length),
+      hair: rnd() < 0.05 ? 0 : 1 + pick(HAIRS.length - 1),
       hairColor: rnd() < 0.7 ? pick(10) : 10 + pick(5),
       cover: often(COVERS.length, 0.55),
-      coverColor: pick(CLOTH_COLORS.length),
+      coverColor: matched ? set[2] : pick(CLOTH_COLORS.length),
       eyes: pick(EYES.length),
       brows: pick(BROWS.length),
       mouth: pick(MOUTHS.length),
@@ -2580,9 +2599,12 @@
       glasses: often(GLASSES.length, 0.6),
       earrings: often(EARRINGS.length, 0.5),
       outfit: pick(OUTFITS.length),
-      outfitColor: pick(CLOTH_COLORS.length),
+      outfitColor: matched ? set[1] : pick(CLOTH_COLORS.length),
       pin: often(PINS.length, 0.55),
-      bg: pick(BACKDROPS.length),
+      bg: matched ? set[0] : pick(BACKDROPS.length),
+      mirror: pick(2),
+      shine: rnd() < 0.5 ? 0 : 1 + pick(3),
+      pattern: rnd() < 0.4 ? 0 : 1 + pick(PATTERNS.length - 1),
     };
     if (keep) for (const k of LOOK_KEYS) if (keep[k] != null) L[k] = keep[k];
     return normLook(L);
@@ -2636,6 +2658,18 @@
       if (cover.tails) paint(layer(cover.top + 1, ['.............kbb', '..............kb']));
       if (cover.tail) paint(layer(cover.top + 4, ['..............kb', '..............kb', '...............k']));
     }
+    // how the hair catches the light
+    if (L.shine === 1) for (const row of grid) for (let x = 0; x < 16; x++) { if (row[x] === 'g') row[x] = 'a'; }
+    if (L.shine === 2) for (let y = 15; y > 0; y--) for (let x = 0; x < 16; x++) {
+      if (grid[y - 1][x] === 'g' && grid[y][x] === 'a') { grid[y - 1][x] = 'a'; grid[y][x] = 'g'; }
+    }
+    if (L.shine === 3) for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      if (grid[y][x] === 'a' && (x * 3 + y * 5) % 7 === 0) grid[y][x] = 'g';
+    }
+    if (L.mirror) for (const row of grid) row.reverse();
+    // the backdrop's pattern, in its own lighter shade
+    const pat = [null, (x, y) => x % 4 === 1 && y % 4 === 1, (x, y) => (x + y) % 6 === 0, (x, y) => SPARKLES.has(y * 16 + x), (x, y) => y < 6 && (x + y) % 2 === 0 && y % 2 === 0][L.pattern];
+    if (pat) for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) if (grid[y][x] === '.' && pat(x, y)) grid[y][x] = 'z';
     // earrings hang below the ears when nothing covers them
     const ears = hair.ears && !(cover && cover.ears === false);
     if (L.earrings && ears) for (const x of [1, 14]) if (grid[10][x] === '.') grid[10][x] = 'i';
@@ -2645,11 +2679,12 @@
       b: CLOTH_COLORS[L.coverColor][1], n: hexShade(CLOTH_COLORS[L.coverColor][1], 0.78),
       o: CLOTH_COLORS[L.outfitColor][1], d: hexShade(CLOTH_COLORS[L.outfitColor][1], 0.72), x: '#f2c14e', w: '#ffffff',
       f: (glasses && glasses.color) || '#1a1820', j: (glasses && glasses.lens) || '#4b8bd6', i: L.earrings ? EARRINGS[L.earrings][1] : '#f2c14e',
-      r: mixHex(skin, '#ff6b7a', 0.45), l: LIP_COLORS[L.lips][1] || '#141218',
+      r: mixHex(skin, '#ff6b7a', 0.45), l: LIP_COLORS[L.lips][1] || '#141218', z: hexShade(BACKDROPS[L.bg][1], 1.16),
     };
     if (L.pin) PINS[L.pin][1].forEach((c, i) => { pal[i + 1] = c; });
     const used = new Set(grid.flat());
-    const [mx, my, mw] = MOUTHS[L.mouth][1];
+    let [mx, my, mw] = MOUTHS[L.mouth][1];
+    if (L.mirror) mx = 16 - mx - mw;
     const face = {
       bg: BACKDROPS[L.bg][1],
       pal: Object.keys(pal).filter((k) => used.has(k) || k === 'l' || k === 's' || k === 'w').map((k) => k + pal[k].slice(1)).join(' '),

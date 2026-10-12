@@ -260,6 +260,14 @@
   .maker-acts { display: flex; gap: 8px; }
   .maker-acts .btn { flex: 1; min-height: 40px; padding: 0 10px; }
   .maker-acts .btn:disabled { opacity: 0.45; pointer-events: none; }
+  .maker-acts .btn.icon { flex: none; width: 44px; padding: 0; }
+  @media (max-width: 480px) {
+    .maker-acts #makerUndo { flex: none; width: 44px; padding: 0; }
+    .maker-acts #makerUndo span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  }
+  .sheet.maker { overflow-x: hidden; }
+  .shuffle .px { transition: transform 0.2s; }
+  .shuffle:hover .px { transform: rotate(-14deg); }
   .maker-starts { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; align-items: center; margin: 0 -22px; padding: 2px 22px; }
   .maker-starts::-webkit-scrollbar { display: none; }
   .maker-starts .ex { flex: none; padding: 0 10px 0 4px; }
@@ -868,6 +876,7 @@
           <div class="maker-acts">
             <button type="button" class="btn gold" id="makerRandom" data-pd-ui="action"></button>
             <button type="button" class="btn" id="makerUndo" data-pd-ui="action"></button>
+            <button type="button" class="btn icon dl-only" id="makerPic" data-pd-ui="action" aria-label="Save them as a picture" title="Save them as a picture"></button>
           </div>
         </div>
       </div>
@@ -915,7 +924,7 @@
       '(shouting) Enough talk! Have at you!',
       '(sad) ...That was my favourite cape.',
     ] },
-    { id: 'minions', label: 'Henchmen', preset: 'henchling', speaker: 'Henchling', lines: [
+    { id: 'minions', label: 'Henchfolk', preset: 'henchling', speaker: 'Henchling', lines: [
       '(excited) Bello! Bello!',
       'Banana? Banana! Hee hee hee!',
       '(sad) ...No banana.',
@@ -963,6 +972,7 @@
     link: pix(['..###....', '.#...#...', '#...#.#..', '#..#...#.', '.#.#...#.', '..#...#..', '...#.#...', '....#....'], 2),
     plus: pix(['....###....', '....###....', '....###....', '....###....', '###########', '###########', '###########', '....###....', '....###....', '....###....', '....###....'], 3),
     lock: pix(['.###.', '#...#', '#...#', '#####', '##.##', '##.##', '#####'], 2),
+    die: pix(['#######', '#.....#', '#.#.#.#', '#..#..#', '#.#.#.#', '#.....#', '#######'], 2),
     unlock: pix(['.###.', '#...#', '#....', '#####', '##.##', '##.##', '#####'], 2),
     undo: pix(['..#......', '.##......', '########.', '.##.....#', '..#.....#', '........#', '.......#.', '..#####..'], 2),
     dice: pix(['.#########.', '#.........#', '#.##...##.#', '#.##...##.#', '#....#....#', '#...###...#', '#....#....#', '#.##...##.#', '#.##...##.#', '#.........#', '.#########.'], 3),
@@ -1559,12 +1569,13 @@
     cheeks: ['Cheeks'], age: ['Lines'], facial: ['Facial hair'], hair: ['Hair'], hairColor: ['Hair colour', 'color'],
     cover: ['Headwear'], coverColor: ['Headwear colour', 'color'], glasses: ['Glasses'], earrings: ['Earrings'], pin: ['Pin', 'flag'],
     outfit: ['Clothes'], outfitColor: ['Clothes colour', 'color'], bg: ['Backdrop', 'color'],
+    mirror: ['Mirror'], shine: ['Shine'], pattern: ['Pattern'],
   };
   const MAKER_TABS = [
-    ['face', 'Face', ['skin', 'head', 'eyes', 'brows', 'mouth', 'lips', 'cheeks', 'age', 'facial']],
-    ['hair', 'Hair', ['hair', 'hairColor', 'cover', 'coverColor']],
+    ['face', 'Face', ['skin', 'head', 'eyes', 'brows', 'mouth', 'lips', 'cheeks', 'age', 'facial', 'mirror']],
+    ['hair', 'Hair', ['hair', 'hairColor', 'shine', 'cover', 'coverColor']],
     ['extras', 'Extras', ['glasses', 'earrings', 'pin']],
-    ['clothes', 'Clothes', ['outfit', 'outfitColor', 'bg']],
+    ['clothes', 'Clothes', ['outfit', 'outfitColor', 'bg', 'pattern']],
     ['voice', 'Voice', []],
   ];
   const MAKER_NAMES = [
@@ -1667,9 +1678,17 @@
     const el = document.createElement('div');
     el.className = 'part';
     el.dataset.key = key;
-    el.innerHTML = `<div class="part-head"><span class="part-label" data-pd-ui="label"></span><span class="part-val" data-pd-ui="metadata"></span><button type="button" class="lock" aria-pressed="false"></button></div><div class="opts" role="radiogroup"></div>`;
+    el.innerHTML = `<div class="part-head"><span class="part-label" data-pd-ui="label"></span><span class="part-val" data-pd-ui="metadata"></span><button type="button" class="lock shuffle"></button><button type="button" class="lock" aria-pressed="false"></button></div><div class="opts" role="radiogroup"></div>`;
     el.querySelector('.part-label').textContent = label;
-    const lock = el.querySelector('.lock');
+    const shuffle = el.querySelector('.shuffle');
+    shuffle.innerHTML = ICON.die;
+    shuffle.setAttribute('aria-label', `Random ${label.toLowerCase()}`);
+    shuffle.title = `Random ${label.toLowerCase()}`;
+    shuffle.addEventListener('click', () => {
+      const n = CV.LOOK_PARTS[key].length;
+      setPart(key, (maker.look[key] + 1 + Math.floor(Math.random() * (n - 1))) % n);
+    });
+    const lock = el.querySelector('.lock[aria-pressed]');
     lock.setAttribute('aria-label', `Keep ${label.toLowerCase()} when you randomize`);
     lock.title = `Keep ${label.toLowerCase()} when you randomize`;
     lock.addEventListener('click', () => {
@@ -1733,6 +1752,8 @@
   function buildMaker() {
     $('#makerRandom').innerHTML = `${pix(['#######', '#.....#', '#.#.#.#', '#..#..#', '#.#.#.#', '#.....#', '#######'], 2)}<span>Randomize</span>`;
     $('#makerUndo').innerHTML = `${ICON.undo}<span>Undo</span>`;
+    $('#makerPic').innerHTML = ICON.down;
+    $('#makerPic').addEventListener('click', saveMakerPicture);
     $('.maker-hear').innerHTML = `${ICON.playSm}<span>Hear them</span>`;
     const tabs = $('#makerTabs');
     for (const [id, label] of MAKER_TABS) {
@@ -1782,7 +1803,7 @@
       const key = el.dataset.key;
       const list = CV.LOOK_PARTS[key];
       el.querySelector('.part-val').textContent = list[L[key]][0];
-      const lock = el.querySelector('.lock');
+      const lock = el.querySelector('.lock[aria-pressed]');
       const locked = maker.locks.has(key);
       lock.setAttribute('aria-pressed', String(locked));
       lock.innerHTML = locked ? ICON.lock : ICON.unlock;
@@ -1798,6 +1819,17 @@
     $$('#makerParts [data-voice]').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.voice === maker.face && !maker.voice)));
     const val = $('#makerParts .voices') && $('#makerParts .part-val');
     if (val) val.textContent = maker.voice ? 'Your own tuning' : presetName(maker.face);
+  }
+  // A big, crisp picture of them, for a profile or a sticker.
+  function saveMakerPicture() {
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = 512;
+    const ctx = cv.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    ctx.scale(32, 32);
+    CV.drawFace(ctx, CV.buildFace(maker.look), 0, 0, {});
+    const name = ($('#makerName').value.trim() || maker.name || 'character').slice(0, 18);
+    cv.toBlob((blob) => { if (blob) deliver(`${CV.slug(name, 16)}.png`, blob, 'image/png', name); }, 'image/png');
   }
   function saveMaker() {
     const name = ($('#makerName').value.trim() || maker.name || randomName()).slice(0, 18);
