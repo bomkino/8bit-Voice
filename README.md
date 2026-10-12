@@ -79,7 +79,9 @@ node cli.mjs --file lines.txt --compare --dir compare --lineup compare/all.wav
 node cli.mjs --list
 ```
 
-`--json` writes each clip's timing next to its WAV: every syllable's start, length and pitch, and the characters it voices, for syncing animation to it. The app's **Make it from the command line** panel gives you the exact command for the line and voice on screen.
+`--in` says a recording again in the voice instead of speaking a line: a 16-bit, 24-bit or float WAV, mono or stereo. Every knob works on it, and a line given with it is what the dialogue box types and `--json` lists.
+
+`--json` writes each clip's timing next to its WAV: every syllable's start, length and pitch, and the characters it voices, for syncing animation to it. The app's **Make it from the command line** panel gives you the exact command for the line and voice on screen. `node stings.mjs` makes the little game-over sting.
 
 ## In your own code
 
@@ -99,7 +101,14 @@ const someone = CV.buildFace(CV.randomLook('any seed'));
 CV.drawFace(canvas.getContext('2d'), face, 0, 0, { open: 0.6 });
 ```
 
-`drawDialog` draws the talking box, with a portrait of any face, and `revealTimes` and `talkLevel` time the typing and the mouth to the voice. `analyzeRecording` and `renderRecording` turn a recording into any character's voice.
+`drawDialog` draws the talking box, with a portrait of any face, and `revealTimes` and `talkLevel` time the typing and the mouth to the voice.
+
+A recording works the same way. `analyzeRecording` takes mono samples at any rate and listens once; `renderRecording` says it again in any voice and returns the same shape as `render`. The Mouth keeps the words, with Clarity running from almost clear down to cheerful gibberish. Every other machine turns the person's syllables, rhythm and melody into its own blips.
+
+```js
+const rec = CV.analyzeRecording(samples, 44100);
+const robot = CV.renderRecording(rec, 'robot', { text: 'What I said, for the dialogue box' });
+```
 
 ## Working on it
 

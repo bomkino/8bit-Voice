@@ -2000,10 +2000,15 @@
 
   function render(input, voice, opts) {
     opts = opts || {};
-    const sr = opts.sampleRate || SAMPLE_RATE;
-    const pl = plan(input, voice, opts);
+    return voiceClip(plan(input, voice, opts), opts.sampleRate || SAMPLE_RATE);
+  }
+
+  // Plays a plan on its machine, levels it, and lists when each unit sounds.
+  // A plan made from a recording brings the recording, for the Mouth.
+  function voiceClip(pl, sr, rec) {
     let x;
     if (!pl.units.length) x = new Float32Array(Math.round(sr * 0.25));
+    else if (rec && pl.style === 'mouth') x = synthRecording(rec, pl, sr);
     else if (pl.style === 'typewriter') x = synthTypewriter(pl, sr);
     else if (pl.style === 'babble') x = synthBabble(pl, sr);
     else if (pl.style === 'chip') x = synthSpeechChip(pl, sr);
@@ -2026,6 +2031,924 @@
       voice: pl.voice,
       events: pl.units.map((u) => ({ t: u.t, d: u.d, c0: u.c0, c1: u.c1, a: u.amp, p0: u.p0, p1: u.p1, cut: u.cut })),
     };
+  }
+
+  // ─────────────────────────── the voice changer ───────────────────────────
+  // Say a line into the microphone, or open a recording, and any character
+  // says it back in its own machine. Listening measures the voice a hundred
+  // times a second: its pitch, whether it buzzes or hisses, how loud it is,
+  // and the shape of the mouth as a small filter, the way the speech chips of
+  // the 80s stored it. Then it finds the syllables. The Mouth speaks those
+  // frames again through its own throat, so the words survive. Every other
+  // machine gets the syllables as if it had planned them from text, so it
+  // keeps the person's rhythm and melody and still sounds like itself.
+
+  const REC_RATE = 16000;
+  const REC_FPS = 100;
+  const REC_HOP = REC_RATE / REC_FPS;
+  const REC_ORDER = 16;
+  const PRE_EMPH = 0.9;
+
+  // Windowed-sinc resampling, so a recording at any rate can be heard at ours.
+  // The filter is worked out once for 256 positions between two samples;
+  // `zc` is how many of its ripples it keeps on each side.
+  function resample(x, from, to, zc) {
+    if (from === to) return Float32Array.from(x);
+    const ratio = to / from;
+    const N = Math.round(x.length * ratio);
+    const out = new Float32Array(N);
+    const fc = 0.92 * Math.min(1, ratio);
+    const half = Math.ceil((zc || 6) / fc);
+    const taps = 2 * half;
+    const PH = 256;
+    const W = new Float32Array((PH + 1) * taps);
+    for (let ph = 0; ph <= PH; ph++) {
+      for (let m = 0; m < taps; m++) {
+        const u = m - half + 1 - ph / PH;
+        const z = Math.abs(u) / half;
+        if (z >= 1) continue;
+        const s = u === 0 ? 1 : Math.sin(Math.PI * fc * u) / (Math.PI * fc * u);
+        W[ph * taps + m] = fc * s * (0.42 + 0.5 * Math.cos(Math.PI * z) + 0.08 * Math.cos(2 * Math.PI * z));
+      }
+    }
+    const L = x.length;
+    for (let n = 0; n < N; n++) {
+      const c = n / ratio;
+      const ci = Math.floor(c);
+      const o = Math.round((c - ci) * PH) * taps;
+      const j0 = ci - half + 1;
+      let s = 0;
+      if (j0 >= 0 && j0 + taps <= L) {
+        for (let m = 0; m < taps; m++) s += x[j0 + m] * W[o + m];
+      } else {
+        for (let m = 0; m < taps; m++) if (j0 + m >= 0 && j0 + m < L) s += x[j0 + m] * W[o + m];
+      }
+      out[n] = s;
+    }
+    return out;
+  }
+
+  function quantile(arr, q) {
+    if (!arr.length) return 0;
+    const s = Float64Array.from(arr).sort();
+    return s[clamp(Math.round(q * (s.length - 1)), 0, s.length - 1)];
+  }
+
+  // The level of each frame, over a window centred on it.
+  function frameRms(x, n, win) {
+    const out = new Float32Array(n);
+    for (let f = 0; f < n; f++) {
+      const a = Math.max(0, Math.round((f + 0.5) * REC_HOP - win / 2));
+      const b = Math.min(x.length, Math.round((f + 0.5) * REC_HOP + win / 2));
+      let s = 0;
+      for (let i = a; i < b; i++) s += x[i] * x[i];
+      out[f] = Math.sqrt(s / win);
+    }
+    return out;
+  }
+
+  // Reflection coefficients from an autocorrelation (Levinson-Durbin). They
+  // keep the filter stable however they are blended. Returns what is left
+  // unpredicted.
+  function levinson(R, p, k, ko, a, tmp) {
+    let E = R[0];
+    a.fill(0);
+    for (let i = 1; i <= p; i++) {
+      let acc = R[i];
+      for (let j = 1; j < i; j++) acc -= a[j] * R[i - j];
+      const ki = E > 0 ? clamp(acc / E, -0.995, 0.995) : 0;
+      k[ko + i - 1] = ki;
+      for (let j = 1; j < i; j++) tmp[j] = a[j] - ki * a[i - j];
+      for (let j = 1; j < i; j++) a[j] = tmp[j];
+      a[i] = ki;
+      E *= 1 - ki * ki;
+    }
+    return E;
+  }
+
+  // The filter's response in dB at 101 frequencies from 0 to 4 kHz.
+  const ENV_BINS = 101;
+  let envTable = null;
+  function lpcEnvelope(k, ko, p) {
+    const bins = ENV_BINS;
+    if (!envTable || envTable.p !== p) {
+      envTable = { p, cos: new Float64Array(bins * p), sin: new Float64Array(bins * p) };
+      for (let b = 0; b < bins; b++) {
+        const w = (2 * Math.PI * ((b * 4000) / (bins - 1))) / REC_RATE;
+        for (let j = 1; j <= p; j++) {
+          envTable.cos[b * p + j - 1] = Math.cos(w * j);
+          envTable.sin[b * p + j - 1] = Math.sin(w * j);
+        }
+      }
+    }
+    const a = new Float64Array(p + 1);
+    const tmp = new Float64Array(p + 1);
+    for (let i = 1; i <= p; i++) {
+      const ki = k[ko + i - 1];
+      for (let j = 1; j < i; j++) tmp[j] = a[j] - ki * a[i - j];
+      for (let j = 1; j < i; j++) a[j] = tmp[j];
+      a[i] = ki;
+    }
+    const out = new Float32Array(bins);
+    for (let b = 0; b < bins; b++) {
+      let re = 1, im = 0;
+      for (let j = 1; j <= p; j++) {
+        re -= a[j] * envTable.cos[b * p + j - 1];
+        im += a[j] * envTable.sin[b * p + j - 1];
+      }
+      out[b] = -10 * Math.log10(re * re + im * im + 1e-12);
+    }
+    return out;
+  }
+
+  // The first two formants of a vowel, from the peaks of the filter.
+  function formants(env) {
+    const hz = (b) => (b * 4000) / (env.length - 1);
+    const peaks = [];
+    for (let b = 1; b < env.length - 1; b++) {
+      if (env[b] > env[b - 1] && env[b] >= env[b + 1] && hz(b) > 180 && hz(b) < 3400) {
+        const d = env[b - 1] - 2 * env[b] + env[b + 1];
+        peaks.push(hz(b + (d < 0 ? (0.5 * (env[b - 1] - env[b + 1])) / d : 0)));
+      }
+    }
+    const F1 = peaks.find((f) => f < 1100) || 500;
+    const F2 = peaks.find((f) => f > F1 + 180 && f > 600) || F1 * 1.7;
+    return [F1, F2];
+  }
+
+  // Which of the machines' six vowels a pair of formants is nearest to.
+  function vowelClass(F, scale) {
+    let best = '@';
+    let bd = Infinity;
+    for (const v of ['a', 'e', 'i', 'o', 'u', '@']) {
+      const d1 = Math.log(F[0] / scale / VOW[v].F[0]);
+      const d2 = Math.log(F[1] / scale / VOW[v].F[1]);
+      const d = d1 * d1 + 0.7 * d2 * d2;
+      if (d < bd) {
+        bd = d;
+        best = v;
+      }
+    }
+    return best;
+  }
+
+  function silentRecording() {
+    const z = () => new Float32Array(0);
+    return {
+      version: VERSION, fps: REC_FPS, duration: 0, frames: 0, order: REC_ORDER, pitch: 120, whisper: false,
+      f0: z(), voicing: z(), rms: z(), gain: z(), k: z(), syllables: [],
+    };
+  }
+
+  // Listens to a recording. Takes mono samples at any rate; gives back the
+  // frames and the syllables, as plain numbers, ready for renderRecording.
+  function analyzeRecording(samples, sampleRate) {
+    const sr0 = sampleRate > 0 ? sampleRate : SAMPLE_RATE;
+    const len0 = samples ? samples.length : 0;
+    const raw = new Float32Array(len0);
+    for (let i = 0; i < len0; i++) raw[i] = isFinite(samples[i]) ? samples[i] : 0;
+    let x = resample(raw, sr0, REC_RATE, 4);
+    filterBQ(x, biquad('hp', 50, 0.7, REC_RATE));
+
+    // Trim the silence at each end: speech starts with the first run of three
+    // loud frames, so a click before it doesn't count.
+    let n = Math.ceil(x.length / REC_HOP);
+    let lv = frameRms(x, n, 2 * REC_HOP);
+    const top = quantile(lv, 0.98);
+    const floor = quantile(lv, 0.1);
+    // A recording with no pauses (one long "aaah") is all voice.
+    const thr = Math.max(Math.min(floor * 2.5, top * 0.3), top * 0.03, 1e-6);
+    let a = -1, b = -1;
+    for (let f = 0; f + 2 < n && a < 0; f++) if (lv[f] > thr && lv[f + 1] > thr && lv[f + 2] > thr) a = f;
+    for (let f = n - 1; f >= 2 && b < 0; f--) if (lv[f] > thr && lv[f - 1] > thr && lv[f - 2] > thr) b = f;
+    if (a < 0) return silentRecording();
+    const s0 = Math.max(0, a * REC_HOP - Math.round(0.06 * REC_RATE));
+    const s1 = Math.min(x.length, (b + 1) * REC_HOP + Math.round(0.1 * REC_RATE));
+    x = x.slice(s0, s1);
+
+    // Level it: the loud part of the speech at -20 dB, and no peak over 0.95.
+    const active = [];
+    for (let f = a; f <= b; f++) if (lv[f] > thr) active.push(lv[f]);
+    let peak = 0;
+    for (let i = 0; i < x.length; i++) peak = Math.max(peak, Math.abs(x[i]));
+    const norm = Math.min(0.1 / Math.max(1e-9, quantile(active, 0.95)), 0.95 / Math.max(1e-9, peak));
+    for (let i = 0; i < x.length; i++) x[i] *= norm;
+    // Only a recording with real pauses tells us how loud the room is.
+    const noise = floor < top * 0.05 ? floor * norm : 0;
+
+    n = Math.ceil(x.length / REC_HOP);
+    const L = x.length;
+    const P = REC_ORDER;
+
+    // The mouth, every frame: a 25 ms window, emphasised so the high formants
+    // count, through Levinson-Durbin. Also the level, and how bright it is.
+    const W = 400;
+    const win = new Float32Array(W);
+    let wsum = 0;
+    for (let i = 0; i < W; i++) {
+      win[i] = 0.54 - 0.46 * Math.cos((2 * Math.PI * i) / (W - 1));
+      wsum += win[i] * win[i];
+    }
+    const lagWin = new Float64Array(P + 1);
+    for (let j = 0; j <= P; j++) lagWin[j] = Math.exp(-0.5 * Math.pow((2 * Math.PI * 60 * j) / REC_RATE, 2));
+    const K = new Float32Array(n * P);
+    const gain = new Float32Array(n);
+    const rms = new Float32Array(n);
+    const bright = new Float32Array(n);
+    const buf = new Float64Array(W);
+    const R = new Float64Array(P + 1);
+    const la = new Float64Array(P + 1);
+    const lt = new Float64Array(P + 1);
+    for (let f = 0; f < n; f++) {
+      const c = Math.round((f + 0.5) * REC_HOP) - W / 2;
+      let e0 = 0, e1 = 0, prev = 0;
+      let xp = c > 0 && c <= L ? x[c - 1] : 0;
+      for (let i = 0; i < W; i++) {
+        const j = c + i;
+        const s = j >= 0 && j < L ? x[j] : 0;
+        const sw = s * win[i];
+        e0 += sw * sw;
+        e1 += sw * prev;
+        prev = sw;
+        buf[i] = (s - PRE_EMPH * xp) * win[i];
+        xp = s;
+      }
+      for (let j = 0; j <= P; j++) {
+        let s = 0;
+        for (let i = j; i < W; i++) s += buf[i] * buf[i - j];
+        R[j] = s * lagWin[j];
+      }
+      R[0] *= 1.0001;
+      const E = R[0] > 1e-12 ? levinson(R, P, K, f * P, la, lt) : 0;
+      gain[f] = Math.sqrt(Math.max(0, E) / wsum);
+      rms[f] = Math.sqrt(e0 / wsum);
+      bright[f] = e0 > 1e-12 ? 1 - e1 / e0 : 1;
+    }
+
+    // The pitch, YIN-style, on a copy at 8 kHz: for each period from 60 to
+    // 600 Hz, how unlike itself the wave is one period later. The best few
+    // dips are candidates, and a path through them that avoids sudden octave
+    // jumps is the pitch.
+    const YW = 200;
+    const tMin = 13;
+    const tMax = 134;
+    const pad = YW + tMax;
+    const lp = [biquad('lp', 1800, 0.54, REC_RATE), biquad('lp', 1800, 1.31, REC_RATE)];
+    const L8 = Math.floor(L / 2) + 2 * pad;
+    const x8 = new Float32Array(L8);
+    for (let i = 0; i < L; i++) {
+      const y = runBQ(lp[1], runBQ(lp[0], x[i]));
+      if (!(i & 1)) x8[pad + i / 2] = y;
+    }
+    const sq = new Float64Array(L8 + 1);
+    for (let i = 0; i < L8; i++) sq[i + 1] = sq[i] + x8[i] * x8[i];
+    const MAXC = 4;
+    const cf = new Float32Array(n * MAXC);
+    const cs = new Float32Array(n * MAXC);
+    const cn = new Uint8Array(n);
+    const dp = new Float64Array(tMax + 2);
+    const xc = new Float64Array(tMax + 5);
+    const quietV = Math.max(noise * 2, 0.002);
+    for (let f = 0; f < n; f++) {
+      if (rms[f] < quietV) continue;
+      const st = pad + Math.round((f + 0.5) * (REC_HOP / 2) - (YW + tMax) / 2);
+      if (st < 0 || st + YW + tMax + 4 > L8) continue;
+      const e0 = sq[st + YW] - sq[st];
+      if (e0 <= 1e-9) continue;
+      // Four periods at a time: the same samples, read once.
+      for (let t = 1; t <= tMax + 1; t += 4) {
+        let r0 = 0, r1 = 0, r2 = 0, r3 = 0;
+        for (let j = st, e = st + YW; j < e; j++) {
+          const v = x8[j];
+          r0 += v * x8[j + t];
+          r1 += v * x8[j + t + 1];
+          r2 += v * x8[j + t + 2];
+          r3 += v * x8[j + t + 3];
+        }
+        xc[t] = r0;
+        xc[t + 1] = r1;
+        xc[t + 2] = r2;
+        xc[t + 3] = r3;
+      }
+      let cum = 0;
+      dp[0] = 1;
+      for (let t = 1; t <= tMax + 1; t++) {
+        const d = e0 + (sq[st + t + YW] - sq[st + t]) - 2 * xc[t];
+        cum += d;
+        dp[t] = cum > 0 ? (d * t) / cum : 1;
+      }
+      // Local minima, best first; the first dip under 0.15 is always one.
+      const list = [];
+      for (let t = tMin; t <= tMax; t++) {
+        if (dp[t] < dp[t - 1] && dp[t] <= dp[t + 1] && dp[t] < 0.6) list.push(t);
+      }
+      const firstDip = list.find((t) => dp[t] < 0.15);
+      list.sort((p, q) => dp[p] - dp[q]);
+      if (firstDip && list.indexOf(firstDip) >= MAXC) list.splice(MAXC - 1, 0, firstDip);
+      let m = 0;
+      for (const t of list.slice(0, MAXC)) {
+        const den = dp[t - 1] - 2 * dp[t] + dp[t + 1];
+        const sh = den > 0 ? clamp((0.5 * (dp[t - 1] - dp[t + 1])) / den, -0.5, 0.5) : 0;
+        cf[f * MAXC + m] = 8000 / (t + sh);
+        cs[f * MAXC + m] = Math.max(0, dp[t] - (den > 0 ? 0.25 * (dp[t - 1] - dp[t + 1]) * sh : 0)) + (t === firstDip ? 0 : 0.04);
+        m++;
+      }
+      cn[f] = m;
+    }
+    // The path: unvoiced costs a little, unless the frame is quiet or hissing.
+    // Shorter periods win a tie, and every octave jumped costs a lot.
+    const NS = MAXC + 1;
+    const cost = new Float32Array(n * NS).fill(Infinity);
+    const back = new Int8Array(n * NS);
+    const local = (f, j) => {
+      if (j === 0) return rms[f] < quietV ? 0 : bright[f] > 1 ? 0.12 : 0.3;
+      return cs[f * MAXC + j - 1] - 0.03 * Math.log2(cf[f * MAXC + j - 1] / 60);
+    };
+    const freq = (f, j) => cf[f * MAXC + j - 1];
+    for (let f = 0; f < n; f++) {
+      for (let j = 0; j <= cn[f]; j++) {
+        const lc = local(f, j);
+        if (f === 0) {
+          cost[j] = lc;
+          continue;
+        }
+        let best = Infinity, bi = 0;
+        for (let i = 0; i <= cn[f - 1]; i++) {
+          let tc = cost[(f - 1) * NS + i];
+          if (i && j) tc += 0.5 * Math.abs(Math.log2(freq(f, j) / freq(f - 1, i)));
+          else if (i || j) tc += 0.2;
+          if (tc < best) {
+            best = tc;
+            bi = i;
+          }
+        }
+        cost[f * NS + j] = best + lc;
+        back[f * NS + j] = bi;
+      }
+    }
+    const f0 = new Float32Array(n);
+    const voicing = new Float32Array(n);
+    if (n) {
+      let j = 0;
+      for (let i = 1; i <= cn[n - 1]; i++) if (cost[(n - 1) * NS + i] < cost[(n - 1) * NS + j]) j = i;
+      for (let f = n - 1; f >= 0; f--) {
+        if (j > 0) {
+          f0[f] = freq(f, j);
+          voicing[f] = clamp(1.25 - 2.2 * cs[f * MAXC + j - 1], 0.35, 1);
+        }
+        j = back[f * NS + j];
+      }
+    }
+    // A voiced blip shorter than 40 ms is a mistake; then a light median.
+    for (let f = 0; f < n; ) {
+      if (!f0[f]) { f++; continue; }
+      let e = f;
+      while (e < n && f0[e]) e++;
+      if (e - f < 4) for (let i = f; i < e; i++) { f0[i] = 0; voicing[i] = 0; }
+      else {
+        const src = f0.slice(f, e);
+        for (let i = f + 1; i < e - 1; i++) {
+          const w3 = [src[i - f - 1], src[i - f], src[i - f + 1]].sort((p, q) => p - q);
+          f0[i] = w3[1];
+        }
+      }
+      f = e;
+    }
+
+    // A loud, dull frame with no pitch is still a voice, usually a creak below
+    // 60 Hz: it borrows the pitch beside it and buzzes at half strength.
+    for (let f = 0; f < n; f++) {
+      if (f0[f] || bright[f] > 0.3 || rms[f] < quietV * 4) continue;
+      let l = f - 1, r = f + 1;
+      while (l >= 0 && f - l <= 15 && !f0[l]) l--;
+      while (r < n && r - f <= 15 && !f0[r]) r++;
+      const hl = l >= 0 && f - l <= 15 && f0[l] > 0 ? f0[l] : 0;
+      const hr = r < n && r - f <= 15 && f0[r] > 0 ? f0[r] : 0;
+      if (!hl && !hr) continue;
+      f0[f] = hl && hr ? hl * Math.pow(hr / hl, (f - l) / (r - l)) : hl || hr;
+      voicing[f] = 0.5;
+    }
+
+    // Take the room out of the level, so pauses stay quiet.
+    for (let f = 0; f < n; f++) {
+      const r = Math.sqrt(Math.max(0, rms[f] * rms[f] - 2.25 * noise * noise));
+      gain[f] *= rms[f] > 0 ? r / rms[f] : 0;
+      rms[f] = r;
+    }
+    const voicedHz = [];
+    for (let f = 0; f < n; f++) if (f0[f]) voicedHz.push(f0[f]);
+    const pitch = voicedHz.length ? quantile(voicedHz, 0.5) : 120;
+    let act = 0;
+    for (let f = 0; f < n; f++) if (rms[f] > thr * norm) act++;
+    const whisper = act > 10 && voicedHz.length < act * 0.1;
+
+    const rec = {
+      version: VERSION, fps: REC_FPS, duration: L / REC_RATE, frames: n, order: P, pitch, whisper,
+      f0, voicing, rms, gain, k: K, syllables: [],
+    };
+    rec.syllables = findSyllables(rec, x, bright, Math.max(thr * norm, noise * 2));
+    return rec;
+  }
+
+  // Syllables: the peaks of loudness in the vowel band, where the voice is
+  // buzzing, with a real dip between them. Consonants before a vowel belong
+  // to it, the way they do in the text machines.
+  function findSyllables(rec, x, bright, thr) {
+    const n = rec.frames;
+    const { f0, rms } = rec;
+    const band = Float32Array.from(x);
+    filterBQ(band, biquad('hp', 300, 0.7, REC_RATE));
+    filterBQ(band, biquad('lp', 3000, 0.7, REC_RATE));
+    const br = frameRms(band, n, 2 * REC_HOP);
+    const Lr = new Float32Array(n);
+    for (let f = 0; f < n; f++) Lr[f] = 20 * Math.log10(br[f] + 1e-6);
+    const Ld = new Float32Array(n);
+    for (let f = 0; f < n; f++) Ld[f] = (Lr[Math.max(0, f - 1)] + 2 * Lr[f] + Lr[Math.min(n - 1, f + 1)]) / 4;
+    const act = new Uint8Array(n);
+    for (let f = 0; f < n; f++) act[f] = rms[f] > thr ? 1 : 0;
+    const buzz = (f) => (rec.whisper ? act[f] : f0[f] > 0);
+    const top = quantile(Ld, 0.98);
+
+    let peaks = [];
+    for (let f = 0; f < n; f++) {
+      if (!act[f] || !buzz(f) || Ld[f] < top - 30) continue;
+      let isMax = true;
+      for (let j = Math.max(0, f - 2); j <= Math.min(n - 1, f + 2) && isMax; j++) {
+        if (Ld[j] > Ld[f] || (Ld[j] === Ld[f] && j < f)) isMax = false;
+      }
+      if (isMax) peaks.push(f);
+    }
+    // Two peaks under 70 ms apart are one syllable, and so are two with less
+    // than a 2.5 dB dip between them while the voice keeps going.
+    for (let changed = true; changed; ) {
+      changed = false;
+      for (let i = 0; i + 1 < peaks.length; i++) {
+        const p = peaks[i], q = peaks[i + 1];
+        let m = Infinity, gap = 0, run = 0, unv = 0;
+        for (let f = p; f <= q; f++) {
+          m = Math.min(m, Ld[f]);
+          if (!act[f]) gap++;
+          run = buzz(f) ? 0 : run + 1;
+          unv = Math.max(unv, run);
+        }
+        if (q - p < 7 || (Math.min(Ld[p], Ld[q]) - m < 2.5 && !gap && unv < 2)) {
+          peaks.splice(Ld[p] >= Ld[q] ? i + 1 : i, 1);
+          changed = true;
+          break;
+        }
+      }
+    }
+    if (!peaks.length) return [];
+
+    // Where each one starts and stops.
+    const start = [], end = [];
+    let f = peaks[0];
+    while (f > 0 && act[f - 1]) f--;
+    start.push(f);
+    for (let i = 0; i + 1 < peaks.length; i++) {
+      const p = peaks[i], q = peaks[i + 1];
+      let g0 = -1, g1 = -1;
+      for (let j = p + 1; j < q; j++) if (!act[j]) { if (g0 < 0) g0 = j; g1 = j; }
+      if (g0 >= 0) {
+        end.push(g0);
+        start.push(g1 + 1);
+        continue;
+      }
+      // A hiss or a burst before the next vowel goes with it.
+      let u = q;
+      while (u > p + 1 && buzz(u - 1)) u--;
+      let cut = u;
+      if (u > p + 1) {
+        while (cut > p + 1 && !buzz(cut - 1)) cut--;
+      } else {
+        cut = p + 1;
+        for (let j = p + 1; j < q; j++) if (Ld[j] < Ld[cut]) cut = j;
+      }
+      end.push(cut);
+      start.push(cut);
+    }
+    f = peaks[peaks.length - 1];
+    while (f < n - 1 && act[f + 1]) f++;
+    end.push(f + 1);
+
+    const peakL = peaks.map((p) => Ld[p]);
+    const midL = quantile(peakL, 0.5);
+    const durs = peaks.map((p, i) => end[i] - start[i]);
+    const midD = quantile(durs, 0.5);
+    const st = (f) => 12 * Math.log2(f0[f] / rec.pitch);
+
+    // The vowel of each syllable from its formants, with the speaker's size
+    // taken out: a smaller mouth moves every formant up together.
+    const forms = peaks.map((p, i) => {
+      let a = p, b = p;
+      while (a > start[i] && buzz(a - 1) && Ld[a - 1] > Ld[p] - 6) a--;
+      while (b < end[i] - 1 && buzz(b + 1) && Ld[b + 1] > Ld[p] - 6) b++;
+      const at = (fa, fb) => {
+        const env = new Float32Array(ENV_BINS);
+        let cnt = 0;
+        for (let f = fa; f <= fb; f++) {
+          const e = lpcEnvelope(rec.k, f * rec.order, rec.order);
+          for (let j = 0; j < ENV_BINS; j++) env[j] += e[j];
+          cnt++;
+        }
+        for (let j = 0; j < ENV_BINS; j++) env[j] /= cnt;
+        return formants(env);
+      };
+      const mid = Math.round((a + b) / 2);
+      const F = at(Math.max(a, mid - 1), Math.min(b, mid + 1));
+      const long = b - a >= 10;
+      return { a, b, F, F0: long ? at(a + 1, a + 3) : F, F1: long ? at(b - 3, b - 1) : F };
+    });
+    let scale = rec.pitch > 165 ? 1.15 : 1;
+    if (forms.length >= 4) {
+      let s = 0;
+      for (const fm of forms) s += 0.5 * Math.log(fm.F[0] / 470) + 0.5 * Math.log(fm.F[1] / 1330);
+      scale = clamp(Math.exp(s / forms.length), 0.85, 1.3);
+    }
+
+    // What kind of consonant a stretch of frames sounds like.
+    const consonant = (fa, fb, onset) => {
+      let hiss = 0, hb = 0, quiet = 0, voicedSoft = 0;
+      for (let f = fa; f < fb; f++) {
+        if (!act[f]) quiet++;
+        else if (!buzz(f) || rec.whisper) { hiss++; hb += bright[f]; }
+        else voicedSoft++;
+      }
+      if (hiss >= 3) {
+        const m = hb / hiss;
+        return [m > 1.25 ? 's' : m > 0.8 ? 'f' : m > 0.45 ? 'sh' : 'h'];
+      }
+      if (hiss > 0) {
+        const m = hb / hiss;
+        return [m > 1.15 ? 't' : m < 0.75 ? 'k' : 'p'];
+      }
+      if (onset && quiet > 0 && voicedSoft === 0) return ['d'];
+      if (voicedSoft >= 3) return [onset ? 'm' : 'n'];
+      if (voicedSoft >= 1) return onset ? ['l'] : [];
+      return [];
+    };
+
+    return peaks.map((p, i) => {
+      const s = start[i], e = end[i];
+      const fm = forms[i];
+      const vs = [];
+      for (let f = s; f < e; f++) if (f0[f]) vs.push(st(f));
+      let p0 = 0, p1 = 0;
+      if (vs.length) {
+        const m = Math.max(1, Math.round(vs.length * 0.3));
+        p0 = quantile(vs.slice(0, m), 0.5);
+        p1 = quantile(vs.slice(-m), 0.5);
+      } else {
+        // No pitch of its own: the nearest one.
+        for (let r = 1; r < n; r++) {
+          const j = p - r >= 0 && f0[p - r] ? p - r : p + r < n && f0[p + r] ? p + r : -1;
+          if (j >= 0) { p0 = p1 = st(j); break; }
+        }
+      }
+      const v0 = vowelClass(fm.F0, scale);
+      const v1 = vowelClass(fm.F1, scale);
+      const vowels = v0 !== v1 && fm.b - fm.a >= 10 ? [v0, v1] : [vowelClass(fm.F, scale)];
+      const last = i === peaks.length - 1 || start[i + 1] - e >= 15;
+      return {
+        t: s / REC_FPS,
+        d: (e - s) / REC_FPS,
+        peak: p / REC_FPS,
+        a: clamp(Math.pow(10, (peakL[i] - midL) / 60), 0.6, 1.4),
+        p0: +p0.toFixed(3),
+        p1: +p1.toFixed(3),
+        vowels,
+        onset: consonant(s, fm.a, true),
+        coda: consonant(fm.b + 1, e, false),
+        stressed: peakL[i] > midL + 1.5 && e - s > midD,
+        end: last,
+      };
+    });
+  }
+
+  // Spreads the characters of a line over the units in order, phrase by
+  // phrase when the pauses and the punctuation agree, so the box types along.
+  function spreadText(text, units, sylOf, phraseEnds) {
+    const an = analyze(text);
+    const ts = [];
+    const tPhrase = [];
+    an.phrases.forEach((ph) => {
+      const g = [];
+      for (let wi = ph.w0; wi < ph.w1; wi++) for (const s of an.words[wi].syl) g.push(ts.push(s) - 1);
+      if (g.length) tPhrase.push(g);
+    });
+    const nr = phraseEnds.length;
+    const rPhrase = [];
+    let g = [];
+    for (let i = 0; i < nr; i++) {
+      g.push(i);
+      if (phraseEnds[i] || i === nr - 1) { rPhrase.push(g); g = []; }
+    }
+    const groups = rPhrase.length === tPhrase.length ? rPhrase.map((r, i) => [r, tPhrase[i]]) : [[rPhrase.flat(), tPhrase.flat()]];
+    const range = new Array(nr).fill(null);
+    for (const [r, t] of groups) {
+      t.forEach((ti, j) => {
+        const ri = r[t.length > 1 ? Math.round((j * (r.length - 1)) / (t.length - 1)) : 0];
+        range[ri] = [range[ri] ? range[ri][0] : ts[ti].c0, ts[ti].c1];
+      });
+    }
+    let pos = 0;
+    for (let i = 0; i < nr; i++) {
+      if (range[i]) pos = range[i][1];
+      else range[i] = [pos, pos];
+    }
+    // Units inside a syllable share its letters.
+    const count = new Array(nr).fill(0);
+    for (const u of units) count[sylOf(u)]++;
+    const seen = new Array(nr).fill(0);
+    for (const u of units) {
+      const i = sylOf(u);
+      const [c0, c1] = range[i];
+      const span = c1 - c0;
+      u.c0 = c0 + Math.floor((seen[i] * span) / count[i]);
+      u.c1 = c0 + Math.floor(((seen[i] + 1) * span) / count[i]);
+      seen[i]++;
+    }
+  }
+
+  // Turns the syllables into a plan for the chosen machine, exactly the
+  // shape plan() makes from text, timed to the recording.
+  function planRecording(rec, voiceIn, text) {
+    const line = parseLine(text || '');
+    const voice = normVoice(voiceIn);
+    if (line.phone) voice.phone = true;
+    const S = STYLES[voice.style];
+    const M = moodMix(null);
+    if (rec.whisper) M.whisper = true;
+    const syl = rec.syllables || [];
+    // Melody: 0.5 is the person's own, 0 flattens it, 1 doubles it.
+    const mel = voice.melody <= 0.5 ? voice.melody * 2 : 1 + (voice.melody - 0.5) * 2;
+    const k = 1 / voice.speed;
+    const R = mulberry(hash32(rec.frames + '\u0001' + syl.length + '\u0001' + voice.style + '\u0001' + voice.take));
+    const salt = '|rec' + voice.take;
+    const chipVowels = voice.style === 'square' || voice.style === 'pocket' || voice.style === 'boss';
+    const units = [];
+    syl.forEach((s, i) => {
+      const t = s.t * k;
+      const d = s.d * k;
+      const melS = voice.style === 'mouth' ? mel : mel * S.melody;
+      let p0 = s.p0 * melS;
+      let p1 = s.p1 * melS;
+      // The chip machines lift each vowel themselves, so take that back out
+      // and the melody stays the person's.
+      if (chipVowels) {
+        p0 -= VOW[s.vowels[0]].st * S.vowelPitch;
+        p1 -= VOW[s.vowels[0]].st * S.vowelPitch;
+      }
+      if (S.scale) {
+        p0 = quantize(p0, S.scale);
+        p1 = quantize(p1, S.scale);
+      }
+      const final = s.end ? (p1 > p0 + 1 ? 'question' : 'stop') : null;
+      const next = syl[i + 1];
+      const joined = next && !s.end && next.t - (s.t + s.d) < 0.03;
+      const base = { syl: i, stressed: s.stressed, caps: false, final, cut: false, src: undefined };
+      if (S.unit === 'syl') {
+        const dd = voice.style === 'mouth' || !joined ? d : d * (1 - S.legato);
+        units.push(Object.assign({}, base, {
+          kind: 'syl', t, d: dd, p0, p1, amp: s.a * (1 + (R() - 0.5) * 0.06),
+          onset: s.onset.slice(), coda: s.coda.slice(), vowels: s.vowels.slice(), key: 'r' + i + s.vowels.join('') + s.onset.join(''),
+        }));
+      } else if (S.unit === 'letter') {
+        // Babble chatters: a few quick sounds in every syllable.
+        const m = Math.max(1, Math.round(d * S.rate * 0.85));
+        const SOFT = ['l', 'n', 'm', 'b', 'd', 'w', 'y', 'g'];
+        for (let j = 0; j < m; j++) {
+          const q0 = j / m, q1 = (j + 1) / m;
+          const h = hash32(i + '|' + j + salt);
+          const on = j === 0 ? s.onset.slice(0, 1) : h % 5 < 2 ? [SOFT[(h >>> 3) % SOFT.length]] : [];
+          const v = s.vowels[s.vowels.length > 1 && q0 >= 0.5 ? 1 : 0];
+          units.push(Object.assign({}, base, {
+            kind: 'letter', t: t + d * q0, d: Math.max(0.02, d / m - 0.004), p0: lerp(p0, p1, q0), p1: lerp(p0, p1, q1),
+            amp: s.a * (j === 0 ? 1 : 0.92) * (1 + (R() - 0.5) * 0.08), onset: on, coda: [], vowels: [v], isVowel: !on.length,
+            key: 'r' + i + '.' + j, final: j === m - 1 ? final : null,
+          }));
+        }
+      } else {
+        // Typewriter: steady blips for as long as the person is talking.
+        const step = 1 / S.rate;
+        const m = Math.max(1, Math.round(d / step));
+        for (let j = 0; j < m; j++) {
+          const q = m > 1 ? j / (m - 1) : 0;
+          const p = lerp(p0, p1, q) + hashSigned('r' + i + '.' + j + salt) * 0.6;
+          units.push(Object.assign({}, base, {
+            kind: 'char', t: t + (j * d) / m, d: d / m, p0: p, p1: p - 1.5, amp: s.a * (1 + (R() - 0.5) * 0.08),
+            onset: [], coda: [], vowels: [], key: 'r' + i + '.' + j, final: null,
+          }));
+        }
+      }
+    });
+    if (S.tick) {
+      let cursor = 0;
+      for (const u of units) {
+        const k0 = Math.max(cursor, Math.round(u.t * S.tick));
+        const kd = Math.max(2, Math.round(u.d * S.tick));
+        u.t = k0 / S.tick;
+        u.d = kd / S.tick;
+        cursor = k0 + kd;
+      }
+    }
+    const textOut = line.text;
+    if (textOut) spreadText(textOut, units, (u) => u.syl, syl.map((s) => s.end));
+    else for (const u of units) u.c0 = u.c1 = 0;
+    const last = units[units.length - 1];
+    const end = last ? last.t + last.d : 0;
+    const duration = units.length ? Math.max(rec.duration * k, end + (voice.style === 'boss' ? S.tail : 0.12)) : 0.3;
+    return { version: VERSION, text: textOut, mood: M, voice, style: voice.style, units, duration };
+  }
+
+  // The Mouth, re-speaking a recording frame by frame: the person's own mouth
+  // shapes as a filter, played by the Mouth's buzz at the new pitch, or by
+  // noise where they hissed. Turned down, Clarity blurs the shapes, rounds
+  // them off and steps through them, until only the vowels and the tune are
+  // left: cheerful gibberish in the person's rhythm.
+  function synthRecording(rec, pl, sr) {
+    const v = pl.voice;
+    const c = v.character;
+    const n = rec.frames;
+    const P = rec.order;
+    const K = Float32Array.from(rec.k);
+    const G = Float32Array.from(rec.gain);
+    const V = Float32Array.from(rec.voicing);
+    const mel = v.melody <= 0.5 ? v.melody * 2 : 1 + (v.melody - 0.5) * 2;
+
+    // Pitch, in semitones from the person's middle, carried through the gaps.
+    const st = new Float32Array(n);
+    let last = -1;
+    for (let f = 0; f <= n; f++) {
+      if (f < n && !(rec.f0[f] > 0)) continue;
+      const s = f < n ? 12 * Math.log2(rec.f0[f] / rec.pitch) : last >= 0 ? st[last] : 0;
+      const s0 = last >= 0 ? st[last] : s;
+      for (let j = last + 1; j < f; j++) st[j] = lerp(s0, s, (j - last) / (f - last));
+      if (f < n) st[f] = s;
+      last = f;
+    }
+    for (let f = 0; f < n; f++) st[f] *= mel;
+
+    // Low Clarity: each syllable leans towards its vowel and hums it, with a
+    // little bounce in the pitch, like the Mouth's gibberish.
+    const blur = clamp((0.55 - c) / 0.55, 0, 1);
+    const bounce = Math.pow(1 - c, 2) * 1.8;
+    for (const s of rec.syllables) {
+      const f0 = Math.round(s.t * REC_FPS);
+      const f1 = Math.min(n, Math.round((s.t + s.d) * REC_FPS));
+      const fp = clamp(Math.round(s.peak * REC_FPS), 0, n - 1);
+      for (let f = f0; f < f1; f++) {
+        const q = (f - f0) / Math.max(1, f1 - f0 - 1);
+        st[f] += bounce * Math.sin(Math.PI * q) * (s.stressed ? 1.4 : 1);
+        if (blur > 0) {
+          const w = Math.pow(blur, 0.7);
+          for (let j = 0; j < P; j++) K[f * P + j] = lerp(K[f * P + j], rec.k[fp * P + j], w);
+          V[f] = lerp(V[f], 1, w * 0.8);
+        }
+      }
+    }
+    // Blur the mouth in time, both ways, so nothing moves before it should.
+    const tau = 0.035 * Math.pow(1 - c, 1.5);
+    if (tau > 0.002) {
+      const a = 1 - Math.exp(-1 / (tau * REC_FPS));
+      const sm = (get, set) => {
+        let y = get(0);
+        for (let f = 0; f < n; f++) { y += (get(f) - y) * a; set(f, y); }
+        y = get(n - 1);
+        for (let f = n - 1; f >= 0; f--) { y += (get(f) - y) * a; set(f, y); }
+      };
+      for (let j = 0; j < P; j++) sm((f) => K[f * P + j], (f, y) => { K[f * P + j] = y; });
+      sm((f) => V[f], (f, y) => { V[f] = y; });
+    }
+    // Fewer coefficients, kept to a few bits: a rounder, cheaper mouth.
+    const order = Math.round(lerp(8, P, clamp(c / 0.7, 0, 1)));
+    const bits = c < 0.7 ? Math.round(lerp(3, 7, c / 0.7)) : 0;
+    if (bits) {
+      const q = Math.pow(2, bits - 1) / (Math.PI / 2);
+      for (let i = 0; i < K.length; i++) K[i] = clamp(Math.sin(Math.round(Math.asin(K[i]) * q) / q), -0.98, 0.98);
+    }
+    const hold = Math.max(1, Math.round(lerp(3, 1, clamp(c / 0.7, 0, 1))));
+
+    // A smaller throat for a higher voice, as in the Mouth: the filter runs
+    // at a faster rate, which moves every formant up together.
+    const fs = semis(clamp(v.pitch, -12, 24) * 0.42);
+    const fsI = REC_RATE * fs;
+    const NI = Math.ceil(pl.duration * fsI);
+    const blk = Math.max(1, Math.round(fsI / 1000));
+    const speed = v.speed;
+    const shift = semis(v.pitch);
+    const noiseAmt = lerp(0.45, 1, c);
+    const b = new Float64Array(P + 1);
+    const kk = new Float64Array(P);
+    // Where frame position fp falls: the two frames around it and how far
+    // between them. The mouth shape can step instead, like a speech chip.
+    const at = (fp, step) => {
+      if (step > 1) fp = Math.floor(fp / step) * step;
+      const f = Math.floor(fp);
+      return [clamp(f, 0, n - 1), clamp(f + 1, 0, n - 1), step > 1 ? 0 : fp - f];
+    };
+    // Above a cutoff that rises with the voicing, real voices turn breathy:
+    // the buzz is low-passed there and the noise high-passed, so the top end
+    // hisses instead of buzzing. Low Clarity keeps the plain buzz.
+    const mix = clamp((c - 0.3) / 0.5, 0, 1);
+    const run = (corr) => {
+      const out = new Float32Array(NI);
+      let seed = hash32('noise' + v.take) | 1;
+      b.fill(0);
+      let de = 0, phase = 0.5, carry = 0;
+      let p1 = 0, p2 = 0, n1 = 0, n2 = 0;
+      for (let i0 = 0; i0 < NI; i0 += blk) {
+        const fp = ((i0 + blk / 2) / fsI) * speed * REC_FPS - 0.5;
+        const [k0, k1, ka] = at(fp, hold);
+        for (let j = 0; j < order; j++) kk[j] = K[k0 * P + j] + (K[k1 * P + j] - K[k0 * P + j]) * ka;
+        const [f0, f1, a] = at(fp, 1);
+        const live = fp > -1 && fp < n;
+        const g = live ? lerp(G[f0], G[f1], a) * lerp(corr[f0], corr[f1], a) : 0;
+        const vo = clamp(lerp(V[f0], V[f1], a), 0, 1);
+        const hz = clamp(rec.pitch * shift * semis(lerp(st[f0], st[f1], a)), 40, 1400);
+        const inc = hz / fsI;
+        const cut = lerp(7900, lerp(2800, 5000, clamp((vo - 0.35) / 0.65, 0, 1)), mix) * fs;
+        const as = 1 - Math.exp((-2 * Math.PI * cut) / fsI);
+        const pulseAmp = Math.sqrt(1 / inc);
+        const sv = g * Math.sqrt(vo);
+        const sn = g * Math.sqrt(1 - vo) * noiseAmt;
+        const iEnd = Math.min(NI, i0 + blk);
+        for (let i = i0; i < iEnd; i++) {
+          let pu = carry;
+          carry = 0;
+          phase += inc;
+          if (phase >= 1) {
+            phase -= 1;
+            // Place each pulse between samples, so high voices stay steady.
+            const frac = phase / inc;
+            pu += pulseAmp * frac;
+            carry = pulseAmp * (1 - frac);
+          }
+          seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5;
+          const w = (((seed >>> 0) / 4294967296) * 2 - 1) * 1.732;
+          p1 += (pu - p1) * as;
+          p2 += (p1 - p2) * as;
+          n1 += (w - n1) * as;
+          n2 += (n1 - n2) * as;
+          let y = sv * (p2 + w - n2) + sn * w;
+          for (let j = order - 1; j >= 0; j--) {
+            y += kk[j] * b[j];
+            b[j + 1] = b[j] - kk[j] * y;
+          }
+          b[0] = y;
+          de = y + PRE_EMPH * de;
+          out[i] = de;
+        }
+      }
+      return out;
+    };
+    // Play it once, measure it against the recording frame by frame, and
+    // play it again with the level put right.
+    const corr = new Float32Array(n).fill(1);
+    const first = run(corr);
+    const wn = Math.round(0.025 * fsI);
+    const lc = new Float32Array(n);
+    for (let f = 0; f < n; f++) {
+      const ci = Math.round((((f + 0.5) / REC_FPS) / speed) * fsI);
+      let s = 0;
+      for (let i = Math.max(0, ci - (wn >> 1)); i < Math.min(NI, ci + (wn >> 1)); i++) s += first[i] * first[i];
+      const got = Math.sqrt(s / wn);
+      lc[f] = got > 1e-7 && rec.rms[f] > 1e-7 ? clamp(Math.log(rec.rms[f] / got), -3, 3) : 0;
+    }
+    for (let f = 0; f < n; f++) corr[f] = Math.exp((lc[Math.max(0, f - 1)] + 2 * lc[f] + lc[Math.min(n - 1, f + 1)]) / 4);
+    let out = resample(run(corr), fsI, sr);
+    onePoleHP(out, sr, 70);
+    let pk = 0;
+    for (let i = 0; i < out.length; i++) pk = Math.max(pk, Math.abs(out[i]));
+    if (pk > 0) for (let i = 0; i < out.length; i++) out[i] *= 0.9 / pk;
+    // The Mouth's own converter: crunchy for gibberish, clean when it's clear.
+    crush(out, sr, lerp(16000, 22050, c), Math.round(lerp(8, 12, c)));
+    onePoleLP(out, sr, lerp(7000, 10000, c));
+    return out;
+  }
+
+  // A recording that went through JSON has its arrays as plain objects;
+  // this puts them back.
+  function asRecording(rec) {
+    if (!rec || !(rec.frames >= 0)) return silentRecording();
+    const out = Object.assign({}, rec);
+    for (const key of ['f0', 'voicing', 'rms', 'gain', 'k']) {
+      if (!rec[key] || typeof rec[key].length !== 'number') out[key] = Float32Array.from(Object.values(rec[key] || {}));
+    }
+    if (!(out.order > 0) || out.k.length < out.frames * out.order || out.f0.length < out.frames || !Array.isArray(out.syllables)) {
+      return silentRecording();
+    }
+    return out;
+  }
+
+  // Says a recording again in a character's voice. Same result as render():
+  // the samples, and events timed to them for mouths, meters and the box.
+  // Give the line's text and the box types it along with the syllables.
+  function renderRecording(rec, voice, opts) {
+    opts = opts || {};
+    const sr = opts.sampleRate || SAMPLE_RATE;
+    rec = asRecording(rec);
+    return voiceClip(planRecording(rec, voice, opts.text), sr, rec);
   }
 
   // ───────────────────────────────── files ─────────────────────────────────
@@ -2107,7 +3030,7 @@
   }
 
   // ───────────────────────── pixel type & dialogue box ─────────────────────────
-  // The client's words appear in a made-up rune alphabet: each letter always
+  // With runes on, the words appear in a made-up alphabet: each letter always
   // gets the same glyph, so it reads like a real language nobody speaks. The
   // punctuation stays readable, which is where the tone lives. Names use a
   // plain 5×7 caps face. Everything is drawn pixel by pixel, so it stays crisp
@@ -2901,6 +3824,8 @@
     analyze,
     plan,
     render,
+    analyzeRecording,
+    renderRecording,
     encodeWav,
     zip,
     slug,
