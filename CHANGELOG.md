@@ -2,6 +2,18 @@
 
 Each release's section becomes its notes on GitHub and in the Mac app's update window. The first paragraph is the headline.
 
+## 1.2.0
+
+Make anything talk like a video game, then make it a video. Make your own characters, and lend them your voice.
+
+- **Videos for Reels, TikTok, Shorts and YouTube.** 9:16, 4:5, 1:1 and 16:9, with the character talking above a dialogue box that types along, kept inside each app's safe area. Colour, dark, green or clear backgrounds.
+- **A cast with faces.** Fourteen characters, a real mix of people, each with a portrait that talks and blinks. New: the Narrator, whose voice is almost human, and the Henchling, who sings everything.
+- **Make your own character.** Skin, face shape, hair, headwear, eyes, brows, lips, facial hair, glasses, earrings, pins, clothes, backdrop and light, with randomize, locks, undo and starting points from the cast. Save them as a picture, and share them in a link.
+- **Your voice.** Record a line or open a recording, and any character says it back with your timing and your tune.
+- **The Mouth,** a new machine: 80s home-computer speech, from happy gibberish to almost words.
+- A new look and a simpler way in: pick a character, type or speak, hear it, save it.
+- Links carry your lines, voice and character, and tell no server anything.
+
 ## 1.1.0
 
 8-bit Voice is now its own open-source app, for Mac, Windows, Linux and phones.

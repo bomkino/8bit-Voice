@@ -1,4 +1,6 @@
-Type a line and hear it as a video-game voice: six chip machines, stage directions, and WAV downloads. Everything is synthesized on your computer, so there are no samples and nothing to license.
+### Get it
+
+Everything happens on your own device: no accounts, no tracking, no samples, nothing to license.
 
 | Your computer | Download |
 | --- | --- |
