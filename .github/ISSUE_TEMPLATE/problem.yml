@@ -1,0 +1,26 @@
+name: Something's not working
+description: A bug, a crash, a strange sound, or something that looks wrong.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for telling us. Every report helps, however small.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what you got instead.
+    validations:
+      required: true
+  - type: input
+    id: where
+    attributes:
+      label: Where?
+      description: The web app or a desktop app, and your device, system and browser. For example "iPhone 15, iOS 26, Safari" or "Mac app 1.2.0 on macOS 15".
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Screenshots, a short recording, or the line you typed. Drag files in here.

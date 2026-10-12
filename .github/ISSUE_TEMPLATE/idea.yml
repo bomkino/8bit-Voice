@@ -1,0 +1,15 @@
+name: An idea
+description: A voice, a character, a part for the creator, an export, or anything else you'd like.
+labels: [idea]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: What would you make with it?
+      description: Optional, but it helps us get it right.

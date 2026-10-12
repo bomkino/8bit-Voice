@@ -196,7 +196,8 @@ declare namespace ChipVoice {
     | 'bg'
     | 'mirror'
     | 'shine'
-    | 'pattern';
+    | 'pattern'
+    | 'light';
   /** A made-up character: which option of each part, by index. */
   type Look = Record<LookKey, number>;
   /** Parts by name ("Umber", "Locs") or index; anything left out is the first option. */

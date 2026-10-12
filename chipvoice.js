@@ -2519,12 +2519,30 @@
   const MIRROR = [['Off'], ['On']];
   const SHINE = [['Classic'], ['Matte'], ['Low'], ['Sparkly']];
   const PATTERNS = [['Plain'], ['Dots'], ['Lines'], ['Sparkles'], ['Haze']];
+  // Light washes the whole picture in one tap: a colour that the lighter
+  // shades lean towards, how far, how bright, and how saturated. Outlines
+  // stay dark.
+  const LIGHTS = [
+    ['Daylight', null], ['Golden hour', ['#ffb35c', 0.16, 1.03, 1.05]], ['Moonlight', ['#7d95ff', 0.18, 0.92, 0.88]],
+    ['Neon', ['#ff4fd8', 0.16, 1.02, 1.2]], ['Campfire', ['#ff7a2e', 0.18, 0.96, 1.05]], ['Vivid', [null, 0, 1.02, 1.35]],
+  ];
+  function lightHex(hex, L) {
+    const [tint, amt, k, sat] = L;
+    const n = parseInt(hex.slice(1), 16);
+    let c = [n >> 16, (n >> 8) & 255, n & 255];
+    const y = 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2];
+    c = c.map((v) => y + (v - y) * sat);
+    const a = amt * (0.3 + 0.7 * (y / 255));
+    const t = tint ? parseInt(tint.slice(1), 16) : 0;
+    const tc = [t >> 16, (t >> 8) & 255, t & 255];
+    return '#' + c.map((v, i) => Math.round(clamp(lerp(v, tc[i], a) * k, 0, 255)).toString(16).padStart(2, '0')).join('');
+  }
   const SPARKLES = new Set([[2, 1], [1, 2], [2, 2], [3, 2], [2, 3], [13, 2], [12, 3], [13, 3], [14, 3], [13, 4], [14, 9], [1, 11], [11, 0]].map(([x, y]) => y * 16 + x));
   const LOOK_PARTS = {
     skin: SKIN_TONES, head: HEADS, hair: HAIRS, hairColor: HAIR_COLORS, cover: COVERS, coverColor: CLOTH_COLORS,
     eyes: EYES, brows: BROWS, mouth: MOUTHS, lips: LIP_COLORS, cheeks: CHEEKS, age: AGES, facial: FACIAL,
     glasses: GLASSES, earrings: EARRINGS, outfit: OUTFITS, outfitColor: CLOTH_COLORS, pin: PINS, bg: BACKDROPS,
-    mirror: MIRROR, shine: SHINE, pattern: PATTERNS,
+    mirror: MIRROR, shine: SHINE, pattern: PATTERNS, light: LIGHTS,
   };
   // Backdrop, clothes and headwear colours that sit well together, so a roll
   // of the dice looks dressed on purpose.
@@ -2605,6 +2623,7 @@
       mirror: pick(2),
       shine: rnd() < 0.5 ? 0 : 1 + pick(3),
       pattern: rnd() < 0.4 ? 0 : 1 + pick(PATTERNS.length - 1),
+      light: rnd() < 0.6 ? 0 : 1 + pick(LIGHTS.length - 1),
     };
     if (keep) for (const k of LOOK_KEYS) if (keep[k] != null) L[k] = keep[k];
     return normLook(L);
@@ -2682,11 +2701,13 @@
       r: mixHex(skin, '#ff6b7a', 0.45), l: LIP_COLORS[L.lips][1] || '#141218', z: hexShade(BACKDROPS[L.bg][1], 1.16),
     };
     if (L.pin) PINS[L.pin][1].forEach((c, i) => { pal[i + 1] = c; });
+    const light = LIGHTS[L.light][1];
+    if (light) for (const k in pal) if (k !== 'k') pal[k] = lightHex(pal[k], light);
     const used = new Set(grid.flat());
     let [mx, my, mw] = MOUTHS[L.mouth][1];
     if (L.mirror) mx = 16 - mx - mw;
     const face = {
-      bg: BACKDROPS[L.bg][1],
+      bg: light ? lightHex(BACKDROPS[L.bg][1], light) : BACKDROPS[L.bg][1],
       pal: Object.keys(pal).filter((k) => used.has(k) || k === 'l' || k === 's' || k === 'w').map((k) => k + pal[k].slice(1)).join(' '),
       mouth: [mx, my, mw, L.lips ? 'l' : 'k'],
       rows: grid.map((r) => r.join('')).join('/'),
