@@ -2,13 +2,13 @@
 // Makes 8-bit Voice clips from the command line, with the same engine
 // as the app (chipvoice.js), so a line sounds identical in both.
 //
-//   node cli.mjs "(offended) I never said I'd call." --voice heist-producer --phone
-//   node cli.mjs --file lines.txt --voice space-director --phone --dir clips
+//   node cli.mjs "(offended) You said WHAT about my hat?" --voice wizard --out hat.wav
+//   node cli.mjs --file lines.txt --voice narrator --dir clips
 //   node cli.mjs --file lines.txt --compare --dir compare
 //   node cli.mjs --list
 //
 // Options
-//   --voice <id>       a client preset or a machine (see --list)
+//   --voice <id>       a character or a machine (see --list)
 //   --pitch <st>       semitones, -24 to 24
 //   --speed <x>        0.4 to 2.5
 //   --melody <0-1>     monotone to sing-song
@@ -17,7 +17,7 @@
 //   --phone            through a phone speaker
 //   --take <n>         another performance of the same settings
 //   --file <path>      one line per clip; blank lines are skipped
-//   --compare          every line in all six machines
+//   --compare          every line in every machine
 //   --lineup <path>    also write every clip into one file, with a gap between
 //   --speaker <name>   used in file names
 //   --json             write the timing (syllables, pitch, characters) next to each WAV
@@ -50,15 +50,15 @@ if (opts.help || (!words.length && !opts.file && !opts.list)) {
 }
 
 if (opts.list) {
-  console.log("Client presets");
+  console.log("Characters");
   for (const id of CV.PRESET_ORDER) {
     const p = CV.PRESETS[id];
-    console.log(`  ${id.padEnd(17)} ${p.episode.padEnd(5)} ${p.name}: ${p.note}`);
+    console.log(`  ${id.padEnd(11)} ${p.name}, ${p.tag.toLowerCase()}. ${p.note}`);
   }
   console.log("\nMachines");
   for (const id of CV.STYLE_ORDER) {
     const s = CV.STYLES[id];
-    console.log(`  ${id.padEnd(17)} ${s.name}, ${s.era}. Character knob: ${s.character}.`);
+    console.log(`  ${id.padEnd(11)} ${s.name}, ${s.era}. Character knob: ${s.character}.`);
   }
   console.log("\nStage directions, in brackets before a line");
   console.log("  " + CV.MOOD_ORDER.map((k) => CV.MOODS[k].label.toLowerCase()).join(", "));

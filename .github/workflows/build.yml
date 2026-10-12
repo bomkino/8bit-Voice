@@ -30,8 +30,10 @@ jobs:
       - run: npm test
       - name: Command line makes a clip
         run: |
-          node cli.mjs "(offended) I never said I'd call." --voice heist-producer --phone --out clip.wav
-          test "$(head -c 4 clip.wav)" = RIFF
+          for v in $(node -p "require('./chipvoice.js').PRESET_ORDER.join(' ')"); do
+            node cli.mjs "(offended) You said WHAT about my hat?" --voice "$v" --out "clip-$v.wav"
+            test "$(head -c 4 "clip-$v.wav")" = RIFF
+          done
 
   desktop:
     name: ${{ matrix.name }}

@@ -1,10 +1,10 @@
 /*!
- * chipvoice.js · the engine behind 8-bit Voice (pitch.dog), made for Typecast
+ * chipvoice.js · the engine behind 8-bit Voice, by pitch.dog
  * https://github.com/bomkino/8bit-Voice · MIT License
  *
  * Type a line and get it back as a video-game voice. The words stay unreadable;
- * the rhythm, the melody and the punctuation stay human, so whoever answers can
- * tell the audience what was said.
+ * the rhythm, the melody and the punctuation stay human, so anyone listening
+ * can tell what was meant.
  *
  * Every sound is synthesized here from square, triangle and wavetable oscillators,
  * formant filters and noise. There are no samples, so there is nothing to license.
@@ -19,7 +19,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  const VERSION = '1.0.0';
+  const VERSION = '1.2.0';
   const SAMPLE_RATE = 48000;
 
   // ───────────────────────────── small utilities ─────────────────────────────
@@ -199,8 +199,29 @@
       leadIn: 0.05,
       tail: 0.15,
     },
+    mouth: {
+      name: 'Mouth',
+      era: '80s home-computer speech',
+      blurb: 'A tiny throat and mouth that try to say your words. Turn Clarity up and you can almost make them out.',
+      character: 'Clarity',
+      characterHint: 'From cheerful gibberish to almost words',
+      unit: 'syl',
+      baseHz: 110,
+      rate: 5.2,
+      melody: 0.85,
+      decl: 3.5,
+      jitter: 1.5,
+      vowelPitch: 0,
+      tick: 0,
+      scale: null,
+      legato: 0,
+      wordGap: 0.03,
+      pause: 1.1,
+      leadIn: 0.06,
+      tail: 0.22,
+    },
   };
-  const STYLE_ORDER = ['square', 'pocket', 'babble', 'typewriter', 'boss', 'chip'];
+  const STYLE_ORDER = ['square', 'pocket', 'babble', 'typewriter', 'boss', 'chip', 'mouth'];
 
   const SCALES = {
     pentatonic: [0, 2, 4, 7, 9],
@@ -210,48 +231,82 @@
   };
 
   // ──────────────────────────────── presets ────────────────────────────────
-  // One per client in season 1. Each picks a machine and dials it in; every
-  // knob stays adjustable.
+  // The cast: fourteen characters, each a machine dialled in. Every knob stays
+  // adjustable, and `face` names the portrait the app draws for them.
 
   const PRESETS = {
-    'horror-director': {
-      name: 'Horror director',
-      episode: 'Ep 1',
-      note: 'Calm, deep and a little too pleased about the haunted house.',
-      voice: { style: 'boss', pitch: 3, speed: 1.1, melody: 0.4, character: 0.45, grit: 0 },
+    hero: {
+      name: 'Hero', tag: 'Adventure', face: 'hero',
+      note: 'Brave, bright and a little out of breath.',
+      voice: { style: 'square', pitch: 2, speed: 1.05, melody: 0.55, character: 0.55, grit: 0 },
     },
-    'romcom-director': {
-      name: 'Rom-com director',
-      episode: 'Ep 2',
-      note: 'Bubbly, impatient, types faster than they think.',
-      voice: { style: 'babble', pitch: 0, speed: 1.05, melody: 0.65, character: 0.55, grit: 0 },
-    },
-    'heist-producer': {
-      name: 'Heist producer',
-      episode: 'Ep 3',
-      note: 'Clipped and quick. Says everything like a code word.',
-      voice: { style: 'square', pitch: -3, speed: 1.12, melody: 0.4, character: 0.75, grit: 0 },
-    },
-    'space-director': {
-      name: 'Space director',
-      episode: 'Ep 4',
-      note: 'Grand plans, computer voice. The same take every loop.',
-      voice: { style: 'chip', pitch: 0, speed: 1, melody: 0.55, character: 0.45, grit: 0 },
-    },
-    'period-director': {
-      name: 'Period director',
-      episode: 'Ep 5',
+    wizard: {
+      name: 'Old wizard', tag: 'Fantasy', face: 'wizard',
       note: 'Theatrical, loves a long vowel, hears violins.',
       voice: { style: 'pocket', pitch: -7, speed: 0.85, melody: 0.85, character: 0.3, grit: 0 },
     },
-    'studio-exec': {
-      name: 'Studio exec',
-      episode: 'Any',
+    villain: {
+      name: 'Villain', tag: 'Boss fight', face: 'villain',
+      note: 'Calm, deep and a little too pleased with the plan.',
+      voice: { style: 'boss', pitch: 3, speed: 1.1, melody: 0.4, character: 0.45, grit: 0 },
+    },
+    sidekick: {
+      name: 'Sidekick', tag: 'Cozy', face: 'sidekick',
+      note: 'Bubbly, impatient, talks faster than they think.',
+      voice: { style: 'babble', pitch: 0, speed: 1.05, melody: 0.65, character: 0.55, grit: 0 },
+    },
+    agent: {
+      name: 'Secret agent', tag: 'Stealth', face: 'agent',
+      note: 'Clipped and quick. Says everything like a code word.',
+      voice: { style: 'square', pitch: -3, speed: 1.12, melody: 0.4, character: 0.75, grit: 0 },
+    },
+    computer: {
+      name: 'Ship computer', tag: 'Sci-fi', face: 'computer',
+      note: 'Calm and synthetic. Says it the same way every time.',
+      voice: { style: 'chip', pitch: 0, speed: 1, melody: 0.55, character: 0.45, grit: 0 },
+    },
+    robot: {
+      name: 'Robot', tag: 'Sci-fi', face: 'robot',
+      note: 'Flat, buzzy and very slightly broken.',
+      voice: { style: 'chip', pitch: -6, speed: 0.95, melody: 0.1, character: 0.8, grit: 0.35 },
+    },
+    fairy: {
+      name: 'Fairy', tag: 'Fantasy', face: 'fairy',
+      note: 'Tiny, sparkly and thrilled about everything.',
+      voice: { style: 'babble', pitch: 10, speed: 1.2, melody: 0.85, character: 0.75, grit: 0 },
+    },
+    ghost: {
+      name: 'Ghost', tag: 'Spooky', face: 'ghost',
+      note: 'Floaty and wobbly. Takes its time.',
+      voice: { style: 'pocket', pitch: 4, speed: 0.8, melody: 0.9, character: 0.6, grit: 0 },
+    },
+    golem: {
+      name: 'Stone golem', tag: 'Boss fight', face: 'golem',
+      note: 'Huge and slow. Every word is an earthquake.',
+      voice: { style: 'boss', pitch: -9, speed: 0.78, melody: 0.25, character: 0.7, grit: 0.15 },
+    },
+    guard: {
+      name: 'Guard', tag: 'Anywhere', face: 'guard',
       note: 'No time, no patience, no inflection.',
       voice: { style: 'typewriter', pitch: -4, speed: 1.15, melody: 0.15, character: 0.65, grit: 0 },
     },
+    critter: {
+      name: 'Villager', tag: 'Cozy', face: 'critter',
+      note: 'Squeaky small talk, mostly about fruit.',
+      voice: { style: 'babble', pitch: 7, speed: 1.15, melody: 0.7, character: 0.6, grit: 0 },
+    },
+    narrator: {
+      name: 'Narrator', tag: 'Almost human', face: 'narrator',
+      note: 'Warm and unhurried. You can almost make out the words.',
+      voice: { style: 'mouth', pitch: 0, speed: 0.95, melody: 0.5, character: 0.92, grit: 0 },
+    },
+    henchling: {
+      name: 'Henchling', tag: 'Gibberish', face: 'henchling',
+      note: 'Small, loyal, sings everything. Loves bananas, probably.',
+      voice: { style: 'mouth', pitch: 15, speed: 1.3, melody: 0.95, character: 0.08, grit: 0 },
+    },
   };
-  const PRESET_ORDER = ['horror-director', 'romcom-director', 'heist-producer', 'space-director', 'period-director', 'studio-exec'];
+  const PRESET_ORDER = ['hero', 'narrator', 'henchling', 'wizard', 'villain', 'sidekick', 'agent', 'computer', 'robot', 'fairy', 'ghost', 'golem', 'guard', 'critter'];
 
   const DEFAULT_VOICE = { style: 'square', pitch: 0, speed: 1, melody: 0.5, character: 0.5, grit: 0, phone: false, take: 1 };
 
@@ -652,7 +707,10 @@
         w.syl.forEach((s, si) => {
           const base = { word: wi, wordStart: si === 0, wordEnd: si === w.syl.length - 1, stressed: s.stressed, func: w.func, caps: w.caps };
           if (S.unit === 'syl') {
-            items.push(Object.assign({}, base, { kind: 'syl', key: s.text, c0: s.c0, c1: s.c1, onset: s.onsetT, coda: s.codaT, vowels: s.vowels, n: s.letters.length }));
+            items.push(Object.assign({}, base, {
+              kind: 'syl', key: s.text, c0: s.c0, c1: s.c1, onset: s.onsetT, coda: s.codaT, vowels: s.vowels, n: s.letters.length,
+              src: { letters: s.letters, onset: s.onset, nucleus: s.nucleus, coda: s.coda, magicE: s.magicE, word: w.lower, si, ns: w.syl.length, keys: w.syl.map((x) => x.letters), stressed: s.stressed, func: w.func },
+            }));
           } else if (S.unit === 'letter') {
             const L = s.letters;
             for (let li = 0; li < L.length; li++) {
@@ -761,7 +819,7 @@
         units.push({
           kind: it.kind, t, d, c0: it.c0, c1: it.c1, p0: p, p1, amp: a, final,
           cut: isLast && (type === 'cut' || type === 'dash'),
-          onset: it.onset, coda: it.coda, vowels: it.vowels, stressed: it.stressed, caps: it.caps, key: it.key, isVowel: it.isVowel,
+          onset: it.onset, coda: it.coda, vowels: it.vowels, stressed: it.stressed, caps: it.caps, key: it.key, isVowel: it.isVowel, src: it.src,
         });
         t += d + (isLast ? 0 : gap);
       });
@@ -1430,6 +1488,454 @@
     return out;
   }
 
+  // ─────────────────────────────── the mouth ───────────────────────────────
+  // A small model of a throat and a mouth, the way the talking computers of
+  // the 80s worked: a glottal pulse through five resonances (the formants)
+  // that glide from sound to sound, with noise for the hisses and the pops.
+  // Letters become speech sounds through a few dozen spelling rules and a
+  // short list of common words. Clarity decides how many of those sounds are
+  // the real ones; the rest are swapped, by a hash, for a made-up language,
+  // so at the bottom of the knob it is cheerful gibberish that still sounds
+  // like somebody talking.
+
+  // Vowel targets: F1, F2, F3 in Hz for an adult voice.
+  const MV = {
+    iy: [270, 2290, 3010], ih: [390, 1990, 2550], ei: [450, 2060, 2650], eh: [530, 1840, 2480],
+    ae: [660, 1720, 2410], aa: [730, 1090, 2440], ao: [570, 840, 2410], oh: [490, 910, 2350],
+    uh: [440, 1020, 2240], uw: [300, 870, 2240], ah: [640, 1190, 2390], ax: [500, 1450, 2500],
+    er: [490, 1350, 1690],
+  };
+  const MDIPH = { ey: ['ei', 'iy'], ay: ['aa', 'iy'], aw: ['aa', 'uw'], ow: ['oh', 'uw'], oy: ['ao', 'iy'] };
+  const isMV = (p) => !!(MV[p] || MDIPH[p]);
+
+  // Consonants: how each one is made. F is where the formants point while the
+  // mouth makes it (so the vowel next door bends towards it); fric and burst
+  // are [centre Hz, bandwidth Hz, level].
+  const MC = {
+    p: { k: 'stop', F: [400, 900, 2100], burst: [1100, 2000, 0.45], asp: 1 },
+    b: { k: 'stop', voiced: 1, F: [300, 900, 2100], burst: [1000, 2000, 0.22] },
+    t: { k: 'stop', F: [400, 1700, 2600], burst: [4200, 2500, 0.6], asp: 1 },
+    d: { k: 'stop', voiced: 1, F: [300, 1700, 2600], burst: [3800, 2500, 0.3] },
+    k: { k: 'stop', F: [400, 0, 0], burst: [2300, 900, 0.65], asp: 1 },
+    g: { k: 'stop', voiced: 1, F: [300, 0, 0], burst: [2100, 900, 0.32] },
+    f: { k: 'fric', F: [400, 1100, 2100], fric: [7000, 5000, 0.13] },
+    v: { k: 'fric', voiced: 1, F: [300, 1100, 2100], fric: [6000, 5000, 0.08] },
+    th: { k: 'fric', F: [400, 1400, 2700], fric: [6500, 5000, 0.11] },
+    dh: { k: 'fric', voiced: 1, F: [300, 1400, 2700], fric: [5500, 5000, 0.06] },
+    s: { k: 'fric', F: [400, 1700, 2700], fric: [5600, 1400, 0.5] },
+    z: { k: 'fric', voiced: 1, F: [300, 1700, 2700], fric: [5400, 1400, 0.3] },
+    sh: { k: 'fric', F: [400, 1900, 2400], fric: [2900, 1500, 0.5] },
+    zh: { k: 'fric', voiced: 1, F: [300, 1900, 2400], fric: [2800, 1500, 0.3] },
+    h: { k: 'h' },
+    ch: { k: 'aff', F: [400, 1900, 2400], burst: [3400, 2000, 0.5], fric: [2900, 1500, 0.45] },
+    j: { k: 'aff', voiced: 1, F: [300, 1900, 2400], burst: [3200, 2000, 0.25], fric: [2800, 1500, 0.28] },
+    m: { k: 'nasal', F: [250, 1000, 2200] },
+    n: { k: 'nasal', F: [250, 1650, 2600] },
+    ng: { k: 'nasal', F: [250, 2100, 2700] },
+    l: { k: 'liq', F: [360, 1150, 2800] },
+    r: { k: 'liq', F: [330, 1060, 1450] },
+    w: { k: 'liq', F: [290, 620, 2150] },
+    y: { k: 'liq', F: [260, 2100, 3000] },
+  };
+
+  // Common words, which spelling rules get wrong. Syllables split with "/".
+  const MLEX = (() => {
+    const src = 'a=ax an=ae n the=dh ax to=t uw too=t uw two=t uw of=ax v and=ae n d or=ao r for=f ao r from=f r ah m ' +
+      'in=ih n on=aa n at=ae t is=ih z it=ih t its=ih t s as=ae z was=w ah z are=aa r be=b iy been=b ih n i=ay im=ay m ' +
+      'ill=ay l ive=ay v id=ay d me=m iy my=m ay you=y uw your=y ao r youre=y ao r we=w iy he=h iy she=sh iy ' +
+      'they=dh ey them=dh eh m their=dh eh r there=dh eh r theyre=dh eh r this=dh ih s that=dh ae t thats=dh ae t s ' +
+      'these=dh iy z those=dh ow z then=dh eh n than=dh ae n with=w ih dh what=w ah t whats=w ah t s who=h uw ' +
+      'why=w ay how=h aw where=w eh r when=w eh n do=d uw does=d ah z dont=d ow n t done=d ah n one=w ah n ' +
+      'once=w ah n s some=s ah m come=k ah m have=h ae v has=h ae z had=h ae d give=g ih v live=l ih v ' +
+      'love=l ah v said=s eh d says=s eh z know=n ow no=n ow so=s ow go=g ow oh=ow ok=ow/k ey okay=ow/k ey ' +
+      'yes=y eh s yeah=y eh hi=h ay hey=h ey hello=h ax/l ow bye=b ay good=g uh d great=g r ey t could=k uh d ' +
+      'would=w uh d should=sh uh d were=w er word=w er d work=w er k world=w er l d eye=ay eyes=ay z ' +
+      'people=p iy/p ax l very=v eh/r iy only=ow n/l iy any=eh/n iy many=m eh/n iy every=eh v/r iy ' +
+      'again=ax/g eh n water=w ao/t er over=ow/v er after=ae f/t er never=n eh/v er ever=eh/v er ' +
+      'little=l ih/t ax l really=r iy/l iy something=s ah m/th ih ng nothing=n ah/th ih ng because=b ih/k ah z ' +
+      'today=t ax/d ey tonight=t ax/n ay t friend=f r eh n d friends=f r eh n d z time=t ay m now=n aw ' +
+      'right=r ay t night=n ay t light=l ay t think=th ih ng k thank=th ae ng k thanks=th ae ng k s ' +
+      'please=p l iy z sorry=s aa/r iy wait=w ey t want=w aa n t need=n iy d see=s iy look=l uh k ' +
+      'here=h iy r hear=h iy r put=p uh t push=p uh sh pull=p uh l full=f uh l call=k ao l all=ao l ' +
+      'talk=t ao k walk=w ao k other=ah/dh er mother=m ah/dh er brother=b r ah/dh er father=f aa/dh er ' +
+      'money=m ah/n iy guy=g ay buy=b ay busy=b ih/z iy door=d ao r floor=f l ao r four=f ao r ' +
+      'pretty=p r ih/t iy move=m uw v whose=h uw z also=ao l/s ow always=ao l/w ey z around=ax/r aw n d ' +
+      'about=ax/b aw t into=ih n/t uw just=j ah s t not=n aa t can=k ae n cant=k ae n t will=w ih l ' +
+      'get=g eh t got=g aa t make=m ey k take=t ey k like=l ay k say=s ey way=w ey day=d ey play=p l ey ' +
+      'game=g ey m games=g ey m z lets=l eh t s our=aw er hour=aw er us=ah s if=ih f up=ah p but=b ah t ' +
+      'out=aw t ' + 'mister=m ih s/t er hero=h iy/r ow treasure=t r eh/zh er princess=p r ih n/s eh s ' +
+      'castle=k ae/s ax l kingdom=k ih ng/d ax m quest=k w eh s t level=l eh/v ax l world=w er l d';
+    const lex = {};
+    let word = null;
+    let phones = '';
+    const flush = () => { if (word) lex[word] = phones.split('/').map((x) => x.trim().split(/\s+/)); };
+    for (const tok of src.trim().split(/\s+/)) {
+      if (tok.includes('=')) {
+        flush();
+        [word, phones] = tok.split('=');
+      } else phones += ' ' + tok;
+    }
+    flush();
+    return lex;
+  })();
+
+  // Splits a run of phonemes into onset, vowels and coda.
+  function splitPhones(list) {
+    let a = list.findIndex(isMV);
+    if (a < 0) return { on: list.slice(), v: [], co: [] };
+    let b = a;
+    while (b + 1 < list.length && isMV(list[b + 1])) b++;
+    return { on: list.slice(0, a), v: list.slice(a, b + 1), co: list.slice(b + 1) };
+  }
+
+  const VOICED = new Set(['b', 'd', 'g', 'v', 'dh', 'z', 'zh', 'j', 'm', 'n', 'ng', 'l', 'r', 'w', 'y']);
+  const DH_WORDS = new Set(['though', 'thus', 'thy', 'thee', 'thine', 'therefore', 'whether', 'either', 'neither', 'rather', 'together', 'weather', 'feather', 'leather']);
+
+  // The spelling rules: one syllable of a word to speech sounds.
+  function mouthRules(u) {
+    const s = u.src;
+    const lexW = MLEX[s.word];
+    if (lexW && lexW.length === s.ns) return splitPhones(lexW[s.si]);
+    let on = (u.onset || []).slice();
+    let co = (u.coda || []).slice();
+    let nuc = s.nucleus;
+    let coda = s.coda;
+    const first = s.si === 0;
+    const last = s.si === s.ns - 1;
+    const w = s.word;
+    const L = s.letters;
+    if (L === 'tion' || L === 'sion') return { on: ['sh'], v: ['ax'], co: ['n'] };
+    if (L === 'ture') return { on: ['ch'], v: ['er'], co: [] };
+    if (!nuc) {
+      // "hmm", "shh", "brr", "pfft": the consonants are the sound.
+      if (/^[hm]+$/.test(L)) return { on: [], v: [], co: ['m'] };
+      if (/^s*h+$/.test(L)) return { on: [], v: [], co: ['sh'] };
+      return { on, v: ['ax'], co };
+    }
+    if (first && /^(kn|gn)/.test(w) && on.length > 1) on.shift();
+    if (first && /^wr/.test(w) && on[0] === 'w') on.shift();
+    if (last && /mb$/.test(w) && co[co.length - 1] === 'b') co.pop();
+    if (on.includes('th') && (s.func || DH_WORDS.has(w))) on = on.map((c) => (c === 'th' ? 'dh' : c));
+    // "w" after a vowel is part of it: ow, aw, ew.
+    if (coda[0] === 'w') { nuc += 'w'; coda = coda.slice(1); if (co[0] === 'w') co.shift(); }
+    // A word ending in a plural "-es" or a past "-ed" after one consonant
+    // keeps the vowel before it long, and the ending loses its vowel.
+    const next = s.keys[s.si + 1];
+    const endsQuiet = (k) => k && /^[bdfgklmnprtvz]e[sd]$/.test(k) && s.si + 1 === s.ns - 1;
+    let magicE = s.magicE || (endsQuiet(next) && !coda && nuc.length === 1);
+    if (last && s.si > 0 && /^[bdfgklmnprvz]e[sd]$/.test(L)) {
+      const c = on.length ? on : [L[0]];
+      const voiced = VOICED.has(c[c.length - 1]);
+      return { on: [], v: [], co: c.concat([L[2] === 's' ? 'z' : voiced ? 'd' : 't']) };
+    }
+    if (last && s.si > 0 && /^ye[sd]$/.test(L) && /[aeo]$/.test(s.keys[s.si - 1])) return { on: [], v: [], co: [L[2] === 's' ? 'z' : 'd'] };
+    const n2 = nuc.slice(0, 2);
+    const c0 = coda[0] || '';
+    const r = c0 === 'r';
+    const stressed = s.ns === 1 || s.stressed;
+    const wOnset = on[on.length - 1] === 'w';
+    let v;
+    if (n2.length === 2 && n2[0] !== n2[1] || /^(ee|oo)/.test(nuc)) {
+      if (n2 === 'ee') v = 'iy';
+      else if (n2 === 'ea') v = /^(d|th|v)/.test(coda) && !r ? 'eh' : 'iy';
+      else if (n2 === 'ie') v = last && !coda && w.length <= 3 ? 'ay' : 'iy';
+      else if (n2 === 'ei' || n2 === 'ey') v = last && s.ns > 1 && n2 === 'ey' ? 'iy' : 'ey';
+      else if (n2 === 'ai' || n2 === 'ay') v = 'ey';
+      else if (n2 === 'oo') v = c0 === 'k' || (c0 === 'd' && /^(g|w|h|st|c)$/.test(s.onset)) || (c0 === 't' && s.onset === 'f') ? 'uh' : 'uw';
+      else if (n2 === 'ou') v = /^gh/.test(coda) ? 'ao' : /^ld/.test(coda) ? 'uh' : r ? 'ao' : !coda && last ? 'uw' : 'aw';
+      else if (n2 === 'ow') v = (last && s.ns > 1) || /^(sh|gr|kn|bl|fl|gl|sl|l|r|thr|sn|s|st|thr)$/.test(s.onset) || /^kn/.test(w) ? 'ow' : 'aw';
+      else if (n2 === 'oa' || n2 === 'oe') v = 'ow';
+      else if (n2 === 'oi' || n2 === 'oy') v = 'oy';
+      else if (n2 === 'au' || n2 === 'aw') v = 'ao';
+      else if (n2 === 'ue' || n2 === 'ui' || n2 === 'ew' || n2 === 'eu') v = 'uw';
+      else if (n2 === 'uy') v = 'ay';
+      else if (n2 === 'ia' || n2 === 'io' || n2 === 'iu') return { on, v: ['iy', 'ax'], co };
+      else if (n2 === 'ua' || n2 === 'uo') return { on, v: ['uw', 'ax'], co };
+      else v = null;
+      if (v === 'ey' && r) v = 'eh';
+    }
+    if (!v) {
+      const c = nuc[0] === 'y' ? 'y' : nuc[0];
+      if (r) {
+        if (magicE) v = { a: 'eh', e: 'iy', i: 'ay', o: 'ao', u: 'uw', y: 'ay' }[c];
+        else if (c === 'a' && (wOnset || stressed)) v = wOnset ? 'ao' : 'aa';
+        else if (c === 'o') v = 'ao';
+        else { v = 'er'; co.shift(); }
+      } else if (magicE) v = { a: 'ey', e: 'iy', i: 'ay', o: 'ow', u: 'uw', y: 'ay' }[c];
+      else if (/^gh/.test(coda) && c === 'i') v = 'ay';
+      else if (c === 'i' && /^(nd|ld)$/.test(coda)) v = 'ay';
+      else if (c === 'o' && /^(ld|lt|ll)$/.test(coda)) v = 'ow';
+      else if (c === 'a' && /^l[lktd]/.test(coda)) { v = 'ao'; if (/^lk/.test(coda)) co = co.filter((x) => x !== 'l'); }
+      else if (c === 'a' && wOnset) v = 'aa';
+      else if (!coda) {
+        if (c === 'y') v = s.ns === 1 ? 'ay' : last ? 'iy' : 'ih';
+        else if (c === 'e') v = stressed ? 'iy' : last && s.ns > 1 ? 'iy' : 'ih';
+        else if (c === 'a') v = stressed ? 'ey' : 'ax';
+        else if (c === 'i') v = stressed ? 'ay' : 'ih';
+        else if (c === 'o') v = stressed || last ? 'ow' : 'ax';
+        else v = 'uw';
+      } else {
+        v = { a: 'ae', e: 'eh', i: 'ih', o: 'aa', u: 'ah', y: 'ih' }[c] || 'ax';
+        if (c === 'u' && /^(p|b|f|sh)$/.test(s.onset) && /^(ll|sh|t)$/.test(coda)) v = 'uh';
+      }
+      // Unstressed short vowels relax to a schwa, the way people say them.
+      if (s.ns > 1 && !stressed && /^(ae|eh|aa|ah)$/.test(v)) v = 'ax';
+      if (v === 'uw' && /^(m|k|f|h|p|b|v|c)$/.test(s.onset) && (magicE || !coda)) on = on.concat(['y']);
+    }
+    // A final "s" after a voiced sound is a "z".
+    if (last && co[co.length - 1] === 's' && !/ss$/.test(w)) {
+      const prev = co.length > 1 ? co[co.length - 2] : null;
+      if (prev ? VOICED.has(prev) : s.ns > 1 && !/[aeiou]s$/.test(w)) co[co.length - 1] = 'z';
+    }
+    // "g" before e, i or y is often soft: magic, giant, page.
+    if (on[0] === 'g' && /^[eiy]/.test(nuc) && !(first && /^(ge[tia]|gi[vrfl]|gid|gig|gea)/.test(w))) on[0] = 'j';
+    return { on, v: [v], co };
+  }
+
+  // The made-up language: the same syllable always turns into the same
+  // nonsense. Below a third of Clarity it is a bouncier one, all b, m and
+  // open vowels, like a crowd of very small, very happy henchmen.
+  const MBOUNCE = { on: ['b', 'b', 'p', 'm', 'm', 'n', 'l', 'd', 't', 'k', 'g', 'p', 'b', 'l', 'y', 'w'], v: ['aa', 'aa', 'ow', 'iy', 'ah', 'eh', 'uw', 'ay', 'ey', 'aa', 'iy', 'ow'], co: ['n', 'l', 's', 'm', 'p'] };
+  const MANY = { on: ['b', 'd', 'g', 'k', 'p', 't', 'm', 'n', 'l', 'r', 's', 'z', 'f', 'v', 'sh', 'h', 'w', 'y', 'ch', 'j', 'th'], v: ['iy', 'ih', 'ey', 'eh', 'ae', 'aa', 'ao', 'ow', 'uh', 'uw', 'ah', 'ay', 'aw', 'er', 'oy'], co: ['n', 'm', 's', 't', 'k', 'l', 'r', 'z', 'p', 'd', 'ng', 'f'] };
+  function mouthScramble(key, salt, bouncy) {
+    const h = hash32(key + salt);
+    const I = bouncy ? MBOUNCE : MANY;
+    const on = h & 7 ? [I.on[h % I.on.length]] : [];
+    const v = [I.v[(h >>> 7) % I.v.length]];
+    const co = (bouncy ? (h >>> 13) % 5 === 0 : (h >>> 13) % 3 !== 0) ? [I.co[(h >>> 17) % I.co.length]] : [];
+    return { on, v, co, h };
+  }
+
+  function mouthPhones(u, clarity, salt) {
+    const real = mouthRules(u);
+    if (clarity >= 0.995) return real;
+    const keepV = clamp((clarity - 0.06) / 0.6, 0, 1);
+    const keepC = clamp((clarity - 0.3) / 0.62, 0, 1);
+    const bouncy = clarity < 0.36;
+    const s = u.src;
+    let fake = mouthScramble(u.key, salt, bouncy);
+    // Down at the bottom, a long word repeats its last sound: ba-na-na.
+    if (clarity < 0.3 && s.si > 0 && s.si === s.ns - 1 && s.ns >= 2 && (hash32(s.word + salt) & 3) !== 0) {
+      const prev = mouthScramble(s.keys[s.si - 1], salt, bouncy);
+      fake = { on: prev.on.length ? prev.on : fake.on, v: prev.v, co: fake.co, h: fake.h };
+    }
+    const r = (i) => (hash32(u.key + salt + '|' + i) >>> 0) / 4294967296;
+    const v = real.v.length && r(0) < keepV ? real.v : fake.v;
+    const pick = (list, alt, base) => {
+      if (!list.length) return keepC > 0.5 ? [] : alt.slice(0, 1);
+      const out = [];
+      list.forEach((c, i) => out.push(r(base + i) < keepC ? c : alt[i % Math.max(1, alt.length)] || MANY.on[(fake.h >>> (i * 3)) % MANY.on.length]));
+      return bouncy ? out.slice(-1) : out;
+    };
+    let on = pick(real.on, fake.on, 1);
+    let co = real.co.length || keepC < 0.5 ? pick(real.co, fake.co, 9) : [];
+    if (bouncy && (fake.h >>> 21) % 3) co = [];
+    return { on, v, co };
+  }
+
+  function mouthDur(c, pos) {
+    const C = MC[c];
+    if (!C) return 0.05;
+    if (C.k === 'stop') return pos === 'on' ? 0.042 + (C.asp ? 0.035 : 0) : 0.06;
+    if (C.k === 'aff') return 0.1;
+    if (C.k === 'fric') return c === 's' || c === 'sh' ? 0.095 : C.voiced ? 0.06 : 0.075;
+    if (C.k === 'h') return 0.055;
+    if (C.k === 'nasal') return pos === 'co' ? 0.08 : 0.06;
+    return c === 'w' || c === 'y' ? 0.05 : 0.055;
+  }
+
+    function synthMouth(pl, sr) {
+    const v = pl.voice;
+    const S = STYLES.mouth;
+    const rate = 1000;
+    const n = Math.ceil(pl.duration * rate) + 2;
+    const z = (x) => new Float32Array(n).fill(x);
+    const F1 = z(500), F2 = z(1500), F3 = z(2500), B1 = z(70), B2 = z(100), B3 = z(160);
+    const st = z(NaN), AV = z(0), AH = z(0), AF = z(0), FF = z(4000), FB = z(2000);
+    const clarity = v.character;
+    const salt = '|mouth' + v.take;
+    const tempo = pl.mood.tempo / v.speed;
+    const whisper = pl.mood.whisper;
+    const bounce = Math.pow(1 - clarity, 2) * 1.8;
+    const base = S.baseHz * semis(v.pitch);
+    // A smaller throat for a higher voice: pitch it up and it shrinks, the
+    // way a sped-up tape does.
+    const fs = semis(clamp(v.pitch, -12, 24) * 0.42);
+    const put = (i, F, av, ah, af, ff, fb, nasal) => {
+      if (i < 0 || i >= n) return;
+      F1[i] = F[0]; F2[i] = F[1]; F3[i] = F[2];
+      if (nasal) { B1[i] = 100; B2[i] = 260; B3[i] = 380; }
+      AV[i] = av; AH[i] = ah; AF[i] = af;
+      if (ff) { FF[i] = ff; FB[i] = fb; }
+    };
+    for (const u of pl.units) {
+      const ph = u.src ? mouthPhones(u, clarity, salt) : { on: [], v: ['ax'], co: [] };
+      const i0 = Math.round(u.t * rate);
+      const i1 = Math.max(i0 + 30, Math.round((u.t + u.d) * rate));
+      const span = i1 - i0;
+      const vowels = ph.v.flatMap((x) => (MDIPH[x] ? MDIPH[x] : [x]));
+      const segs = [];
+      ph.on.forEach((c, k) => segs.push({ c, pos: 'on', d: mouthDur(c, 'on') * (k > 0 ? 0.8 : 1), noAsp: ph.on[k - 1] === 's' }));
+      const coSegs = (u.cut ? [] : ph.co).map((c) => ({ c, pos: 'co', d: mouthDur(c, 'co') }));
+      const cons = segs.concat(coSegs).reduce((a, x) => a + x.d, 0) * Math.min(1.25, tempo) * rate;
+      const vMin = vowels.length ? Math.max(40, span * 0.4) : 0;
+      const k = cons > 0 ? Math.max(0.35, Math.min(1, (span - vMin) / cons)) : 1;
+      for (const x of segs.concat(coSegs)) x.n = Math.max(6, Math.round(x.d * Math.min(1.25, tempo) * rate * k));
+      let vn = span - segs.concat(coSegs).reduce((a, x) => a + x.n, 0);
+      if (vowels.length) vn = Math.max(30, vn);
+      if (u.cut) vn = Math.max(20, Math.round(vn * 0.6));
+      const all = segs.concat(vowels.length ? [{ vowel: true, n: vn }] : [], coSegs);
+      const vF = (j) => (MV[vowels[j]] || MV.ax);
+      const firstV = vF(0);
+      const lastV = vF(Math.max(0, vowels.length - 1));
+      const A = clamp(u.amp, 0.3, 1.4);
+      let i = i0;
+      for (const sg of all) {
+        const near = sg.pos === 'co' ? lastV : firstV;
+        for (let j = 0; j < sg.n; j++, i++) {
+          const q = sg.n > 1 ? j / (sg.n - 1) : 0;
+          // Pitch, in semitones from the base, for every frame of the unit.
+          const qu = (i - i0) / Math.max(1, span - 1);
+          let p = u.p0 + (u.p1 - u.p0) * (u.final ? Math.pow(qu, 1.5) : qu);
+          p += bounce * Math.sin(Math.PI * clamp(qu, 0, 1)) * (u.stressed ? 1.4 : 1);
+          if (i >= 0 && i < n) st[i] = p;
+          if (sg.vowel) {
+            const vi = vowels.length > 1 && q >= 0.45 ? 1 : 0;
+            const F = vF(vi);
+            const env = Math.min(1, (j + 1) / 6) * (1 - 0.22 * q) * (u.cut && j > sg.n - 4 ? 0.3 : 1);
+            const tail = u.final && q > 0.7 ? 1 - 0.5 * (q - 0.7) / 0.3 : 1;
+            put(i, F, whisper ? 0 : A * env * tail, whisper ? 0.55 * A * env : 0, 0);
+            continue;
+          }
+          const C = MC[sg.c] || MC.t;
+          let F = C.F || near;
+          if (sg.c === 'k' || sg.c === 'g') F = [C.F[0], near[1] * 1.08 + 150, Math.max(near[1] * 1.08 + 450, 2400)];
+          if (C.k === 'stop' || C.k === 'aff') {
+            const asp = C.asp && !sg.noAsp && sg.pos === 'on';
+            const clo = C.k === 'aff' ? 0.35 : sg.pos === 'co' ? 0.7 : asp ? 0.5 : 0.72;
+            const bur = C.k === 'aff' ? 0.45 : sg.pos === 'co' ? 1 : asp ? 0.62 : 0.9;
+            if (q < clo) put(i, F, C.voiced && !whisper ? 0.1 * A : 0, 0, 0);
+            else if (q < bur) put(i, F, C.voiced && !whisper ? 0.2 * A : 0, 0, C.burst[2] * A * (sg.pos === 'co' ? 0.6 : 1), C.burst[0], C.burst[1]);
+            else if (C.k === 'aff') put(i, F, C.voiced && !whisper ? 0.3 * A : 0, 0, C.fric[2] * A, C.fric[0], C.fric[1]);
+            else if (asp) put(i, firstV, 0, 0.4 * A * (1 - 0.5 * q), 0);
+            else put(i, F, C.voiced && !whisper ? 0.4 * A : 0, 0, C.burst[2] * 0.3 * A, C.burst[0], C.burst[1]);
+          } else if (C.k === 'fric') {
+            const env = Math.min(1, (j + 1) / 8) * Math.min(1, (sg.n - j) / 8);
+            put(i, F, C.voiced && !whisper ? 0.35 * A : 0, 0, C.fric[2] * A * env, C.fric[0], C.fric[1]);
+          } else if (C.k === 'h') {
+            put(i, firstV, 0, 0.42 * A * Math.min(1, (j + 1) / 10), 0);
+          } else if (C.k === 'nasal') {
+            put(i, C.F, whisper ? 0 : 0.55 * A, whisper ? 0.2 * A : 0, 0, 0, 0, true);
+          } else {
+            put(i, C.F, whisper ? 0 : 0.72 * A, whisper ? 0.3 * A : 0, 0);
+          }
+        }
+      }
+    }
+    // Between units the pitch holds where the next one starts, so the voice
+    // glides through the line instead of restarting.
+    let nextP = NaN;
+    for (let i = n - 1; i >= 0; i--) { if (isNaN(st[i])) st[i] = nextP; else nextP = st[i]; }
+    let prevP = 0;
+    for (let i = 0; i < n; i++) { if (isNaN(st[i])) st[i] = prevP; else prevP = st[i]; }
+    // Zero-phase smoothing: the mouth moves before a sound as well as after.
+    const smooth = (x, tau) => {
+      const a = 1 - Math.exp(-1 / (tau * rate));
+      let y = x[0];
+      for (let i = 0; i < n; i++) { y += (x[i] - y) * a; x[i] = y; }
+      y = x[n - 1];
+      for (let i = n - 1; i >= 0; i--) { y += (x[i] - y) * a; x[i] = y; }
+    };
+    for (const x of [F1, F2, F3]) smooth(x, 0.012);
+    for (const x of [B1, B2, B3]) smooth(x, 0.01);
+    smooth(st, 0.028);
+    smooth(AV, 0.0035);
+    smooth(AH, 0.004);
+    smooth(AF, 0.002);
+    smooth(FF, 0.004);
+    smooth(FB, 0.004);
+
+    // The sound itself, a sample at a time.
+    const N = (n - 1) * Math.round(sr / rate);
+    const blk = Math.round(sr / rate);
+    const out = new Float32Array(N);
+    const R = mulberry(hash32(pl.text + salt));
+    const res = () => ({ a: 0, b: 0, c: 0, y1: 0, y2: 0 });
+    const setRes = (r, f, bw) => {
+      f = Math.min(f, sr * 0.45);
+      const T = 1 / sr;
+      r.c = -Math.exp(-2 * Math.PI * bw * T);
+      r.b = 2 * Math.exp(-Math.PI * bw * T) * Math.cos(2 * Math.PI * f * T);
+      r.a = 1 - r.b - r.c;
+    };
+    const runRes = (r, x) => {
+      const y = r.a * x + r.b * r.y1 + r.c * r.y2;
+      r.y2 = r.y1;
+      r.y1 = y;
+      return y;
+    };
+    const cas = [res(), res(), res(), res(), res()];
+    const fr = biquad('bp', 4000, 2, sr);
+    const vib = 0.3 * pl.mood.vibrato;
+    let phase = 0;
+    let jit = 1, shim = 1, drift = 0, driftV = 0;
+    let tilt = 0;
+    const aTilt = 1 - Math.exp((-2 * Math.PI * 2600) / sr);
+    let seedA = hash32(pl.text + 'asp') | 1;
+    let seedF = hash32(pl.text + 'fric') | 1;
+    const OQ = 0.6;
+    for (let fi = 0; fi < n - 1; fi++) {
+      setRes(cas[0], F1[fi] * fs, B1[fi]);
+      setRes(cas[1], F2[fi] * fs, B2[fi]);
+      setRes(cas[2], F3[fi] * fs, B3[fi]);
+      setRes(cas[3], 3400 * fs, 250);
+      setRes(cas[4], 4300 * fs, 320);
+      setBP(fr, FF[fi] * Math.sqrt(fs), Math.max(0.7, (FF[fi] * Math.sqrt(fs)) / FB[fi]), sr);
+      // A slow wander in pitch: nobody holds a note perfectly still.
+      driftV += (R() - 0.5) * 0.04 - drift * 0.02;
+      drift = clamp(drift + driftV * 0.05, -0.35, 0.35);
+      for (let j = 0; j < blk; j++) {
+        const a = j / blk;
+        const s0 = lerp(st[fi], st[fi + 1], a);
+        const tt = (fi + a) / rate;
+        let stv = s0 + drift;
+        if (vib) stv += vib * Math.sin(2 * Math.PI * 5.4 * tt);
+        const f0 = base * semis(stv) * jit;
+        phase += f0 / sr;
+        if (phase >= 1) {
+          phase -= 1;
+          jit = 1 + (R() - 0.5) * 0.012;
+          shim = 1 + (R() - 0.5) * 0.08;
+        }
+        const x = phase / OQ;
+        const g = phase < OQ ? x * (2 - 3 * x) : 0;
+        tilt += (g - tilt) * aTilt;
+        seedA ^= seedA << 13; seedA ^= seedA >>> 17; seedA ^= seedA << 5;
+        const na = ((seedA >>> 0) / 4294967296) * 2 - 1;
+        seedF ^= seedF << 13; seedF ^= seedF >>> 17; seedF ^= seedF << 5;
+        const nf = ((seedF >>> 0) / 4294967296) * 2 - 1;
+        const av = lerp(AV[fi], AV[fi + 1], a);
+        const ah = lerp(AH[fi], AH[fi + 1], a);
+        const af = lerp(AF[fi], AF[fi + 1], a);
+        // Breath rides on the voice too, louder while the folds are open.
+        const breath = av * 0.05 * (phase < OQ ? 1 : 0.25);
+        let y = tilt * av * shim * 2.2 + na * (ah * 0.4 + breath);
+        for (let r = 0; r < 5; r++) y = runRes(cas[r], y);
+        y += runBQ(fr, nf * af) * 2.5;
+        out[fi * blk + j] = y;
+      }
+    }
+    onePoleHP(out, sr, 70);
+    let pk = 0;
+    for (let i = 0; i < N; i++) pk = Math.max(pk, Math.abs(out[i]));
+    if (pk > 0) for (let i = 0; i < N; i++) out[i] *= 0.9 / pk;
+    // Through an old computer's converter: crunchy for gibberish, clean
+    // enough to follow when Clarity is up.
+    crush(out, sr, lerp(16000, 22050, clarity), Math.round(lerp(8, 12, clarity)));
+    onePoleLP(out, sr, lerp(7000, 10000, clarity));
+    return out;
+  }
+
   // ─────────────────────────────── finishing ───────────────────────────────
 
   function speakerphone(x, sr) {
@@ -1501,6 +2007,7 @@
     else if (pl.style === 'typewriter') x = synthTypewriter(pl, sr);
     else if (pl.style === 'babble') x = synthBabble(pl, sr);
     else if (pl.style === 'chip') x = synthSpeechChip(pl, sr);
+    else if (pl.style === 'mouth') x = synthMouth(pl, sr);
     else x = synthChip(pl, sr, pl.style);
     const N = Math.round(pl.duration * sr);
     if (x.length !== N) {
@@ -1728,19 +2235,115 @@
     return lines;
   }
 
+  // Dialogue box colours. `key` is the outer edge, so the box reads on any
+  // background.
   const THEMES = {
-    ink: { key: '#07070b', border: '#f1eadb', fill: '#13141c', text: '#f1eadb', dim: '#8d8a94', accent: '#e9b44c' },
-    paper: { key: '#f4efe5', border: '#16161d', fill: '#f4efe5', text: '#16161d', dim: '#8c8790', accent: '#c2412d' },
+    ink: { name: 'Ink', key: '#07070b', border: '#f1eadb', fill: '#13141c', text: '#f1eadb', dim: '#8d8a94', accent: '#e9b44c' },
+    paper: { name: 'Paper', key: '#f4efe5', border: '#16161d', fill: '#f4efe5', text: '#16161d', dim: '#8c8790', accent: '#c2412d' },
+    royal: { name: 'Royal', key: '#0a0c2a', border: '#f4f4ff', fill: '#1f2a8c', text: '#ffffff', dim: '#9aa4e6', accent: '#ffd84d' },
+    pocket: { name: 'Pocket', key: '#0f380f', border: '#0f380f', fill: '#9bbc0f', text: '#0f380f', dim: '#306230', accent: '#306230' },
+    amber: { name: 'Amber', key: '#000000', border: '#ffb000', fill: '#160d00', text: '#ffb000', dim: '#8a5e00', accent: '#ffd36b' },
+    candy: { name: 'Candy', key: '#4a1834', border: '#4a1834', fill: '#ffe3f0', text: '#4a1834', dim: '#b07595', accent: '#ff4f9a' },
   };
+  const THEME_ORDER = ['ink', 'paper', 'royal', 'pocket', 'amber', 'candy'];
+
+  // ─────────────────────────────── portraits ───────────────────────────────
+  // A 16×16 face for each of the cast. Each letter is a colour from the
+  // face's palette (k outline, s skin, h shade, a and b accents, w light,
+  // g extra); e is an eye, which closes when the face blinks, and . is the
+  // background. The mouth is drawn on top, open as far as the voice is loud.
+
+  const FACES = {
+    hero: { bg: '#1f4f2a', pal: 'k141218 sffcfa0 he2a074 af2c14e bd64545 wffffff gc08a2a', mouth: [7, 12, 2, 'k'],
+      rows: '...k..k..k....../..kak.kak.kak.../..kaakaaakaak.../.kaaaaaaaaaaak../.kaaaaaaaaaaaak./.kbbbbbbbbbbbbk./.kbbbbbbbbbbbbbk/.kssssssssssssk./.kssweksswekssk./.ksswkksswkkssk./.kshssssssssshk./.kssssssssssssk./..kssssssssssk../...kssssssssk.../....kkkkkkkk..../................' },
+    narrator: { bg: '#3a2140', pal: 'k141218 sf2c49b hd29a72 a2e2e38 bff5a4a wf4efe6 g6a4128', mouth: [7, 12, 2, 'k'],
+      rows: '................/....kkkkkkkk..../...kaaaaaaaak.../..kakkkkkkkkak../..kakggggggkak../.kbkgggggggggkbk/kbbkssssssssskbk/kbbksggsssggskbk/kbbkswesssweskbk/kbbkswkssswkskbk/.kkkhssssssshkk./...kssggggssk.../...kssssssssk.../....kssssssk..../..kwwkkkkkkwwk../.kwwwwkbbkwwwwk.' },
+    henchling: { bg: '#173a5e', pal: 'k141218 sff9a3c he0712a affd23f b3a3a46 wffffff gff6b8a', mouth: [6, 12, 4, 'k'],
+      rows: '......kkkk....../....kkaaaakk..../...kaaaaaaaak.../...kaaaaaaaak.../..kkkkkkkkkkkk../kk.kssssssssk.kk/ksksswwsswwssksk/ksskswekswekssk./.kssswkkswkkssk./..ksssssssssssk./..kgsssssssssgk./..kssssssssssk../..kssssssssssk../...kssssssssk.../....kbbbbbbk..../...kbbbbbbbbk...' },
+    wizard: { bg: '#26285e', pal: 'k14141c sf0c6a0 hd39a74 a7b55d6 bf2c14e weeebe4 gb9b5ad', mouth: [7, 12, 2, 'k'],
+      rows: '......kkk......./.....kaaak....../....kaabaak...../...kaaaaaaak..../..kaaaaabaaak.../.kkkkkkkkkkkkk../..kssssssssssk../..ksseessseesk../..ksseessseesk../..khsssshsssshk./..kwwssssssswwk./..kwwwwwwwwwwwk./...kwwwwwwwwwk../....kwwwwwwwk.../.....kwwgwwk..../......kkkkk.....' },
+    villain: { bg: '#4a1020', pal: 'k0e0b10 sd9d2e6 ha99dbd aa8233a bff3b4e wffffff ge9b44c', mouth: [6, 11, 4, 'k'],
+      rows: '................/....kkkkkkkk..../...kkkkkkkkkk.../..kkkkkkkkkkkk../..kkkkksskkkkk../..kkkssssssskk../..kksssssssskk../..ksskkssskkssk./..ksbeesssebsk../..kshssssssshk../..kshssssssshk../..kssssssssssk../.aakssssssssk.../aaaakkkkkkkkaaa./aabaaaaaaaaaabaa/abbaaaaaaaaaabba' },
+    sidekick: { bg: '#14595a', pal: 'k14141c sffd2a6 heaa77b aff6b4a bffffff wffffff gff9e8a', mouth: [7, 11, 2, 'k'],
+      rows: '....kkkkkkk...../...kaaaaaaak..../..kaabaaaaaak.../..kaaaaaaaaakkk./..kkkkkkkkkkaak./..kssssssssskk../.kssssssssssssk./.ksswwsssswwssk./.kswekssswekssk./.kswkkssswkkssk./.kgssssssssssgk./.kssssssssssssk./..kssssssssssk../...kssssssssk.../....kkkkkkkk..../................' },
+    agent: { bg: '#1d2533', pal: 'k0d0d12 sc99a74 ha87b58 a2a2a33 b4b8bd6 wf4f4f4 g7a7a85', mouth: [7, 11, 3, 'k'],
+      rows: '....kkkkkkkk..../...kaaaaaaaak.../..kaaaaaaaaaak../..kaasssssssak../..kassssssssak../..ksssssssssssk./..kkkkkkkkkkkkk./..kkbbbkkbbbkkk./..kskkkkskkkkk../..ksssssssssk.../..kshssssssshk../..kssssssssssk../...kssssssssk.../..wkkssssssskw../.wwwakkkkkkawww./wwwwaaa..aaawwww' },
+    computer: { bg: '#0b1d2e', pal: 'k0a0d12 s2c3e50 h1f2d3a a8fa3b5 b59f0c8 wd7e3ec gff5c7a', mouth: [5, 10, 6, 'b'],
+      rows: '................/..kkkkkkkkkkkk../.kaaaaaaaaaaaak./.kakkkkkkkkkkak./.kaksssssssskak./.kaksssssssskak./.kaksbbssbbskak./.kaksbbssbbskak./.kaksssssssskak./.kaksssssssskak./.kaksssssssskak./.kakkkkkkkkkkak./.kaaaaaaaaagak../.kkkkkkkkkkkkkk./.....kaaaak...../...kkkkkkkkkk...' },
+    robot: { bg: '#5a3a12', pal: 'k141218 sb8c0c8 h8a939c ae9b44c bff4d4d weef2f5 g5c646d', mouth: [5, 11, 6, 'b'],
+      rows: '.......bb......./.......kk......./.......kk......./..kkkkkkkkkkkk../.kssssssssssssk./aksssssssssssska/aksskkkssskkkska/.kskbbkssskbbks./aksskkkssskkkska/aksssssssssssska/.ksgggggggggssk./.ksgkgkgkgkgssk./.kssssssssssssk./.kkkkkkkkkkkkkk./....kggggggk..../..kkkkkkkkkkkk..' },
+    fairy: { bg: '#3d2050', pal: 'k1b1224 sffe0d0 hf5b8b0 aff8fc8 b9ff3ff wffffff gffd84d', mouth: [7, 11, 2, 'k'],
+      rows: '................/bb....kkkk....bb/bbb..kaaaak..bbb/.bbbkaaaaaakbbb./..bkaaaaaaaakb../...kaassssaak.../..kassssssssak../..kassssssssak../..kasswksswksak./..kasskksskksak./..kahssssshak.../..kassssssssak../...kassssssak.../....kkkssskk..../.bb..kaaaak..bb./..b...kkkk...b..' },
+    ghost: { bg: '#1c2a3a', pal: 'k141a26 seaf2ff hb9c8e4 a7f93b8 b9ff3ff wffffff gc8d6ee', mouth: [7, 10, 2, 'k'],
+      rows: '................/.....kkkkkk...../....kssssssk..../...kssssssssk.../..kssssssssssk../..kskkssssskksk./..kskkssssskksk./..kssssssssssk../..khssssssssshk./..kssssssssssk../..kssssssssssk../..khssssssssshk./..kssssssssssk../..ksshsssshssk../..ksk.kssk.ksk../..kk...kk...kk..' },
+    golem: { bg: '#2c3324', pal: 'k141412 s8d8a7c h6b6a5e a5f8a3a b7fbf4a wffe28a g4d4c44', mouth: [6, 12, 4, 'k'],
+      rows: '..kkkkkkkkkkk.../.khsssshsssssk../.ksssssssshssk../kssshssssssssbk./ksbsssssshsssak./kssssssssssssak./kshkkkkssskkkkk./kssskwkssskwksk./ksssskkssskksssk/khsssssssssshssk/kssssshkhssssssk/ksssssssssssssk./kshsssssssssshk./ksssssssssssssk./.kkssssssssskk../...kkkkkkkkk....' },
+    guard: { bg: '#4a3b2a', pal: 'k141218 se3b48f hc08a66 a9aa3ad bd0d6dc wffffff g6b7480', mouth: [6, 12, 4, 'k'],
+      rows: '.......kk......./......kbbk....../....kkkbbkkk..../...kaaaaaaaak.../..kabbaaaaaaak../..kaaaaaaaaaak../..kkkkkkkkkkkk../..kgkggkkggkgk../..kssssssssssk../..ksekksskkesk../..kssssssssssk../..kshssssssshk../..kssssssssssk../..kaakkkkkkaak../.kaaaaaaaaaaaak./kaaaaaaaaaaaaaak' },
+    critter: { bg: '#5a2a3a', pal: 'k1a1214 se8a86a hc9824a afff1e0 bff8fa8 wffffff gffb4c4', mouth: [7, 11, 2, 'k'],
+      rows: '.kkk........kkk./kshsk......kshsk/ksbsk......ksbsk/kssskkkkkkkkssk./.kssssssssssssk./kssssssssssssssk/ksswkssssssswksk/kswekssssssweksk/ksskkssssssskksk/kgssssakkassssgk/ksssssaaaassssk./kssssaaaaaassssk/.ksssaaaaaasssk./..kssaaaaaassk../...kkkkkkkkkk.../................' },
+  };
+  const FACE_ORDER = Object.keys(FACES);
+  const faceCache = new Map();
+  function faceData(id) {
+    if (faceCache.has(id)) return faceCache.get(id);
+    const f = FACES[id];
+    if (!f) return null;
+    const pal = { '.': f.bg };
+    for (const e of f.pal.split(' ')) pal[e[0]] = '#' + e.slice(1);
+    const d = { bg: f.bg, pal, mouth: f.mouth, rows: f.rows.split('/') };
+    faceCache.set(id, d);
+    return d;
+  }
+  // Draws face `id` with its top-left corner at x, y, one unit per pixel of
+  // the face. o.open, 0..1, opens the mouth; o.blink closes the eyes;
+  // o.bg: false leaves the background out.
+  function drawFace(ctx, id, x, y, o) {
+    o = o || {};
+    const f = faceData(id);
+    if (!f) return false;
+    for (let r = 0; r < 16; r++) {
+      const row = f.rows[r];
+      let c = 0;
+      while (c < 16) {
+        const ch = row[c];
+        let e = c + 1;
+        while (e < 16 && row[e] === ch) e++;
+        let col = ch === 'e' ? (o.blink ? f.pal.s : '#14141c') : f.pal[ch];
+        if (!(ch === '.' && o.bg === false) && col) {
+          ctx.fillStyle = col;
+          ctx.fillRect(x + c, y + r, e - c, 1);
+        }
+        c = e;
+      }
+    }
+    const [mx, my, mw, mk] = f.mouth;
+    const open = clamp(o.open || 0, 0, 1);
+    ctx.fillStyle = f.pal[mk];
+    ctx.fillRect(x + mx, y + my, mw, open < 0.15 ? 1 : 2);
+    if (open >= 0.5) {
+      const inset = mw >= 4 ? 1 : 0;
+      ctx.fillStyle = mk === 'k' ? '#c2414b' : f.pal.w;
+      ctx.fillRect(x + mx + inset, y + my + 1, mw - 2 * inset, 1);
+    }
+    return true;
+  }
   const LINE_H = 11;
   const TAB_H = 15;
 
+  // o.portrait, optional, puts a framed picture of the speaker at the left of
+  // the box, the way RPGs do, and moves the text over: { face, open, blink }
+  // for one of the cast, or { size, draw(ctx, x, y) } for your own.
   function measureDialog(o) {
     const width = o.width || 180;
-    const lines = layoutText(o.text || '', width - 16, o.script || 'alien');
-    const n = Math.max(o.lines || 1, lines.length);
+    const ps = o.portrait ? o.portrait.size || 16 : 0;
+    const pw = ps ? ps + 7 : 0;
+    const lines = layoutText(o.text || '', width - 16 - pw, o.script || 'alien');
+    const min = ps ? Math.ceil((ps + 2) / LINE_H) : 1;
+    // o.rows fixes the box at that many lines and pages through the text.
+    const n = o.rows ? Math.max(o.rows, min) : Math.max(o.lines || 1, min, lines.length);
     const tab = o.speaker ? TAB_H - 3 : 0;
-    return { width, height: tab + n * LINE_H + 11, boxHeight: n * LINE_H + 11, tab, lines, n };
+    return { width, height: tab + n * LINE_H + 11, boxHeight: n * LINE_H + 11, tab, lines, n, pw, ps };
   }
 
   function rrect(ctx, x, y, w, h, r, color) {
@@ -1779,6 +2382,8 @@
   // Draws the dialogue box into a canvas where one unit is one pixel of the
   // box. Scale the canvas up with `image-rendering: pixelated`.
   //   o.text, o.speaker, o.script ('alien' | 'latin'), o.width, o.lines
+  //   o.rows and o.from: a box of exactly that many lines showing the text
+  //   from line o.from, for paging through a long line the way games do
   //   o.visible(i) -> whether character i is showing (default: all)
   //   o.open 0..1 (the box unfolding), o.cursor (show the ▼), o.level 0..1
   //   (the talk meter by the name), o.whisper (dim text), o.theme
@@ -1803,8 +2408,8 @@
       const tw = wordWidth(name.replace(/\s/g, ' '), 'latin') + (name.split(' ').length - 1) * 2;
       const meter = 9;
       const tabW = tw + 12 + meter;
-      drawWindow(ctx, x0 + 5, y0 - M.tab, tabW, TAB_H, T);
-      let tx = x0 + 5 + 6;
+      drawWindow(ctx, x0 + 5 + M.pw, y0 - M.tab, tabW, TAB_H, T);
+      let tx = x0 + 5 + M.pw + 6;
       for (const ch of name) {
         if (ch === ' ') { tx += 5; continue; }
         const g = glyph(ch, 'latin');
@@ -1817,16 +2422,27 @@
       const ph = o.meterPhase || 0;
       for (let b = 0; b < 3; b++) {
         const wob = 0.6 + 0.4 * Math.abs(Math.sin(ph * 2.3 + b * 1.9));
-        const hgt = lv > 0.02 ? Math.max(1, Math.round(lv * [4, 6, 5][b] * wob)) : 1;
+        const hgt = lv > 0.02 ? Math.max(2, Math.round(lv * [4, 6, 5][b] * wob)) : [2, 3, 4][b];
         ctx.fillStyle = lv > 0.02 ? T.accent : T.dim;
         ctx.fillRect(tx + 3 + b * 2, y0 - M.tab + 11 - hgt, 1, hgt);
       }
     }
     drawWindow(ctx, x0, y0, W, H, T);
+    if (o.portrait) {
+      const ps = M.ps;
+      const py = y0 + Math.round((H - ps) / 2);
+      ctx.fillStyle = T.border;
+      ctx.fillRect(x0 + 4, py - 1, ps + 2, ps + 2);
+      if (o.portrait.face) drawFace(ctx, o.portrait.face, x0 + 5, py, o.portrait);
+      else o.portrait.draw(ctx, x0 + 5, py);
+    }
     const color = o.whisper ? T.dim : T.text;
     const vis = o.visible || (() => true);
+    const from = o.rows ? o.from || 0 : 0;
     M.lines.forEach((ln, li) => {
-      for (const it of ln.items) if (vis(it.i)) drawGlyph(ctx, it.g, x0 + 8 + it.x, y0 + 7 + li * LINE_H, color);
+      const r = li - from;
+      if (r < 0 || r >= M.n) return;
+      for (const it of ln.items) if (vis(it.i)) drawGlyph(ctx, it.g, x0 + 8 + M.pw + it.x, y0 + 7 + r * LINE_H, color);
     });
     if (o.cursor) {
       const cx = x0 + W - 13;
@@ -1888,6 +2504,10 @@
     zip,
     slug,
     THEMES,
+    THEME_ORDER,
+    FACES,
+    FACE_ORDER,
+    drawFace,
     glyph,
     layoutText,
     measureDialog,

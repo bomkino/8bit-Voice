@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 
 const CV = createRequire(import.meta.url)("../chipvoice.js");
-const LINE = "(offended) I never said I'd call.";
+const LINE = "(offended) You said WHAT about my hat?";
 
 test("the same line, voice and take give the same clip, sample for sample", () => {
   const v = CV.normVoice({ style: "square", take: 3 });
@@ -51,8 +51,43 @@ test("WAV files are 48 kHz, 16-bit mono", () => {
 });
 
 test("stage directions and punctuation are read", () => {
-  const p = CV.parseLine("PRODUCER: (slow, awed) ...That's the future.");
-  assert.equal(p.speaker, "PRODUCER");
+  const p = CV.parseLine("WIZARD: (slow, awed) ...That's the future.");
+  assert.equal(p.speaker, "WIZARD");
   assert.ok(p.mood.keys.includes("slow") && p.mood.keys.includes("awed"));
   assert.ok(CV.render("Really?", CV.normVoice({})).events.length > 0);
+});
+
+test("every preset has a face, and every face draws", () => {
+  const ctx = { fillRect() {}, fillStyle: "" };
+  for (const id of CV.PRESET_ORDER) {
+    const face = CV.PRESETS[id].face;
+    assert.ok(CV.FACES[face], `${id} has no face`);
+    assert.ok(CV.drawFace(ctx, face, 0, 0, { open: 1, blink: true }));
+  }
+  assert.equal(CV.drawFace(ctx, "nobody", 0, 0), false);
+});
+
+test("a portrait moves the text over", () => {
+  const plain = CV.measureDialog({ text: "Hello there", width: 200 });
+  const framed = CV.measureDialog({ text: "Hello there", width: 200, portrait: { face: "hero" } });
+  assert.equal(plain.pw, 0);
+  assert.ok(framed.pw > 16);
+  assert.ok(framed.boxHeight >= 16 + 2);
+});
+
+test("Clarity turns the Mouth from gibberish into almost words", () => {
+  const line = "Please open the door and let me in.";
+  const clear = CV.render(line, { style: "mouth", character: 1 });
+  const babble = CV.render(line, { style: "mouth", character: 0 });
+  assert.equal(clear.events.length, babble.events.length, "same syllables, same timing");
+  assert.ok(clear.samples.some((x, i) => x !== babble.samples[i]), "different sounds");
+});
+
+test("the Mouth copes with words that have no vowels, digits and odd spelling", () => {
+  for (const line of ["Hmm. Shh! Brr...", "Room 101, level 7.", "Psst—rhythm gym, xylophone."]) {
+    const r = CV.render(line, "narrator");
+    let peak = 0;
+    for (const x of r.samples) peak = Math.max(peak, Math.abs(x));
+    assert.ok(peak > 0.05 && peak <= 1, line);
+  }
 });

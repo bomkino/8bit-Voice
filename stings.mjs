@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// The little 8-bit stings around the client voice, synthesized like the voice
-// itself: a pulse lead, a 4-bit triangle bass and noise, stepped at 60 Hz like
+// Little 8-bit stings to put around a line, synthesized like the voices
+// themselves: a pulse lead, a 4-bit triangle bass and noise, stepped at 60 Hz like
 // a console sound driver. Original tunes, nothing to license.
 //
 //   node stings.mjs [folder]      writes game-over.wav and hang-up-game-over.wav
 //
-// Ep 4: every time the director hangs up, it's game over.
+// Good for a call that ends badly: the hang-up click, then game over.
 import { createRequire } from "node:module";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";

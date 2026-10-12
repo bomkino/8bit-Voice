@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>8-bit Voice</title>
-<meta name="description" content="Type a line and hear it as a video-game voice. Six chip machines, stage directions, WAV downloads. Free, offline, nothing to license.">
+<meta name="description" content="Make anything talk like a video game. Type a line, pick a character, and get a retro game voice with a talking dialogue box, as a video for Reels, TikTok, Shorts or YouTube. Free, offline and open source.">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#e3e0d9" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0c0d12" media="(prefers-color-scheme: dark)">
@@ -19,7 +19,7 @@
 <meta name="format-detection" content="telephone=no">
 <meta property="og:type" content="website">
 <meta property="og:title" content="8-bit Voice">
-<meta property="og:description" content="Type a line and hear it as a video-game voice. In your browser, or as an app for macOS, Windows and Linux.">
+<meta property="og:description" content="Make anything talk like a video game. Type a line, pick a character, export a video. Free, offline, open source.">
 <meta property="og:url" content="https://bomkino.github.io/8bit-Voice/">
 <meta property="og:image" content="https://bomkino.github.io/8bit-Voice/icons/social.png">
 <meta property="og:image:width" content="1200">
@@ -48,22 +48,23 @@
   }
   html { font-family: var(--sans); font-size: 16px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
   input, textarea, button, select { font: inherit; letter-spacing: inherit; }
-  [data-pd-ui="page-title"] { font: 700 clamp(28px, 24px + 1.2vw, 40px)/1.06 var(--sans); letter-spacing: -0.024em; }
-  [data-pd-ui="section-title"] { font: 600 clamp(21px, 19.5px + 0.45vw, 23.5px)/1.16 var(--sans); letter-spacing: -0.013em; }
+  [data-pd-ui="hero-title"] { font: 700 clamp(30px, 22px + 2.6vw, 52px)/1.02 var(--sans); letter-spacing: -0.03em; }
+  [data-pd-ui="section-title"] { font: 650 clamp(21px, 19.5px + 0.45vw, 23.5px)/1.16 var(--sans); letter-spacing: -0.013em; }
   [data-pd-ui="body"] { font: 400 var(--fs)/1.48 var(--sans); }
   [data-pd-ui="body-compact"] { font: 400 calc(var(--fs) - 1px)/1.42 var(--sans); letter-spacing: 0.001em; }
-  [data-pd-ui="input"] { font: 400 var(--fs)/1.25 var(--sans); }
+  [data-pd-ui="input"] { font: 400 var(--fs)/1.3 var(--sans); }
   [data-pd-ui="label"] { font: 600 calc(var(--fs) - 2px)/1.22 var(--sans); letter-spacing: 0.006em; }
   [data-pd-ui="action"] { font: 600 calc(var(--fs) - 1px)/1.1 var(--sans); letter-spacing: -0.002em; }
+  [data-pd-ui="action-big"] { font: 700 calc(var(--fs) + 1px)/1.1 var(--sans); letter-spacing: -0.01em; }
   [data-pd-ui="caption"] { font: 400 calc(var(--fs) - 3px)/1.38 var(--sans); letter-spacing: 0.004em; }
   [data-pd-ui="badge"] { font: 600 11px/1 var(--mono); letter-spacing: 0.055em; text-transform: uppercase; }
   [data-pd-ui="data"] { font: 500 calc(var(--fs) - 3px)/1.25 var(--mono); letter-spacing: 0.006em; font-variant-numeric: tabular-nums; }
   [data-pd-ui="metadata"] { font: 500 calc(var(--fs) - 4px)/1.25 var(--mono); letter-spacing: 0.04em; }
   [data-pd-ui="code"] { font: 400 calc(var(--fs) - 3px)/1.45 var(--mono); }
 
-  /* Console plastic around a little screen: a grey shell with the handheld's
-     magenta buttons, and a dark stage that shows the box as it will look in
-     the cut. */
+  /* Console plastic around a little screen: warm grey shell, magenta and
+     gold buttons, and a dark stage that shows the box as it will look in the
+     video. */
   :root {
     color-scheme: light;
     --bg: #e3e0d9;
@@ -135,37 +136,49 @@
   svg.px { display: block; shape-rendering: crispEdges; fill: currentColor; }
   [hidden] { display: none !important; }
 
-  .app { max-width: 1180px; margin: 0 auto; padding: max(40px, env(safe-area-inset-top)) max(28px, env(safe-area-inset-right)) 64px max(28px, env(safe-area-inset-left)); }
+  .app { max-width: 1180px; margin: 0 auto; padding: max(28px, env(safe-area-inset-top)) max(28px, env(safe-area-inset-right)) 64px max(28px, env(safe-area-inset-left)); }
 
-  /* masthead */
-  .masthead { display: grid; gap: 14px; margin-bottom: 28px; }
-  .brand { display: flex; align-items: center; gap: 10px; color: var(--ink-2); }
-  .brand canvas { color: var(--accent); }
-  .masthead h1 { margin: 0; }
-  .lede { margin: 0; max-width: 62ch; color: var(--ink-2); text-wrap: pretty; }
+  /* masthead: a pixel wordmark, the promise, and the way to take it with you */
+  .masthead { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px 32px; flex-wrap: wrap; margin-bottom: 22px; }
+  .masthead-text { display: grid; gap: 14px; min-width: 0; flex: 1 1 520px; }
+  .wordmark-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .wordmark { color: var(--ink); }
+  .by { color: var(--ink-3); text-decoration: none; padding-top: 2px; }
+  .by:hover { color: var(--ink); }
+  .masthead h1 { margin: 0; max-width: 18ch; text-wrap: balance; }
+  .masthead h1 em { font-style: normal; color: var(--accent); }
+  .lede { margin: 0; max-width: 60ch; color: var(--ink-2); text-wrap: pretty; }
+  .get { display: flex; gap: 10px; flex-wrap: wrap; }
+  .get .btn { text-decoration: none; }
+  .get .btn .sub { color: var(--ink-3); font-weight: 500; }
 
   /* stage */
   .hero { background: var(--stage); color: var(--stage-ink); border-radius: calc(var(--r) + 4px); box-shadow: var(--shadow); overflow: hidden; }
   .stage {
-    position: relative; padding: 26px 24px 30px; display: grid; gap: 22px; justify-items: center;
+    position: relative; padding: 24px 24px 28px; display: grid; gap: 18px; justify-items: center;
     background-color: var(--stage);
     background-image: radial-gradient(rgba(241, 234, 219, 0.075) 1px, transparent 1.2px);
     background-size: 12px 12px; background-position: 6px 6px;
   }
   .roll-wrap { position: relative; cursor: pointer; }
-  .box-wrap { display: grid; place-items: center; min-height: 40px; }
+  .box-wrap { display: grid; place-items: center; min-height: 40px; cursor: pointer; }
   .stage-empty { position: absolute; inset: 0; display: grid; place-items: center; color: var(--stage-ink-2); }
   .transport {
     display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
     padding: 14px 18px 14px 14px; background: var(--stage-2); border-top: 1px solid var(--stage-line);
   }
   .play {
-    flex: none; width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center;
+    position: relative; flex: none; width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center;
     background: var(--gold); color: var(--gold-ink); transition: transform 0.12s ease, background-color 0.2s;
   }
   .play:hover { transform: scale(1.04); }
   .play:active { transform: scale(0.97); }
   .play:focus-visible { outline-color: var(--stage-ink); border-radius: 50%; }
+  .play.pulse::after {
+    content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 3px solid var(--gold);
+    animation: pulse 1.6s cubic-bezier(.2, .7, .3, 1) infinite;
+  }
+  @keyframes pulse { 0% { transform: scale(0.9); opacity: 0.9; } 100% { transform: scale(1.35); opacity: 0; } }
   .now { flex: 1 1 220px; min-width: 0; display: grid; gap: 4px; }
   .now-line { color: var(--stage-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .now-n { color: var(--stage-ink-2); margin-right: 10px; }
@@ -173,42 +186,77 @@
   .now-meta b { color: var(--gold); font-weight: inherit; }
   .stage-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
-  .seg { display: inline-flex; padding: 3px; border-radius: 11px; background: rgba(241, 234, 219, 0.06); border: 1px solid var(--stage-line); }
-  .seg button { min-height: 34px; padding: 0 12px; border-radius: 8px; color: var(--stage-ink-2); transition: background-color 0.15s, color 0.15s; }
-  .seg button:hover { color: var(--stage-ink); }
-  .seg button[aria-pressed="true"] { background: rgba(241, 234, 219, 0.12); color: var(--stage-ink); }
-  .seg button:focus-visible { outline-color: var(--stage-ink); outline-offset: 0; }
+  .seg { display: inline-flex; padding: 3px; border-radius: 11px; background: var(--sunk); border: 1px solid var(--line); max-width: 100%; }
+  .seg button { min-height: 36px; padding: 0 12px; border-radius: 8px; color: var(--ink-2); white-space: nowrap; transition: background-color 0.15s, color 0.15s, box-shadow 0.15s; }
+  .seg button:hover { color: var(--ink); }
+  .seg button[aria-pressed="true"], .seg button[aria-checked="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12), inset 0 0 0 1px var(--line); }
+  .seg.fill { display: flex; }
+  .seg.fill button { flex: 1; }
 
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 44px; padding: 0 16px;
-    border-radius: 12px; border: 1px solid var(--line-2); color: var(--ink);
-    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+    border-radius: 12px; border: 1px solid var(--line-2); color: var(--ink); text-decoration: none;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s, transform 0.12s;
   }
   .btn:hover { background: var(--accent-soft); border-color: var(--accent); }
   .btn.solid { background: var(--ink); border-color: var(--ink); color: var(--bg); }
   .btn.solid:hover { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn.hot { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn.hot:hover { filter: brightness(1.08); }
   .btn.on-stage { border-color: rgba(241, 234, 219, 0.2); color: var(--stage-ink); }
   .btn.on-stage:hover { background: rgba(241, 234, 219, 0.08); border-color: rgba(241, 234, 219, 0.45); }
   .btn.on-stage:focus-visible { outline-color: var(--stage-ink); }
+  .btn.gold { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); }
+  .btn.gold:hover { filter: brightness(1.06); background: var(--gold); border-color: var(--gold); }
+  .btn.big { min-height: 54px; padding: 0 22px; border-radius: 14px; }
+  .btn:active { transform: scale(0.98); }
   .btn svg { flex: none; }
+  .btn .sub { opacity: 0.7; font-weight: 500; }
 
-  /* panels */
-  .columns { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); gap: 20px; margin-top: 20px; align-items: start; }
-  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 24px; display: grid; gap: 22px; min-width: 0; }
+  /* the cast */
+  .cast { margin-top: 16px; display: grid; gap: 10px; }
+  .cast-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .cast-note { color: var(--ink-2); text-wrap: pretty; min-height: 1.4em; }
+  .cast-note b { color: var(--ink); font-weight: 600; }
+  .roster {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px;
+  }
+  .card {
+    position: relative; display: grid; justify-items: center; gap: 7px; padding: 10px 6px 9px; border-radius: 14px;
+    background: var(--surface); border: 1px solid var(--line); text-align: center; min-width: 0;
+    transition: transform 0.15s cubic-bezier(.3, .7, .3, 1), border-color 0.15s, box-shadow 0.15s;
+  }
+  .card:hover { transform: translateY(-2px); border-color: var(--line-2); }
+  .card[aria-checked="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink), 0 10px 22px -16px rgba(0, 0, 0, 0.5); }
+  .card-face { border-radius: 6px; box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--line-2); }
+  .card[aria-checked="true"] .card-face { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent); }
+  .card-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card-tag { color: var(--ink-3); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card.new::after { content: "New"; position: absolute; top: 6px; right: 6px; padding: 3px 5px 2px; border-radius: 5px; background: var(--accent); color: var(--accent-ink); font: 600 9px/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; }
+  .card.dice { background: transparent; border-style: dashed; border-color: var(--line-2); }
+  .card.dice .dice-face { width: 48px; height: 48px; display: grid; place-items: center; color: var(--accent); }
+  .card.dice:hover .dice-face { animation: wobble 0.5s ease; }
+  @keyframes wobble { 30% { transform: rotate(-12deg); } 60% { transform: rotate(9deg); } }
+
+  /* tabs: one panel at a time on phones, all of them side by side on big screens */
+  .tabs { display: none; }
+  .panels { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); gap: 20px; margin-top: 20px; align-items: start; }
+  .panel.wide { grid-column: 1 / -1; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 24px; display: grid; gap: 22px; min-width: 0; scroll-margin-top: 80px; }
   .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   .panel-head h2 { margin: 0; }
   .field { display: grid; gap: 10px; min-width: 0; }
   .field-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
   .muted { color: var(--ink-3); }
   .quiet { color: var(--ink-2); }
-  .divider { height: 1px; background: var(--line); margin: 2px 0; }
 
   /* lines */
-  .examples { display: flex; gap: 8px; flex-wrap: wrap; }
-  .ex { min-height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line-2); color: var(--ink-2); transition: border-color 0.15s, color 0.15s, background-color 0.15s; }
+  .scenes { display: flex; gap: 8px; flex-wrap: wrap; }
+  .ex { display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 12px 0 6px; border-radius: 10px; border: 1px solid var(--line-2); color: var(--ink-2); transition: border-color 0.15s, color 0.15s, background-color 0.15s; }
   .ex:hover { color: var(--ink); border-color: var(--ink); }
+  .ex canvas { border-radius: 4px; }
   textarea {
-    width: 100%; min-height: 216px; resize: vertical; padding: 14px 16px; border-radius: 12px;
+    width: 100%; min-height: 196px; resize: vertical; padding: 14px 16px; border-radius: 12px;
     border: 1px solid var(--line-2); background: var(--bg); color: var(--ink);
     transition: border-color 0.15s, box-shadow 0.15s;
   }
@@ -223,6 +271,9 @@
   .mood[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .hint { margin: 0; color: var(--ink-3); text-wrap: pretty; }
   .hint code { color: var(--ink-2); }
+  .link { color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; transition: color 0.15s, text-decoration-color 0.15s; }
+  .link:hover { color: var(--ink); text-decoration-color: currentColor; }
+  .links { display: flex; gap: 14px; }
 
   .clips { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
   .clip { position: relative; display: flex; align-items: stretch; border-radius: 12px; transition: background-color 0.15s; }
@@ -242,20 +293,7 @@
   .icon-btn:hover { color: var(--ink); background: var(--line); }
   .eq { display: flex; align-items: flex-end; gap: 2px; height: 12px; }
   .eq i { width: 3px; background: currentColor; height: 4px; }
-  .clips-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-top: 4px; }
-  .foot-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
   .empty-clips { padding: 18px 16px; border: 1px dashed var(--line-2); border-radius: 12px; color: var(--ink-3); }
-
-  /* presets */
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip {
-    display: inline-flex; align-items: center; gap: 9px; min-height: 44px; padding: 0 14px 0 10px; border-radius: 12px;
-    border: 1px solid var(--line-2); color: var(--ink); transition: border-color 0.15s, background-color 0.15s, color 0.15s;
-  }
-  .chip:hover { border-color: var(--ink); }
-  .chip-ep { padding: 4px 6px 3px; border-radius: 6px; background: var(--sunk); color: var(--ink-2); transition: inherit; }
-  .chip[aria-checked="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
-  .chip[aria-checked="true"] .chip-ep { background: var(--accent); color: var(--accent-ink); }
 
   /* machines */
   .machines { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -272,7 +310,9 @@
   }
   .m-hear:hover { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
   .machine.is-hearing .m-hear { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+  .machine.is-new .m-era::after { content: " · new"; color: var(--accent); }
   .m-blurb { margin: 0; color: var(--ink-2); text-wrap: pretty; min-height: 2.8em; }
+  .custom { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px 10px 14px; border-radius: 12px; background: var(--sunk); color: var(--ink-2); }
 
   /* knobs */
   .knobs { display: grid; gap: 18px; }
@@ -322,6 +362,35 @@
   }
   .text-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 
+  /* export */
+  .export-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.75fr); gap: 28px; align-items: start; }
+  .export-opts { display: grid; gap: 22px; min-width: 0; }
+  .formats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .format {
+    display: grid; justify-items: start; gap: 8px; padding: 12px; border-radius: 14px; text-align: left;
+    border: 1px solid var(--line-2); background: var(--bg); min-width: 0; transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+  }
+  .format:hover { border-color: var(--ink-3); }
+  .format[aria-checked="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); background: var(--surface); }
+  .ratio { height: 34px; display: flex; align-items: flex-end; }
+  .ratio i { display: block; height: 100%; border: 2px solid currentColor; border-radius: 4px; color: var(--ink-3); }
+  .format[aria-checked="true"] .ratio i { color: var(--accent); background: var(--accent-soft); }
+  .format .f-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+  .format .f-where { color: var(--ink-3); }
+  .swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+  .swatch { display: grid; justify-items: center; gap: 6px; padding: 8px 8px 7px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); transition: border-color 0.15s, box-shadow 0.15s; }
+  .swatch:hover { border-color: var(--ink-3); }
+  .swatch[aria-checked="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+  .swatch span { color: var(--ink-2); }
+  .opt-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 18px; }
+  .preview-col { display: grid; gap: 14px; justify-items: center; position: sticky; top: 16px; }
+  .preview-frame { position: relative; width: 100%; display: grid; place-items: center; padding: 14px; border-radius: 16px; background: var(--sunk); border: 1px solid var(--line); }
+  .preview-frame canvas { image-rendering: auto; border-radius: 8px; box-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.5); background: repeating-conic-gradient(#c9c6bf 0% 25%, #e8e5df 0% 50%) 50% / 16px 16px; }
+  .preview-cap { color: var(--ink-3); text-align: center; text-wrap: balance; }
+  .make { width: 100%; }
+  .export-more { display: grid; gap: 10px; padding-top: 4px; }
+  .audio-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+
   details.code { border-radius: 14px; border: 1px solid var(--line); background: var(--bg); }
   details.code summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 0 16px; border-radius: 14px; }
   details.code summary::-webkit-details-marker { display: none; }
@@ -333,27 +402,23 @@
 
   footer { margin-top: 36px; padding-top: 22px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 16px 32px; flex-wrap: wrap; color: var(--ink-3); }
   footer p { margin: 0; max-width: 64ch; text-wrap: pretty; }
+  footer .foot-meta { flex: 0 1 auto; }
+  footer a { color: var(--ink-2); }
   kbd { padding: 1px 5px 0; border-radius: 4px; border: 1px solid var(--line-2); }
 
   .toast {
-    position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 16px); opacity: 0; pointer-events: none;
-    padding: 12px 16px; border-radius: 12px; background: var(--ink); color: var(--bg); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.45);
+    position: fixed; z-index: 40; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translate(-50%, 16px); opacity: 0; pointer-events: none;
+    display: flex; align-items: center; gap: 14px; padding: 10px 10px 10px 16px; min-height: 48px; border-radius: 14px; background: var(--ink); color: var(--bg); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.45);
     transition: opacity 0.2s, transform 0.2s; max-width: calc(100vw - 32px);
   }
-  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast:not(.has-action) { padding-right: 16px; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+  .toast button { min-height: 32px; padding: 0 12px; border-radius: 9px; background: rgba(255, 255, 255, 0.14); color: inherit; }
+  .toast button:hover { background: rgba(255, 255, 255, 0.24); }
 
   a { color: inherit; text-decoration-color: var(--line-2); text-underline-offset: 3px; transition: text-decoration-color 0.15s, color 0.15s; }
   a:hover { text-decoration-color: currentColor; }
-  .link { color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; transition: color 0.15s, text-decoration-color 0.15s; }
-  .link:hover { color: var(--ink); text-decoration-color: currentColor; }
   html:not([data-shell="web"]) .web-only { display: none !important; }
-
-  /* masthead: the title on the left, the way to take it with you on the right */
-  .masthead-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px 32px; flex-wrap: wrap; }
-  .masthead-text { display: grid; gap: 14px; min-width: 0; }
-  .get { display: flex; gap: 10px; flex-wrap: wrap; }
-  .get .btn { text-decoration: none; }
-  .get .btn .sub { color: var(--ink-3); font-weight: 500; }
 
   /* drop a text file on the lines */
   .drop { position: relative; }
@@ -386,7 +451,7 @@
   .apps-note { margin: 0; }
   .app-minor { color: var(--ink-3); padding: 4px 2px 0; }
   .app-minor a { color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--line-2); }
-  .app-minor a:hover { color: var(--ink); text-decoration-color: currentColor; }
+  .apps-more { justify-self: start; }
 
   /* the mini player: the play button follows you down the page */
   .mini {
@@ -401,7 +466,8 @@
   .mini.show { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
   .mini-play { flex: none; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; background: var(--gold); color: var(--gold-ink); }
   .mini-play:focus-visible, .mini button:focus-visible { outline-color: var(--stage-ink); }
-  .mini-now { flex: 1; min-width: 0; display: grid; gap: 3px; padding: 4px 8px 4px 10px; text-align: left; border-radius: 12px; }
+  .mini-face { flex: none; margin-left: 6px; border-radius: 4px; }
+  .mini-now { flex: 1; min-width: 0; display: grid; gap: 3px; padding: 4px 8px 4px 8px; text-align: left; border-radius: 12px; }
   .mini-line, .mini-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mini-meta { color: var(--stage-ink-2); }
   .mini .now-n { color: var(--stage-ink-2); margin-right: 8px; }
@@ -412,9 +478,9 @@
   body.has-mini .toast { bottom: calc(86px + env(safe-area-inset-bottom)); }
   body.has-mini .app { padding-bottom: calc(104px + env(safe-area-inset-bottom)); }
 
-  /* the Home Screen sheet */
-  .sheet { width: min(440px, 100%); max-width: 100%; margin: auto auto 0; padding: 0; border: 0; border-radius: 22px 22px 0 0; background: var(--surface); color: var(--ink); box-shadow: 0 -20px 60px -20px rgba(0, 0, 0, 0.5); }
-  .sheet::backdrop { background: rgba(8, 8, 12, 0.45); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+  /* sheets: Home Screen steps, and the video that's being made */
+  .sheet { width: min(460px, 100%); max-width: 100%; max-height: calc(100% - 24px); margin: auto auto 0; padding: 0; border: 0; border-radius: 22px 22px 0 0; background: var(--surface); color: var(--ink); box-shadow: 0 -20px 60px -20px rgba(0, 0, 0, 0.5); overflow: auto; }
+  .sheet::backdrop { background: rgba(8, 8, 12, 0.5); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
   .sheet[open] { animation: sheet-in 0.32s cubic-bezier(.2, .8, .2, 1); }
   @keyframes sheet-in { from { transform: translateY(40px); opacity: 0; } }
   .sheet-body { display: grid; gap: 14px; padding: 10px 22px calc(22px + env(safe-area-inset-bottom)); }
@@ -425,33 +491,51 @@
   .step-n { flex: none; width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); }
   .step-ic { display: inline-block; vertical-align: -2px; color: var(--accent); }
   .step-ic svg { display: inline-block; }
+  .bar { height: 10px; border-radius: 5px; background: var(--sunk); overflow: hidden; border: 1px solid var(--line); }
+  .bar i { display: block; height: 100%; width: 0; background: repeating-linear-gradient(90deg, var(--accent) 0 8px, color-mix(in srgb, var(--accent) 80%, white) 8px 10px); transition: width 0.15s linear; }
+  .result video { display: block; width: 100%; max-height: 52vh; border-radius: 12px; background: #000; }
+  .result-meta { color: var(--ink-3); text-align: center; }
+  .sheet-btns { display: grid; gap: 8px; }
+  .sheet-btns .row { display: flex; gap: 8px; }
+  .sheet-btns .row .btn { flex: 1; }
   @media (min-width: 641px) { .sheet { margin: auto; border-radius: 22px; } }
 
   /* touch: no hover-only hints, no double-tap zoom on controls */
   button, a, .clip-main, input[type="range"] { touch-action: manipulation; }
   @media (hover: none) and (pointer: coarse) {
     .keys-only { display: none !important; }
+    .card:hover { transform: none; }
   }
-
-  footer .foot-meta { flex: none; }
-  footer a { color: var(--ink-2); }
 
   @media (max-width: 980px) {
-    .columns { grid-template-columns: 1fr; }
+    .panels { grid-template-columns: 1fr; }
+    .export-grid { grid-template-columns: 1fr; }
+    .preview-col { position: static; }
     .apps-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    /* phones and small windows: tabs */
+    .tabs {
+      display: flex; position: sticky; top: 0; z-index: 15; margin: 18px calc(-1 * max(16px, env(safe-area-inset-left))) 0; padding: 10px max(16px, env(safe-area-inset-left)) 10px;
+      background: color-mix(in srgb, var(--bg) 88%, transparent); -webkit-backdrop-filter: blur(12px) saturate(1.3); backdrop-filter: blur(12px) saturate(1.3);
+    }
+    .tabs .seg { width: 100%; }
+    .tabs .seg button { flex: 1; min-height: 42px; }
+    .panels { margin-top: 8px; }
+    .panel[data-tab]:not(.is-tab) { display: none; }
   }
   @media (max-width: 640px) {
-    .app { padding: max(22px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 44px max(16px, env(safe-area-inset-left)); }
-    .masthead { margin-bottom: 20px; }
-    .stage { padding: 20px 14px 22px; gap: 16px; }
+    .app { padding: max(18px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 44px max(16px, env(safe-area-inset-left)); }
+    .masthead { margin-bottom: 16px; }
+    .stage { padding: 18px 12px 20px; gap: 14px; }
     .transport { padding: 12px; gap: 12px; }
     .stage-tools { width: 100%; }
-    .stage-tools .btn { margin-left: auto; }
+    .stage-tools .btn { flex: 1; }
     .panel { padding: 18px 16px; gap: 20px; }
     .clip-main { gap: 10px; padding-left: 14px; }
-    .row2 { grid-template-columns: 1fr; }
-    .chips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .chip { flex-direction: column; align-items: flex-start; justify-content: center; gap: 6px; padding: 10px 12px; text-align: left; }
+    .row2, .opt-row { grid-template-columns: 1fr; }
+    .roster { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -16px; padding: 4px 16px 10px; scrollbar-width: none; }
+    .roster::-webkit-scrollbar { display: none; }
+    .card { flex: 0 0 92px; scroll-snap-align: start; }
+    .formats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .m-pick { padding: 12px 46px 12px 12px; }
     .m-hear { top: 8px; right: 8px; }
     .apps { padding: 20px 16px 18px; }
@@ -464,34 +548,32 @@
     .take-row .btn { min-height: 44px; }
   }
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { transition: none !important; }
+    *, *::before, *::after { transition: none !important; animation: none !important; }
   }
 </style>
 </head>
 <body>
-<div class="app" data-pd-density="default">
+<div class="app">
   <header class="masthead">
-    <div class="brand">
-      <canvas id="mark" width="13" height="11" aria-hidden="true"></canvas>
-      <span data-pd-ui="badge">pitch.dog · 8-bit Voice</span>
+    <div class="masthead-text">
+      <div class="wordmark-row">
+        <canvas class="wordmark" id="wordmark" role="img" aria-label="8-bit Voice"></canvas>
+        <a class="by" href="https://pitch.dog" data-pd-ui="badge">by pitch.dog</a>
+      </div>
+      <h1 data-pd-ui="hero-title">Make anything talk like a <em>video game</em>.</h1>
+      <p class="lede" data-pd-ui="body">Type a line, pick a character, hear them say it. Then save it as a video for Reels, TikTok, Shorts or YouTube. It all happens on your device, works offline, and it’s free and open source.</p>
     </div>
-    <div class="masthead-row">
-      <div class="masthead-text">
-        <h1 data-pd-ui="page-title">8-bit Voice</h1>
-        <p class="lede" data-pd-ui="body">Type a line and hear it as a video-game voice. The words come out as gibberish, but the rhythm, the melody and the attitude survive, so whoever answers can tell the audience what was said.</p>
-      </div>
-      <div class="get web-only">
-        <a class="btn" id="getApp" href="#apps" data-pd-ui="action"></a>
-        <button type="button" class="btn" id="install" data-pd-ui="action" hidden></button>
-        <button type="button" class="btn" id="addHome" data-pd-ui="action" hidden></button>
-      </div>
+    <div class="get web-only">
+      <a class="btn" id="getApp" href="#apps" data-pd-ui="action"></a>
+      <button type="button" class="btn" id="install" data-pd-ui="action" hidden></button>
+      <button type="button" class="btn" id="addHome" data-pd-ui="action" hidden></button>
     </div>
   </header>
 
   <section class="hero" aria-label="Preview">
     <div class="stage" id="stage">
-      <div class="roll-wrap" id="rollWrap" title="Click to play from here"><canvas id="roll" aria-hidden="true"></canvas></div>
-      <div class="box-wrap"><canvas id="box" role="img" aria-label="Dialogue box"></canvas></div>
+      <div class="roll-wrap" id="rollWrap" title="Tap to play from here"><canvas id="roll" aria-hidden="true"></canvas></div>
+      <div class="box-wrap" id="boxWrap"><canvas id="box" role="img" aria-label="Dialogue box"></canvas></div>
       <div class="stage-empty" id="stageEmpty" data-pd-ui="body" hidden>Type a line to hear it.</div>
     </div>
     <div class="transport">
@@ -501,46 +583,57 @@
         <div class="now-meta" id="nowMeta" data-pd-ui="metadata"></div>
       </div>
       <div class="stage-tools">
-        <div class="seg" role="group" aria-label="Text in the box">
-          <button type="button" data-script="alien" data-pd-ui="action">Runes</button>
-          <button type="button" data-script="latin" data-pd-ui="action">Words</button>
-        </div>
-        <div class="seg" role="group" aria-label="Box colour">
-          <button type="button" data-boxtheme="ink" data-pd-ui="action">Ink</button>
-          <button type="button" data-boxtheme="paper" data-pd-ui="action">Paper</button>
-        </div>
         <button type="button" class="btn on-stage dl-only" id="dlOne" data-pd-ui="action"></button>
+        <button type="button" class="btn gold" id="makeVideo" data-pd-ui="action"></button>
       </div>
     </div>
   </section>
 
-  <div class="columns">
-    <section class="panel" aria-labelledby="linesTitle">
+  <section class="cast" aria-labelledby="castTitle">
+    <div class="cast-head">
+      <span id="castTitle" data-pd-ui="label">Characters</span>
+      <span class="muted" id="castCount" data-pd-ui="metadata"></span>
+    </div>
+    <div class="roster" id="roster" role="radiogroup" aria-labelledby="castTitle"></div>
+    <p class="cast-note" id="castNote" data-pd-ui="caption"></p>
+  </section>
+
+  <nav class="tabs" aria-label="Sections">
+    <div class="seg fill" role="tablist">
+      <button type="button" role="tab" data-tab="lines" data-pd-ui="action">Lines</button>
+      <button type="button" role="tab" data-tab="voice" data-pd-ui="action">Voice</button>
+      <button type="button" role="tab" data-tab="export" data-pd-ui="action">Export</button>
+    </div>
+  </nav>
+
+  <div class="panels">
+    <section class="panel" data-tab="lines" id="panel-lines" aria-labelledby="linesTitle">
       <div class="panel-head">
         <h2 id="linesTitle" data-pd-ui="section-title">Lines</h2>
-        <div class="examples" role="group" aria-label="Examples from Typecast">
-          <button type="button" class="ex" data-example="ep3" data-pd-ui="action" title="The heist producer's lines from Typecast, episode 3">Ep 3 · The Crew</button>
-          <button type="button" class="ex" data-example="ep4" data-pd-ui="action" title="The space director's lines from Typecast, episode 4">Ep 4 · Liftoff</button>
-        </div>
-      </div>
-      <div class="field">
-        <label for="speaker" data-pd-ui="label">Caller</label>
-        <input id="speaker" class="text-input" data-pd-ui="input" maxlength="18" autocomplete="off" spellcheck="false" placeholder="Caller">
-      </div>
-      <div class="field">
-        <div class="field-row">
-          <label for="script" data-pd-ui="label">What they say, one line per clip</label>
+        <div class="links">
           <button type="button" class="link" id="openTxt" data-pd-ui="caption">Open a .txt</button>
+          <button type="button" class="link" id="clearLines" data-pd-ui="caption">Clear</button>
         </div>
+      </div>
+      <div class="field">
+        <span data-pd-ui="label" id="scenesLabel">Start from a scene</span>
+        <div class="scenes" id="scenes" role="group" aria-labelledby="scenesLabel"></div>
+      </div>
+      <div class="field">
+        <label for="speaker" data-pd-ui="label">Name in the box</label>
+        <input id="speaker" class="text-input" data-pd-ui="input" maxlength="18" autocomplete="off" spellcheck="false" placeholder="No name">
+      </div>
+      <div class="field">
+        <label for="script" data-pd-ui="label">What they say, one line per clip</label>
         <div class="drop" id="drop">
-          <textarea id="script" data-pd-ui="input" spellcheck="false" autocomplete="off" autocapitalize="sentences"></textarea>
+          <textarea id="script" data-pd-ui="input" spellcheck="false" autocomplete="off" autocapitalize="sentences" placeholder="Type a line. Press Enter for another."></textarea>
           <div class="drop-veil" data-pd-ui="label" aria-hidden="true">Drop a text file: one line per clip</div>
         </div>
         <input type="file" id="txtFile" accept=".txt,.md,.fountain,text/plain" hidden>
         <div class="moods" id="moods" role="group" aria-labelledby="moodLabel">
           <span class="moods-label" id="moodLabel" data-pd-ui="caption">Delivery</span>
         </div>
-        <p class="hint" data-pd-ui="caption">Tap a delivery to add it to the line you’re on, or type it in brackets: <code data-pd-ui="code">(slow, awed)</code>, <code data-pd-ui="code">(very fast and very high)</code>. Punctuation does the rest: a question goes up, a dash cuts off.<span class="keys-only"> <kbd data-pd-ui="code">Ctrl</kbd> <kbd data-pd-ui="code">Enter</kbd> plays the line you’re typing; outside the box, <kbd data-pd-ui="code">Space</kbd> plays and <kbd data-pd-ui="code">←</kbd> <kbd data-pd-ui="code">→</kbd> step through the lines.</span></p>
+        <p class="hint" data-pd-ui="caption">Tap a delivery to add it to the line you’re on, or type it in brackets: <code data-pd-ui="code">(slow, awed)</code>, <code data-pd-ui="code">(very fast and very high)</code>. Punctuation does the rest: a question goes up, a dash cuts off, capitals are louder. <code data-pd-ui="code">WIZARD: Hello</code> puts a name on one line.<span class="keys-only"> <kbd data-pd-ui="code">Ctrl</kbd> <kbd data-pd-ui="code">Enter</kbd> plays the line you’re typing; outside the box, <kbd data-pd-ui="code">Space</kbd> plays and <kbd data-pd-ui="code">←</kbd> <kbd data-pd-ui="code">→</kbd> step through the lines.</span></p>
       </div>
       <div class="field">
         <div class="field-row">
@@ -548,37 +641,18 @@
           <span class="muted" id="clipsSum" data-pd-ui="data"></span>
         </div>
         <ol class="clips" id="clips"></ol>
-        <div class="clips-foot">
-          <span class="muted dl-only" id="dlNote" data-pd-ui="caption"></span>
-          <div class="foot-btns">
-            <button type="button" class="btn" id="shareLink" data-pd-ui="action" title="A link that opens these lines in this voice"></button>
-            <button type="button" class="btn solid dl-only" id="dlAll" data-pd-ui="action"></button>
-          </div>
-          <span class="muted" id="dlOff" data-pd-ui="caption" hidden>Downloads aren’t available in this view. Open <a href="https://bomkino.github.io/8bit-Voice/">8-bit Voice</a> on its own to save the clips.</span>
-        </div>
       </div>
-      <details class="code" id="codeBox">
-        <summary><span data-pd-ui="label">Make it from the command line</span><svg class="px chev" width="10" height="6" viewBox="0 0 5 3" aria-hidden="true"><path d="M0 0h1v1H0zM4 0h1v1H4zM1 1h1v1H1zM3 1h1v1H3zM2 2h1v1H2z"/></svg></summary>
-        <div class="code-body">
-          <p class="hint" data-pd-ui="caption">The same engine runs in Node, so this gives the same clip, sample for sample. Clone <a href="https://github.com/bomkino/8bit-Voice">the repo</a> and run it in its folder.</p>
-          <pre><code id="snippet" data-pd-ui="code"></code></pre>
-          <div><button type="button" class="btn" id="copy" data-pd-ui="action">Copy</button></div>
-        </div>
-      </details>
     </section>
 
-    <section class="panel" aria-labelledby="voiceTitle">
+    <section class="panel" data-tab="voice" id="panel-voice" aria-labelledby="voiceTitle">
       <div class="panel-head">
         <h2 id="voiceTitle" data-pd-ui="section-title">Voice</h2>
         <button type="button" class="btn" id="hearAll" data-pd-ui="action"></button>
       </div>
-
-      <div class="field">
-        <span data-pd-ui="label" id="presetLabel">Callers</span>
-        <div class="chips" id="presets" role="radiogroup" aria-labelledby="presetLabel"></div>
-        <p class="hint" id="presetNote" data-pd-ui="caption"></p>
+      <div class="custom" id="custom" hidden>
+        <span data-pd-ui="caption" id="customText"></span>
+        <button type="button" class="link" id="resetVoice" data-pd-ui="caption"></button>
       </div>
-
       <div class="field">
         <div class="field-row">
           <span data-pd-ui="label" id="machineLabel">Machine</span>
@@ -587,9 +661,7 @@
         <div class="machines" id="machines" role="radiogroup" aria-labelledby="machineLabel"></div>
         <p class="m-blurb" id="blurb" data-pd-ui="caption"></p>
       </div>
-
       <div class="knobs" id="knobs"></div>
-
       <div class="row2">
         <div class="tile">
           <div class="tile-head">
@@ -606,26 +678,92 @@
           <span class="muted" data-pd-ui="caption">Same settings, a slightly different performance.</span>
         </div>
       </div>
+    </section>
 
+    <section class="panel wide" data-tab="export" id="panel-export" aria-labelledby="exportTitle">
+      <div class="panel-head">
+        <h2 id="exportTitle" data-pd-ui="section-title">Export</h2>
+        <span class="muted" data-pd-ui="caption">Made on your device. Nothing is uploaded.</span>
+      </div>
+      <div class="export-grid">
+        <div class="export-opts">
+          <div class="field">
+            <span data-pd-ui="label" id="formatLabel">Video size</span>
+            <div class="formats" id="formats" role="radiogroup" aria-labelledby="formatLabel"></div>
+          </div>
+          <div class="opt-row">
+            <div class="field">
+              <span data-pd-ui="label" id="bgLabel">Background</span>
+              <div class="seg fill" id="bgSeg" role="radiogroup" aria-labelledby="bgLabel"></div>
+            </div>
+            <div class="field">
+              <span data-pd-ui="label" id="layoutLabel">Layout</span>
+              <div class="seg fill" id="layoutSeg" role="radiogroup" aria-labelledby="layoutLabel"></div>
+            </div>
+            <div class="field">
+              <span data-pd-ui="label" id="scopeLabel">Lines</span>
+              <div class="seg fill" id="scopeSeg" role="radiogroup" aria-labelledby="scopeLabel"></div>
+            </div>
+            <div class="field">
+              <span data-pd-ui="label" id="scriptLabel">Text in the box</span>
+              <div class="seg fill" id="scriptSeg" role="radiogroup" aria-labelledby="scriptLabel"></div>
+            </div>
+          </div>
+          <div class="field">
+            <div class="field-row">
+              <span data-pd-ui="label" id="themeLabel">Box style</span>
+              <span class="muted" data-pd-ui="caption">Also changes the preview above</span>
+            </div>
+            <div class="swatches" id="swatches" role="radiogroup" aria-labelledby="themeLabel"></div>
+          </div>
+          <div class="export-more">
+            <span data-pd-ui="label">Sound only</span>
+            <div class="audio-btns">
+              <button type="button" class="btn dl-only" id="dlWav" data-pd-ui="action"></button>
+              <button type="button" class="btn dl-only" id="dlLineup" data-pd-ui="action"></button>
+              <button type="button" class="btn dl-only" id="dlAll" data-pd-ui="action"></button>
+              <button type="button" class="btn" id="shareLink" data-pd-ui="action" title="A link that opens these lines in this voice"></button>
+            </div>
+            <span class="muted dl-only" id="dlNote" data-pd-ui="caption"></span>
+            <span class="muted" id="dlOff" data-pd-ui="caption" hidden>Downloads aren’t available in this view. Open <a href="https://bomkino.github.io/8bit-Voice/">8-bit Voice</a> on its own to save files.</span>
+          </div>
+          <details class="code" id="codeBox">
+            <summary><span data-pd-ui="label">Make it from the command line</span><svg class="px chev" width="10" height="6" viewBox="0 0 5 3" aria-hidden="true"><path d="M0 0h1v1H0zM4 0h1v1H4zM1 1h1v1H1zM3 1h1v1H3zM2 2h1v1H2z"/></svg></summary>
+            <div class="code-body">
+              <p class="hint" data-pd-ui="caption">The same engine runs in Node, so this gives the same sound, sample for sample. Clone <a href="https://github.com/bomkino/8bit-Voice">the repo</a> and run it in its folder.</p>
+              <pre><code id="snippet" data-pd-ui="code"></code></pre>
+              <div><button type="button" class="btn" id="copy" data-pd-ui="action">Copy</button></div>
+            </div>
+          </details>
+        </div>
+        <div class="preview-col">
+          <div class="preview-frame"><canvas id="exportPreview" aria-label="How the video will look" role="img"></canvas></div>
+          <p class="preview-cap" id="previewCap" data-pd-ui="caption"></p>
+          <button type="button" class="btn hot big make" id="makeVideo2" data-pd-ui="action-big"></button>
+        </div>
+      </div>
     </section>
   </div>
 
   <section class="apps web-only" id="apps" aria-labelledby="appsTitle">
     <div class="apps-head">
       <h2 id="appsTitle" data-pd-ui="section-title">Get the app</h2>
-      <p class="hint" data-pd-ui="caption">The same tool in its own window. It works offline, and your lines and settings stay on your computer.</p>
+      <p class="hint" data-pd-ui="caption">The same tool in its own window, for macOS, Windows and Linux. It works offline, and your lines and settings stay on your computer.</p>
     </div>
+    <button type="button" class="btn apps-more" id="appsMore" data-pd-ui="action" hidden>Show the desktop downloads</button>
     <div class="apps-grid" id="appsGrid"></div>
-    <p class="hint apps-note" data-pd-ui="caption">The apps aren’t signed by Apple or Microsoft yet, so your computer asks once before opening one. <a href="https://github.com/bomkino/8bit-Voice#opening-it-the-first-time">Here’s what to click.</a> Every version is on the <a href="https://github.com/bomkino/8bit-Voice/releases">releases page</a>.</p>
+    <p class="hint apps-note" id="appsNote" data-pd-ui="caption">The apps aren’t signed by Apple or Microsoft, so your computer asks once before opening one. <a href="https://github.com/bomkino/8bit-Voice#opening-it-the-first-time">Here’s what to click.</a> Every version is on the <a href="https://github.com/bomkino/8bit-Voice/releases">releases page</a>.</p>
   </section>
 
   <footer>
-    <p data-pd-ui="caption">Every sound is synthesized here, on your device, from square, triangle and wavetable oscillators, formant filters and noise. There are no samples, so there is nothing to license. The same line, voice and take always give the same clip. Made by <a href="https://pitch.dog">pitch.dog</a> for Typecast.</p>
-    <p class="foot-meta" data-pd-ui="metadata"><span id="version"></span> · <a href="https://github.com/bomkino/8bit-Voice">Source</a></p>
+    <p data-pd-ui="caption">Every sound is synthesized here, on your device, from square, triangle and wavetable oscillators, a little model of a throat, formant filters and noise. There are no samples, so there is nothing to license, and what you make is yours. The same line, voice and take always give the same clip. Made by <a href="https://pitch.dog">pitch.dog</a>, open source under the <a href="https://github.com/bomkino/8bit-Voice/blob/main/LICENSE">MIT License</a>.</p>
+    <p class="foot-meta" data-pd-ui="metadata"><span id="version"></span> · <a href="https://github.com/bomkino/8bit-Voice">Source</a> · <a href="https://github.com/bomkino/8bit-Voice/issues/new/choose">Report a problem</a></p>
   </footer>
 </div>
+
 <div class="mini" id="mini" aria-label="Player" role="region">
   <button type="button" class="mini-play" id="miniPlay" aria-label="Play"></button>
+  <canvas class="mini-face" id="miniFace" aria-hidden="true"></canvas>
   <button type="button" class="mini-now" id="miniNow" aria-label="Back to the preview">
     <span class="mini-line" id="miniLine" data-pd-ui="label"></span>
     <span class="mini-meta" id="miniMeta" data-pd-ui="metadata"></span>
@@ -638,7 +776,7 @@
   <form method="dialog" class="sheet-body">
     <div class="sheet-grab" aria-hidden="true"></div>
     <h2 id="homeTitle" data-pd-ui="section-title">Put it on your Home Screen</h2>
-    <p class="hint" data-pd-ui="caption">It opens full screen like an app and works offline, on the train, on set, anywhere.</p>
+    <p class="hint" data-pd-ui="caption">It opens full screen like an app and works offline, anywhere.</p>
     <ol class="steps">
       <li><span class="step-n" data-pd-ui="data">1</span><span data-pd-ui="body-compact">Tap <b>Share</b> <span class="step-ic" id="shareGlyph"></span> in Safari’s toolbar.</span></li>
       <li><span class="step-n" data-pd-ui="data">2</span><span data-pd-ui="body-compact">Scroll down and tap <b>Add to Home Screen</b>.</span></li>
@@ -648,7 +786,27 @@
   </form>
 </dialog>
 
-<div class="toast" id="toast" role="status" aria-live="polite" data-pd-ui="label"></div>
+<dialog class="sheet" id="videoSheet" aria-labelledby="videoTitle">
+  <div class="sheet-body">
+    <div class="sheet-grab" aria-hidden="true"></div>
+    <h2 id="videoTitle" data-pd-ui="section-title">Making your video</h2>
+    <p class="hint" id="videoHint" data-pd-ui="caption"></p>
+    <div class="bar" id="videoBar" aria-hidden="true"><i></i></div>
+    <div class="result" id="videoResult" hidden>
+      <video id="videoOut" playsinline controls loop muted></video>
+    </div>
+    <p class="result-meta" id="videoMeta" data-pd-ui="metadata"></p>
+    <div class="sheet-btns">
+      <button type="button" class="btn hot big" id="videoSave" data-pd-ui="action-big" hidden></button>
+      <div class="row">
+        <button type="button" class="btn" id="videoAgain" data-pd-ui="action" hidden>Change and redo</button>
+        <button type="button" class="btn" id="videoClose" data-pd-ui="action">Cancel</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><span id="toastText" data-pd-ui="label"></span><button type="button" id="toastBtn" data-pd-ui="action" hidden></button></div>
 
 <script src="chipvoice.js"></script>
 <script>
@@ -657,34 +815,49 @@
   const CV = window.ChipVoice;
   const $ = (s) => document.querySelector(s);
   const $$ = (s) => Array.from(document.querySelectorAll(s));
-  const STORE = 'typecast-client-voice/v1';
-  const APP_VERSION = '1.1.0';
+  const STORE = '8bit-voice/v2';
+  const APP_VERSION = '1.2.0';
+  const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // ── examples: the 8-bit caller's lines from Ep 3 and Ep 4 ──
-  const EXAMPLES = {
-    ep3: {
-      speaker: 'Producer', preset: 'heist-producer', phone: true,
-      lines: [
-        '(offended) I never said I’d call.',
-        '(faster and faster) It’s a heist movie. A casino. A vault. I need a—',
-        '(unimpressed) Big guy. Who gets us past security?',
-        'And the vault needs a signature.',
-        'Okay. Which one?',
-        '(a beat, then giddy) ...Deal. Send the contracts.',
-        '(panicking, very fast and very high) How do you know what I’m—',
-      ],
-    },
-    ep4: {
-      speaker: 'Director', preset: 'space-director', phone: true,
-      lines: [
-        'Manali. Space movie. Huge. I need the future.',
-        'He looks like a gaming chair.',
-        '(flat) He’s... normal.',
-        '(stunned) ...How did you—',
-        '(slow, awed) ...That’s the future.',
-      ],
-    },
-  };
+  // ── scenes: somewhere to start, one per kind of character ──
+  const SCENES = [
+    { id: 'story', label: 'Story', preset: 'narrator', speaker: 'Narrator', lines: [
+      'Once upon a time, in a kingdom made of pixels...',
+      'there lived a very small hero with a very big sword.',
+      '(slow) And this is where our story begins.',
+    ] },
+    { id: 'quest', label: 'Quest', preset: 'wizard', speaker: 'Wizard', lines: [
+      'Ah, you have come at last.',
+      '(slow, awed) The legendary sword... it chose you.',
+      'Take it. And try not to lose this one.',
+      '(offended) What do you mean, “which way is north”?',
+    ] },
+    { id: 'boss', label: 'Boss fight', preset: 'villain', speaker: 'Villain', lines: [
+      '(quiet) So. You made it to the top floor.',
+      'Every hero says that. Every single one.',
+      '(shouting) Enough talk! Have at you!',
+      '(sad) ...That was my favourite cape.',
+    ] },
+    { id: 'minions', label: 'Henchmen', preset: 'henchling', speaker: 'Henchling', lines: [
+      '(excited) Bello! Bello!',
+      'Banana? Banana! Hee hee hee!',
+      '(sad) ...No banana.',
+      '(very fast and very high) BANANA!',
+    ] },
+    { id: 'space', label: 'Space', preset: 'computer', speaker: 'Computer', lines: [
+      'Good morning, Captain. You slept for 312 years.',
+      '(flat) Coffee is no longer available.',
+      '(fast) Warning. Warning. Something is eating the ship.',
+      'Have a nice day.',
+    ] },
+    { id: 'cozy', label: 'Cozy', preset: 'critter', speaker: 'Villager', lines: [
+      '(excited) Oh! A new neighbour!',
+      'Did you know peaches grow on trees? I just found out!',
+      '(whisper) Don’t tell anyone, but I sold the bridge.',
+      'Okay, bye! Come back tomorrow!',
+    ] },
+  ];
+  const NEW_CAST = new Set(CV.PRESET_ORDER.filter((id) => !['hero'].includes(id)));
 
   // ── pixel icons ──
   function pix(rows, scale) {
@@ -702,27 +875,37 @@
     return `<svg class="px" width="${w * s}" height="${h * s}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><path d="${d}"/></svg>`;
   }
   const ICON = {
-    play: pix(['#....', '##...', '###..', '####.', '#####', '####.', '###..', '##...', '#....'], 2.4),
-    stop: pix(['#######', '#######', '#######', '#######', '#######', '#######', '#######'], 2.4),
+    play: pix(['#....', '##...', '###..', '####.', '#####', '####.', '###..', '##...', '#....'], 2.6),
+    stop: pix(['#######', '#######', '#######', '#######', '#######', '#######', '#######'], 2.6),
     playSm: pix(['#...', '##..', '###.', '####', '###.', '##..', '#...'], 2),
     stopSm: pix(['#####', '#####', '#####', '#####', '#####'], 2),
     down: pix(['...#...', '...#...', '...#...', '#..#..#', '.#.#.#.', '..###..', '...#...', '.......', '#######'], 2),
     share: pix(['...#...', '..###..', '.#.#.#.', '...#...', '...#...', '#..#..#', '#.....#', '#.....#', '#######'], 2),
+    video: pix(['#######....', '#.....#..##', '#.....#.###', '#.....#####', '#.....#.###', '#.....#..##', '#######....'], 2),
+    wave: pix(['....#....', '..#.#....', '..#.#.#..', '#.#.#.#.#', '..#.#.#..', '..#.#....', '....#....'], 2),
+    link: pix(['..###....', '.#...#...', '#...#.#..', '#..#...#.', '.#.#...#.', '..#...#..', '...#.#...', '....#....'], 2),
+    dice: pix(['.#########.', '#.........#', '#.##...##.#', '#.##...##.#', '#....#....#', '#...###...#', '#....#....#', '#.##...##.#', '#.##...##.#', '#.........#', '.#########.'], 3),
   };
 
   // ── state ──
+  const FIRST = 'narrator';
+  const firstScene = SCENES[0];
   const defaults = () => ({
-    text: EXAMPLES.ep3.lines.join('\n'),
-    voice: Object.assign({}, CV.DEFAULT_VOICE, CV.PRESETS['heist-producer'].voice, { phone: true, take: 1 }),
-    speaker: 'Producer', script: 'alien', theme: 'ink', active: 0,
+    text: firstScene.lines.join('\n'),
+    voice: Object.assign({}, CV.DEFAULT_VOICE, CV.PRESETS[FIRST].voice, { take: 1 }),
+    face: FIRST, speaker: 'Narrator', script: 'latin', theme: 'ink', portrait: true, active: 0,
+    exp: { format: 'story', bg: 'color', layout: 'face', scope: 'line' },
+    played: false,
   });
   let state = defaults();
   try {
     const saved = JSON.parse(localStorage.getItem(STORE) || 'null');
     if (saved && typeof saved.text === 'string' && saved.voice) {
-      state = Object.assign(defaults(), saved, { voice: CV.normVoice(saved.voice) });
+      state = Object.assign(defaults(), saved, { voice: CV.normVoice(saved.voice), exp: Object.assign(defaults().exp, saved.exp || {}) });
     }
   } catch (e) { /* storage blocked: start fresh */ }
+  if (!CV.FACES[state.face]) state.face = FIRST;
+  if (!CV.THEMES[state.theme]) state.theme = 'ink';
   let saveTimer = 0;
   function persist() {
     clearTimeout(saveTimer);
@@ -760,6 +943,18 @@
   const speakerOf = (c) => (c && c.parsed.speaker) || state.speaker || '';
   const activeClip = () => clips[state.active] || null;
 
+  // ── faces: mouths that move with the voice, eyes that blink ──
+  function mouthAt(events, t) {
+    for (const e of events) {
+      if (t >= e.t && t < e.t + e.d) {
+        const q = (t - e.t) / e.d;
+        return q < 0.7 ? Math.min(1, 0.35 + e.a * 0.6) : 0.1;
+      }
+    }
+    return 0;
+  }
+  const blinkAt = (t) => ((t + 0.9) % 3.7) < 0.13;
+
   // ── audio ──
   let ac = null;
   // iPhones mute Web Audio when the ring/silent switch is on. Asking for a
@@ -782,8 +977,7 @@
     return ac;
   }
   function silentWavUrl() {
-    const n = 4800;
-    return URL.createObjectURL(new Blob([CV.encodeWav(new Float32Array(n), 48000)], { type: 'audio/wav' }));
+    return URL.createObjectURL(new Blob([CV.encodeWav(new Float32Array(4800), 48000)], { type: 'audio/wav' }));
   }
   // Wake the audio on the first touch, inside the gesture, so the first play
   // isn't swallowed on iOS.
@@ -808,6 +1002,7 @@
     const t0 = a.currentTime + 0.02;
     src.start(t0, offset);
     playing = Object.assign({ src, res, t0: t0 - offset }, info);
+    if (!state.played) { state.played = true; persist(); $('#play').classList.remove('pulse'); }
     src.onended = () => {
       if (!playing || playing.src !== src) return;
       const done = playing.onDone;
@@ -882,13 +1077,43 @@
     return ctx;
   }
   const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  function faceCanvas(cv, id, cssPx, o) {
+    const s = Math.max(1, Math.round((cssPx / 16) * dpr()));
+    const ctx = sizeCanvas(cv, 16, 16, s);
+    ctx.clearRect(0, 0, 16, 16);
+    CV.drawFace(ctx, id, 0, 0, o);
+  }
+
+  // ── the wordmark, in the same pixel letters as the box ──
+  function drawWordmark() {
+    const cv = $('#wordmark');
+    const text = '8-BIT VOICE';
+    let w = 0;
+    for (const ch of text) { const g = CV.glyph(ch, 'latin'); w += g ? g.w + 1 : 3; }
+    w += 1;
+    const cssPx = innerWidth < 640 ? 3 : 4;
+    const ctx = sizeCanvas(cv, w + 1, 9, Math.round(cssPx * dpr()));
+    ctx.clearRect(0, 0, w + 1, 9);
+    const paint = (dx, dy, color) => {
+      let x = dx;
+      for (const ch of text) {
+        const g = CV.glyph(ch, 'latin');
+        if (!g) { x += 3; continue; }
+        ctx.fillStyle = color;
+        g.rows.forEach((row, r) => { for (let c = 0; c < row.length; c++) if (row[c] === '#') ctx.fillRect(x + c, dy + r, 1, 1); });
+        x += g.w + 1;
+      }
+    };
+    paint(1, 1, css('--accent'));
+    paint(0, 0, css('--ink'));
+  }
 
   // ── stage ──
   const stageEl = $('#stage'), rollWrap = $('#rollWrap'), rollCv = $('#roll'), boxCv = $('#box');
   let fit = { W: 200, sDev: 2, lines: 2 };
   function measure() {
     const avail = stageEl.clientWidth - parseFloat(getComputedStyle(stageEl).paddingLeft) * 2;
-    const W = avail >= 760 ? 236 : avail >= 470 ? 200 : 164;
+    const W = avail >= 760 ? 236 : avail >= 470 ? 204 : 172;
     const d = dpr();
     let sDev = Math.floor((avail * d) / W);
     sDev = Math.max(1, Math.min(sDev, Math.round(3 * d)));
@@ -908,11 +1133,12 @@
     drawRoll(res, t);
     drawBox(res, t);
     if (playing && playing.hear) drawGlyphs(t);
+    drawTalkingFaces(res, t);
   }
   function drawRoll(res, t) {
     const s = fit.sDev;
     const wv = fit.W;
-    const hv = Math.max(20, Math.round(((fit.avail >= 470 ? 96 : 72) * dpr()) / s));
+    const hv = Math.max(20, Math.round(((fit.avail >= 470 ? 84 : 60) * dpr()) / s));
     const ctx = sizeCanvas(rollCv, wv, hv, s);
     ctx.clearRect(0, 0, wv, hv);
     if (!res || !res.events.length) return;
@@ -941,21 +1167,21 @@
         const k = xb > xa ? (x - xa) / (xb - xa) : 0;
         ctx.fillRect(x, Y(e.p0 + (e.p1 - e.p0) * k) - 1, 1, thick);
       }
-      if (on || done) {
-        // a tick on the time line under each syllable that has sounded
-        ctx.fillRect(xa, hv - 3, 1, 3);
-      }
+      if (on || done) ctx.fillRect(xa, hv - 3, 1, 3);
     }
     if (live) {
       ctx.fillStyle = 'rgba(241, 234, 219, 0.32)';
       ctx.fillRect(X(Math.min(t, res.duration)), 0, 1, hv - 3);
     }
   }
+  let idleT0 = performance.now();
   function drawBox(res, t) {
     const c = playing ? clips[playing.clip] : activeClip();
+    const now = (performance.now() - idleT0) / 1000;
     const o = {
       text: res ? res.text : '', speaker: (speakerOf(c) || '').slice(0, 18), script: state.script,
       width: fit.W, lines: fit.lines, theme: state.theme,
+      portrait: state.portrait ? { face: state.face, open: 0, blink: !REDUCED && blinkAt(now) } : null,
     };
     const M = CV.measureDialog(o);
     const ctx = sizeCanvas(boxCv, M.width, M.height, fit.sDev);
@@ -969,10 +1195,20 @@
     const open = Math.min(1, t / 0.05);
     const last = res.events.length ? res.events[res.events.length - 1] : null;
     const finished = !last || t > last.t + last.d + 0.08;
+    if (o.portrait) o.portrait.open = mouthAt(res.events, t);
     CV.drawDialog(ctx, Object.assign(o, {
       open, visible: (i) => t >= times[i], cursor: finished && Math.floor(t * 2.5) % 2 === 0,
       level: CV.talkLevel(res.events, t), meterPhase: t * 14, whisper: res.mood.includes('whisper'),
     }));
+  }
+  // The chosen character's card and the mini player talk along.
+  function drawTalkingFaces(res, t) {
+    const open = res && t != null ? mouthAt(res.events, t) : 0;
+    const now = (performance.now() - idleT0) / 1000;
+    const blink = !REDUCED && blinkAt(now + 1.3);
+    const card = $(`#roster [data-preset="${state.face}"] canvas`);
+    if (card) faceCanvas(card, state.face, 48, { open, blink });
+    faceCanvas($('#miniFace'), state.face, 32, { open, blink });
   }
   let raf = 0;
   function loop() {
@@ -984,6 +1220,16 @@
     };
     raf = requestAnimationFrame(step);
   }
+  // Idle life: the face blinks now and then while nothing plays.
+  if (!REDUCED) {
+    let lastBlink = false;
+    setInterval(() => {
+      if (playing || document.hidden) return;
+      const now = (performance.now() - idleT0) / 1000;
+      const b = blinkAt(now) || blinkAt(now + 1.3);
+      if (b !== lastBlink) { lastBlink = b; drawStage(); }
+    }, 60);
+  }
   rollWrap.addEventListener('click', (e) => {
     const c = activeClip();
     if (!c) return;
@@ -991,6 +1237,10 @@
     const k = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
     const res = playing && !playing.hear ? playing.res : renderLine(c.raw, state.voice);
     playClip(state.active, k * res.duration);
+  });
+  $('#boxWrap').addEventListener('click', () => {
+    if (playing && !playing.hear) stopAll();
+    else playClip(state.active);
   });
 
   // ── machine glyphs: a tiny picture of each oscillator ──
@@ -1001,13 +1251,14 @@
     typewriter: (x) => ((x % 6) < 2 ? 3 : 9),
     boss: (x) => ((x % 24) < 12 ? 1 : 10),
     chip: (x) => 9 - Math.floor(((x % 8) / 8) * 7) + ((x * 7) % 5 === 0 ? 1 : 0),
+    mouth: (x) => { const k = x % 11; return Math.round(6 - 5 * Math.exp(-k / 3.2) * Math.cos(k * 1.5)); },
   };
   function drawGlyph(cv, style, phase) {
     const wv = 38, hv = 12;
     const ctx = sizeCanvas(cv, wv, hv, Math.max(1, Math.round(2 * dpr())));
     ctx.clearRect(0, 0, wv, hv);
     ctx.fillStyle = getComputedStyle(cv).color;
-    const f = GLYPH[style];
+    const f = GLYPH[style] || GLYPH.square;
     let prev = null;
     for (let x = 0; x < wv; x++) {
       const y = Math.max(0, Math.min(hv - 1, f(x + (phase || 0))));
@@ -1102,33 +1353,127 @@
     });
   }
 
-  // ── building the controls ──
-  function buildPresets() {
-    const host = $('#presets');
+  // ── the cast ──
+  function presetName(id) { return CV.PRESETS[id] ? CV.PRESETS[id].name : ''; }
+  // A character brings their voice, their face and, unless you named the box
+  // yourself, their name.
+  function chooseCharacter(id, opts) {
+    const p = CV.PRESETS[id];
+    if (!p) return;
+    const prevName = presetName(state.face);
+    const named = state.speaker && state.speaker !== prevName && !CV.PRESET_ORDER.some((x) => presetName(x) === state.speaker);
+    state.face = p.face;
+    state.voice = CV.normVoice(Object.assign({}, CV.DEFAULT_VOICE, p.voice, { phone: state.voice.phone, take: 1 }, (opts && opts.voice) || {}));
+    if (!named) { state.speaker = p.name; sp.value = p.name; }
+    refreshRoster();
+    onVoiceChange(!(opts && opts.silent));
+  }
+  function buildRoster() {
+    const host = $('#roster');
     host.innerHTML = '';
+    const dice = document.createElement('button');
+    dice.type = 'button';
+    dice.className = 'card dice';
+    dice.id = 'surprise';
+    dice.innerHTML = `<span class="dice-face">${ICON.dice}</span><span class="card-name" data-pd-ui="label">Surprise me</span><span class="card-tag" data-pd-ui="metadata">Random</span>`;
+    dice.addEventListener('click', surprise);
+    host.appendChild(dice);
     for (const id of CV.PRESET_ORDER) {
       const p = CV.PRESETS[id];
       const b = document.createElement('button');
       b.type = 'button';
-      b.className = 'chip';
+      b.className = 'card' + (NEW_CAST.has(id) && (id === 'narrator' || id === 'henchling') ? ' new' : '');
       b.setAttribute('role', 'radio');
       b.dataset.preset = id;
-      b.innerHTML = `<span class="chip-ep" data-pd-ui="badge">${p.episode}</span><span data-pd-ui="action">${p.name}</span>`;
-      b.addEventListener('click', () => {
-        const keep = { phone: state.voice.phone };
-        state.voice = CV.normVoice(Object.assign({}, CV.DEFAULT_VOICE, p.voice, keep, { take: 1 }));
-        onVoiceChange(true);
-      });
+      b.title = p.note;
+      b.innerHTML = `<canvas class="card-face" aria-hidden="true"></canvas><span class="card-name" data-pd-ui="label"></span><span class="card-tag" data-pd-ui="metadata"></span>`;
+      b.querySelector('.card-name').textContent = p.name;
+      b.querySelector('.card-tag').textContent = p.tag;
+      faceCanvas(b.querySelector('canvas'), p.face, 48, {});
+      b.addEventListener('click', () => chooseCharacter(id));
+      host.appendChild(b);
+    }
+    $('#castCount').textContent = `${CV.PRESET_ORDER.length} characters · ${CV.STYLE_ORDER.length} machines`;
+  }
+  function refreshRoster() {
+    const pid = matchingPreset();
+    $$('#roster .card[data-preset]').forEach((b) => {
+      const on = b.dataset.preset === state.face;
+      b.setAttribute('aria-checked', String(on));
+      faceCanvas(b.querySelector('canvas'), CV.PRESETS[b.dataset.preset].face, 48, {});
+    });
+    const p = CV.PRESETS[state.face];
+    const S = CV.STYLES[state.voice.style];
+    const note = $('#castNote');
+    note.innerHTML = '';
+    const b = document.createElement('b');
+    b.textContent = p ? p.name + '. ' : '';
+    note.append(b, (p ? p.note : '') + (pid === state.face ? ` ${S.name} machine.` : ` Their face, your own voice: ${S.name}.`));
+  }
+  const SURPRISE_THEMES = CV.THEME_ORDER;
+  function surprise() {
+    const others = CV.PRESET_ORDER.filter((id) => id !== state.face);
+    const id = others[Math.floor(Math.random() * others.length)];
+    const p = CV.PRESETS[id];
+    const nudge = { pitch: Math.max(-12, Math.min(18, p.voice.pitch + Math.round((Math.random() - 0.5) * 6))), take: 1 + Math.floor(Math.random() * 9) };
+    state.theme = SURPRISE_THEMES[Math.floor(Math.random() * SURPRISE_THEMES.length)];
+    chooseCharacter(id, { voice: nudge });
+    refreshLook();
+    const b = $(`#roster [data-preset="${id}"]`);
+    if (b && b.scrollIntoView) b.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'nearest', inline: 'center' });
+  }
+
+  // ── scenes ──
+  let undoTimer = 0;
+  function snapshot() { return JSON.stringify({ text: state.text, voice: state.voice, face: state.face, speaker: state.speaker, active: state.active }); }
+  function restore(snap) {
+    const s = JSON.parse(snap);
+    stopAll();
+    Object.assign(state, s, { voice: CV.normVoice(s.voice) });
+    ta.value = state.text;
+    sp.value = state.speaker;
+    onTextChange();
+    onVoiceChange(false);
+    refreshRoster();
+  }
+  function buildScenes() {
+    const host = $('#scenes');
+    for (const sc of SCENES) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ex';
+      b.dataset.scene = sc.id;
+      b.innerHTML = `<canvas aria-hidden="true"></canvas><span data-pd-ui="action"></span>`;
+      b.querySelector('span').textContent = sc.label;
+      faceCanvas(b.querySelector('canvas'), CV.PRESETS[sc.preset].face, 24, {});
+      b.addEventListener('click', () => loadScene(sc));
       host.appendChild(b);
     }
   }
+  function loadScene(sc) {
+    const before = snapshot();
+    stopAll();
+    state.text = sc.lines.join('\n');
+    ta.value = state.text;
+    state.active = 0;
+    state.speaker = sc.speaker;
+    sp.value = sc.speaker;
+    state.face = CV.PRESETS[sc.preset].face;
+    state.voice = CV.normVoice(Object.assign({}, CV.DEFAULT_VOICE, CV.PRESETS[sc.preset].voice, { take: 1 }));
+    onTextChange();
+    onVoiceChange(true);
+    refreshRoster();
+    toast(`${sc.label}: ${sc.lines.length} lines`, 'Undo', () => restore(before));
+  }
+
+  // ── building the controls ──
   function buildMachines() {
     const host = $('#machines');
     host.innerHTML = '';
     for (const id of CV.STYLE_ORDER) {
       const S = CV.STYLES[id];
       const m = document.createElement('div');
-      m.className = 'machine';
+      m.className = 'machine' + (id === 'mouth' ? ' is-new' : '');
       m.dataset.style = id;
       m.innerHTML =
         `<button type="button" class="m-pick" role="radio" aria-checked="false">` +
@@ -1144,7 +1489,7 @@
     }
   }
   const KNOBS = [
-    { key: 'pitch', label: 'Pitch', min: -12, max: 12, step: 1, bipolar: true, fmt: (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v) + ' st' },
+    { key: 'pitch', label: 'Pitch', min: -12, max: 18, step: 1, center: 0, fmt: (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v) + ' st' },
     { key: 'speed', label: 'Speed', min: 0.6, max: 1.6, step: 0.01, center: 1, fmt: (v) => v.toFixed(2) + '×' },
     { key: 'melody', label: 'Melody', min: 0, max: 1, step: 0.01, fmt: (v) => Math.round(v * 100) + '%', hint: 'From monotone to sing-song' },
     { key: 'character', label: 'Character', min: 0, max: 1, step: 0.01, fmt: (v) => Math.round(v * 100) + '%' },
@@ -1159,30 +1504,23 @@
       el.dataset.key = k.key;
       el.innerHTML =
         `<div class="knob-head"><label for="k-${k.key}" data-pd-ui="label">${k.label}</label><output for="k-${k.key}" data-pd-ui="data"></output></div>` +
-        `<div class="range${k.bipolar || k.center ? ' bipolar' : ''}"><input type="range" id="k-${k.key}" min="${k.min}" max="${k.max}" step="${k.step}"></div>` +
+        `<div class="range${k.center != null ? ' bipolar' : ''}"><input type="range" id="k-${k.key}" min="${k.min}" max="${k.max}" step="${k.step}"></div>` +
         (k.key === 'character' || k.hint ? `<div class="knob-hint" data-pd-ui="caption">${k.hint || ''}</div>` : '');
       const input = el.querySelector('input');
-      if (k.center) {
-        // Speed: a tick at 1×, and the fill grows out from it.
-        el.querySelector('.range').style.setProperty('--tick', ((k.center - k.min) / (k.max - k.min)) * 100 + '%');
-      }
+      if (k.center != null) el.querySelector('.range').style.setProperty('--tick', ((k.center - k.min) / (k.max - k.min)) * 100 + '%');
       input.addEventListener('input', () => {
         state.voice = CV.normVoice(Object.assign({}, state.voice, { [k.key]: parseFloat(input.value) }));
         onVoiceChange(false);
       });
       input.addEventListener('change', () => playClip(state.active));
       input.addEventListener('dblclick', () => {
-        const base = presetVoice() || CV.DEFAULT_VOICE;
+        const base = CV.PRESETS[state.face] ? CV.normVoice(CV.PRESETS[state.face].voice) : CV.DEFAULT_VOICE;
         input.value = base[k.key];
         input.dispatchEvent(new Event('input'));
         playClip(state.active);
       });
       host.appendChild(el);
     }
-  }
-  function presetVoice() {
-    const id = matchingPreset();
-    return id ? CV.PRESETS[id].voice : null;
   }
   function matchingPreset() {
     const v = state.voice;
@@ -1198,8 +1536,10 @@
     const v = state.voice;
     const S = CV.STYLES[v.style];
     const pid = matchingPreset();
-    $$('#presets .chip').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.preset === pid)));
-    $('#presetNote').textContent = pid ? CV.PRESETS[pid].note : 'Custom voice. Pick a client to start from one of theirs.';
+    const own = CV.PRESETS[state.face];
+    $('#custom').hidden = pid === state.face;
+    $('#customText').textContent = pid ? `This is ${presetName(pid)}’s voice on ${own.name}’s face.` : `Your own voice for ${own.name}.`;
+    $('#resetVoice').textContent = `Back to ${own.name}’s voice`;
     $$('.machine').forEach((m) => {
       const on = m.dataset.style === v.style;
       m.classList.toggle('is-on', on);
@@ -1212,7 +1552,7 @@
       const val = v[k.key];
       if (document.activeElement !== input || input.value !== String(val)) input.value = val;
       const pos = (Math.min(k.max, Math.max(k.min, val)) - k.min) / (k.max - k.min);
-      const c = k.bipolar ? 0.5 : k.center ? (k.center - k.min) / (k.max - k.min) : 0;
+      const c = k.center != null ? (k.center - k.min) / (k.max - k.min) : 0;
       input.style.setProperty('--a', Math.min(c, pos) * 100 + '%');
       input.style.setProperty('--b', Math.max(c, pos) * 100 + '%');
       el.querySelector('output').textContent = k.fmt(val);
@@ -1232,7 +1572,7 @@
       const li = document.createElement('li');
       li.className = 'empty-clips';
       li.setAttribute('data-pd-ui', 'body-compact');
-      li.textContent = 'No lines yet. Type one above, or load an episode.';
+      li.textContent = 'No lines yet. Type one above, or start from a scene.';
       host.appendChild(li);
     }
     clips.forEach((c, i) => {
@@ -1241,14 +1581,16 @@
       li.dataset.i = i;
       const tags = c.parsed.mood.keys.map((k) => (c.parsed.mood.very[k] ? 'Very ' + CV.MOODS[k].label.toLowerCase() : CV.MOODS[k].label));
       if (c.parsed.phone) tags.push('Speakerphone');
+      if (c.parsed.speaker) tags.unshift(c.parsed.speaker);
       li.innerHTML =
         `<button type="button" class="clip-main" aria-label="Play line ${i + 1}">` +
         `<span class="clip-n" data-pd-ui="data">${String(i + 1).padStart(2, '0')}</span>` +
         `<span class="clip-body"><span class="clip-text" data-pd-ui="body-compact"></span>` +
-        (tags.length ? `<span class="clip-tags">${tags.map((t) => `<span class="tag" data-pd-ui="badge">${t}</span>`).join('')}</span>` : '') +
+        (tags.length ? `<span class="clip-tags">${tags.map(() => `<span class="tag" data-pd-ui="badge"></span>`).join('')}</span>` : '') +
         `</span><span class="clip-dur" data-pd-ui="data">…</span></button>` +
         `<button type="button" class="icon-btn dl-only" aria-label="Download line ${i + 1}">${ICON.down}</button>`;
       li.querySelector('.clip-text').textContent = c.parsed.text;
+      li.querySelectorAll('.tag').forEach((el, k) => { el.textContent = tags[k]; });
       li.querySelector('.clip-main').addEventListener('click', () => {
         if (playing && !playing.hear && playing.clip === i) stopAll();
         else playClip(i);
@@ -1268,8 +1610,7 @@
       const rows = $$('#clips .clip');
       let total = 0, done = 0;
       for (let k = 0; k < clips.length; k++) {
-        const key = clips[k].raw + '\u0000' + vkey(state.voice);
-        const r = cache.get(key);
+        const r = cache.get(clips[k].raw + '\u0000' + vkey(state.voice));
         if (r) { total += r.duration; done++; if (rows[k]) rows[k].querySelector('.clip-dur').textContent = r.duration.toFixed(2) + ' s'; }
       }
       $('#clipsSum').textContent = clips.length ? `${clips.length} ${clips.length === 1 ? 'clip' : 'clips'} · ${done === clips.length ? total.toFixed(1) + ' s' : '…'}` : '';
@@ -1277,7 +1618,7 @@
       if (i < clips.length) {
         renderLine(clips[i].raw, state.voice);
         durTimer = setTimeout(step, 0);
-      }
+      } else refreshExportPreview();
     };
     step();
   }
@@ -1316,7 +1657,7 @@
     btn.setAttribute('aria-label', mainPlaying ? 'Stop' : 'Play');
     $('#miniPlay').innerHTML = mainPlaying ? ICON.stopSm : ICON.playSm;
     $('#miniPlay').setAttribute('aria-label', mainPlaying ? 'Stop' : 'Play');
-    $('#hearAll').innerHTML = seq ? `${ICON.stopSm}<span>Stop</span>` : `${ICON.playSm}<span>Hear all six</span>`;
+    $('#hearAll').innerHTML = seq ? `${ICON.stopSm}<span>Stop</span>` : `${ICON.playSm}<span>Hear every machine</span>`;
     $$('.machine').forEach((m) => {
       const h = playing && playing.hear === m.dataset.style;
       m.classList.toggle('is-hearing', !!h);
@@ -1362,15 +1703,12 @@
     args.push('--out ' + (c ? fileBase(state.active) : 'line') + '.wav');
     $('#snippet').textContent = 'node cli.mjs ' + args.join(' \\\n  ');
   }
-  function refreshSegs() {
-    $$('[data-script]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.script === state.script)));
-    $$('[data-boxtheme]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.boxtheme === state.theme)));
-  }
 
   let voiceTimer = 0;
   function onVoiceChange(play) {
     persist();
     refreshVoiceUI();
+    refreshRoster();
     if (playing && !play) stopAll();
     cancelAnimationFrame(voiceTimer);
     voiceTimer = requestAnimationFrame(() => {
@@ -1389,11 +1727,585 @@
     drawStage();
   }
 
+  // ── tabs on phones ──
+  const TABS = ['lines', 'voice', 'export'];
+  let tab = 'lines';
+  function showTab(name, scroll) {
+    tab = name;
+    $$('.tabs [data-tab]').forEach((b) => {
+      const on = b.dataset.tab === name;
+      b.setAttribute('aria-selected', String(on));
+      b.setAttribute('aria-pressed', String(on));
+    });
+    $$('.panel[data-tab]').forEach((p) => p.classList.toggle('is-tab', p.dataset.tab === name));
+    if (name === 'export') refreshExportPreview();
+    if (scroll) {
+      const tabsVisible = getComputedStyle($('.tabs')).display !== 'none';
+      const target = tabsVisible ? $('.tabs') : $('#panel-' + name);
+      target.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
+    }
+  }
+  $$('.tabs [data-tab]').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab)));
+
+  // ── look: box style, runes or words ──
+  function themeSwatch(cv, id) {
+    const o = { text: 'Hi!', width: 32, lines: 1, theme: id, script: 'latin', cursor: true };
+    const M = CV.measureDialog(o);
+    const ctx = sizeCanvas(cv, M.width, M.height, Math.max(1, Math.round(2 * dpr())));
+    ctx.clearRect(0, 0, M.width, M.height);
+    CV.drawDialog(ctx, o);
+  }
+  function buildLook() {
+    const host = $('#swatches');
+    for (const id of CV.THEME_ORDER) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'swatch';
+      b.setAttribute('role', 'radio');
+      b.dataset.theme = id;
+      b.innerHTML = `<canvas aria-hidden="true"></canvas><span data-pd-ui="caption">${CV.THEMES[id].name}</span>`;
+      themeSwatch(b.querySelector('canvas'), id);
+      b.addEventListener('click', () => { state.theme = id; persist(); refreshLook(); drawStage(); });
+      host.appendChild(b);
+    }
+    makeSeg('#scriptSeg', [['latin', 'Words'], ['alien', 'Runes']], () => state.script, (v) => { state.script = v; persist(); drawStage(); });
+  }
+  function refreshLook() {
+    $$('#swatches .swatch').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.theme === state.theme)));
+    $$('[data-seg]').forEach((b) => b.setAttribute('aria-checked', String(b._get() === b.dataset.value)));
+    refreshExportPreview();
+  }
+  function makeSeg(sel, options, get, set) {
+    const host = $(sel);
+    host.innerHTML = '';
+    for (const [value, label] of options) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('role', 'radio');
+      b.setAttribute('data-pd-ui', 'action');
+      b.dataset.seg = sel;
+      b.dataset.value = value;
+      b._get = get;
+      b.textContent = label;
+      b.addEventListener('click', () => { set(value); refreshLook(); });
+      host.appendChild(b);
+    }
+  }
+
+  // ── video ──
+  // Sizes and the safe area inside each, where apps don't put their own
+  // buttons and captions over the picture.
+  // Safe areas keep the face and the box clear of the apps' own buttons and
+  // captions. Text is drawn `scale` video pixels to one box pixel, so it reads
+  // on a phone; long lines page through `rows` lines at a time.
+  const FORMATS = {
+    story: { name: 'Reels · TikTok · Shorts', ratio: '9:16', W: 1080, H: 1920, safe: [120, 250, 960, 1420], scale: 7, faceS: 30, rows: 3 },
+    feed: { name: 'Feed post', ratio: '4:5', W: 1080, H: 1350, safe: [80, 80, 1000, 1270], scale: 7, faceS: 26, rows: 3 },
+    square: { name: 'Square', ratio: '1:1', W: 1080, H: 1080, safe: [80, 64, 1000, 1016], scale: 7, faceS: 22, rows: 3 },
+    wide: { name: 'YouTube', ratio: '16:9', W: 1920, H: 1080, safe: [200, 64, 1720, 1016], scale: 8, faceS: 24, rows: 3 },
+  };
+  const FORMAT_ORDER = ['story', 'feed', 'square', 'wide'];
+  const BACKGROUNDS = [['color', 'Colour'], ['stage', 'Dark'], ['green', 'Green'], ['clear', 'Clear']];
+  function buildExport() {
+    const host = $('#formats');
+    for (const id of FORMAT_ORDER) {
+      const F = FORMATS[id];
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'format';
+      b.setAttribute('role', 'radio');
+      b.dataset.format = id;
+      const [rw, rh] = F.ratio.split(':').map(Number);
+      b.innerHTML = `<span class="ratio"><i style="width:${Math.round((34 * rw) / rh)}px"></i></span><span class="f-name" data-pd-ui="label">${F.ratio}</span><span class="f-where" data-pd-ui="caption">${F.name}</span>`;
+      b.addEventListener('click', () => { state.exp.format = id; persist(); refreshExport(); });
+      host.appendChild(b);
+    }
+    makeSeg('#bgSeg', BACKGROUNDS, () => state.exp.bg, (v) => { state.exp.bg = v; persist(); refreshExport(); });
+    makeSeg('#layoutSeg', [['face', 'Face + box'], ['box', 'Box only']], () => state.exp.layout, (v) => { state.exp.layout = v; persist(); refreshExport(); });
+    makeSeg('#scopeSeg', [['line', 'This line'], ['all', 'All lines']], () => state.exp.scope, (v) => { state.exp.scope = v; persist(); refreshExport(); });
+  }
+  function refreshExport() {
+    $$('#formats .format').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.format === state.exp.format)));
+    refreshLook();
+    const F = FORMATS[state.exp.format];
+    const clear = state.exp.bg === 'clear';
+    $('#makeVideo2').innerHTML = `${ICON.video}<span>${clear ? 'Make PNG frames' : 'Make the video'} <span class="sub">${F.ratio}</span></span>`;
+    $('#makeVideo').innerHTML = `${ICON.video}<span>Video <span class="sub">${F.ratio}</span></span>`;
+    $('#makeVideo').setAttribute('aria-label', `Make a ${F.ratio} video`);
+    const bgWord = { color: 'on the character’s colour', stage: 'on a dark stage', green: 'on green, to key out in your editor', clear: 'as transparent PNG frames and a WAV, for desktop editors' }[state.exp.bg];
+    const scope = state.exp.scope === 'all' ? `all ${clips.length} lines` : 'this line';
+    $('#previewCap').textContent = `${F.ratio}, ${F.W} × ${F.H}, ${bgWord}. ${scope[0].toUpperCase() + scope.slice(1)}.`;
+  }
+  function exportTexts() {
+    const list = state.exp.scope === 'all' ? clips : (activeClip() ? [activeClip()] : []);
+    return list;
+  }
+  // Works out where everything goes for one video, once.
+  function videoLayout(fmtId, opts, list) {
+    const F = FORMATS[fmtId];
+    const [x0, y0, x1, y1] = F.safe;
+    const withFace = opts.layout === 'face';
+    const portrait = !withFace && state.portrait ? { face: state.face } : null;
+    // With the face in the box, the text gets a little smaller to keep its width.
+    const scale = withFace ? F.scale : F.scale - 1;
+    const width = Math.floor((x1 - x0) / scale);
+    const segs = list.map((c) => ({ clip: c, res: renderLine(c.raw, state.voice), speaker: speakerOf(c).slice(0, 18) }));
+    const anySpeaker = segs.some((s) => s.speaker);
+    let rows = 1;
+    for (const s of segs) {
+      const m = CV.measureDialog({ text: s.res.text, speaker: s.speaker, width, script: state.script, portrait });
+      s.lines = m.lines;
+      rows = Math.max(rows, Math.min(F.rows, m.lines.length));
+    }
+    const M = CV.measureDialog({ text: '', speaker: anySpeaker ? 'X' : '', width, rows, script: state.script, portrait });
+    const boxW = M.width * scale, boxH = M.height * scale;
+    let faceS = withFace ? F.faceS : 0;
+    const gap = withFace ? Math.round(F.H * 0.035) : 0;
+    while (withFace && faceS > 8 && faceS * 20 + gap + boxH > y1 - y0) faceS--;
+    const faceH = withFace ? faceS * 20 : 0;
+    const total = faceH + gap + boxH;
+    // Face and box sit together a little above the middle; the box alone sits
+    // low, where games put it, leaving the picture above for your footage.
+    const top = withFace ? Math.round(y0 + (y1 - y0 - total) * 0.42) : y1 - boxH;
+    // Timing: the box opens, the line plays, the box holds; for every line.
+    let t = 0;
+    const lead = 0.4, hold = 0.7;
+    segs.forEach((s, i) => {
+      s.start = t;
+      s.voiceAt = t + (i === 0 ? lead : 0.25);
+      s.end = s.voiceAt + s.res.duration + (i === segs.length - 1 ? hold + 0.4 : hold);
+      s.times = CV.revealTimes(s.res.text, s.res.events);
+      // which line each character is on, for paging
+      s.lineOf = new Int16Array(s.res.text.length);
+      s.lines.forEach((ln, li) => { for (const it of ln.items) s.lineOf[it.i] = li; });
+      t = s.end;
+    });
+    return {
+      F, W: F.W, H: F.H, bg: opts.bg, withFace, faceS, portrait, scale, width, rows, anySpeaker,
+      box: { x: Math.round((F.W - boxW) / 2), y: top + faceH + gap, w: boxW, h: boxH, M },
+      face: withFace ? { x: Math.round((F.W - faceH) / 2), y: top, size: faceH } : null,
+      segs, duration: t,
+    };
+  }
+  function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+  // Stepped bands, darker towards the floor, like an old game's sky.
+  function paintBackdrop(ctx, L) {
+    const { W, H } = L;
+    if (L.bg === 'clear') { ctx.clearRect(0, 0, W, H); return; }
+    if (L.bg === 'green') { ctx.fillStyle = '#00ff00'; ctx.fillRect(0, 0, W, H); return; }
+    const base = L.bg === 'stage' ? '#151621' : CV.FACES[state.face].bg;
+    const [r, g, b] = hexRgb(base);
+    const bands = 9;
+    for (let i = 0; i < bands; i++) {
+      const k = 1.08 - (i / (bands - 1)) * 0.5;
+      ctx.fillStyle = `rgb(${Math.min(255, Math.round(r * k))},${Math.min(255, Math.round(g * k))},${Math.min(255, Math.round(b * k))})`;
+      ctx.fillRect(0, Math.floor((H * i) / bands), W, Math.ceil(H / bands) + 1);
+    }
+  }
+  // A dot grid drifting slowly upwards, so the picture is never quite still.
+  function paintDots(ctx, L, t) {
+    if (L.bg === 'clear' || L.bg === 'green') return;
+    const step = Math.round(Math.min(L.W, L.H) / 30);
+    const d = Math.max(3, Math.round(step / 8));
+    const off = Math.floor((t * step) / 2.5) % step;
+    ctx.fillStyle = 'rgba(255,255,255,0.085)';
+    for (let y = step / 2 - off; y < L.H; y += step) for (let x = step / 2; x < L.W; x += step) ctx.fillRect(Math.round(x), Math.round(y), d, d);
+  }
+  const easeOutBack = (k) => { const c = 2.2; return 1 + (c + 1) * Math.pow(k - 1, 3) + c * Math.pow(k - 1, 2); };
+  function videoFrame(ctx, L, t, P) {
+    if (P.bgCanvas) { ctx.clearRect(0, 0, L.W, L.H); ctx.drawImage(P.bgCanvas, 0, 0); }
+    else paintBackdrop(ctx, L);
+    paintDots(ctx, L, t);
+    let si = L.segs.findIndex((s) => t < s.end);
+    if (si < 0) si = L.segs.length - 1;
+    const s = L.segs[si];
+    if (!s) return;
+    const lt = t - s.voiceAt;
+    const ev = s.res.events;
+    const open = si === 0 ? Math.max(0, Math.min(1, (t - 0.16) / 0.16)) : 1;
+    const mouth = lt >= 0 ? mouthAt(ev, lt) : 0;
+    const blink = blinkAt(t);
+    const shadow = L.bg !== 'green';
+    ctx.imageSmoothingEnabled = false;
+    if (L.face) {
+      const T = CV.THEMES[state.theme];
+      // framed like the box: dark edge, light border, then the face
+      const fctx = P.faceCv.getContext('2d');
+      fctx.clearRect(0, 0, 20, 20);
+      fctx.fillStyle = T.key; fctx.fillRect(1, 0, 18, 20); fctx.fillRect(0, 1, 20, 18);
+      fctx.fillStyle = T.border; fctx.fillRect(1, 1, 18, 18);
+      CV.drawFace(fctx, state.face, 2, 2, { open: mouth, blink });
+      // Pops in, hops on every syllable, breathes in between.
+      const pop = t < 0.34 ? easeOutBack(Math.min(1, t / 0.34)) : 1;
+      const px = L.faceS;
+      const size = 20 * Math.max(1, Math.round(px * pop));
+      let hop = 0;
+      if (lt >= 0) {
+        for (const e of ev) {
+          if (lt >= e.t && lt < e.t + e.d) { hop = Math.sin(Math.PI * Math.min(1, ((lt - e.t) / e.d) * 1.25)) * Math.min(1, 0.4 + e.a); break; }
+        }
+      }
+      const breath = Math.sin((t * Math.PI * 2) / 2.8) * 0.22;
+      const lift = Math.round((hop * 0.7 + breath) * px);
+      const cx = L.face.x + L.face.size / 2, by = L.face.y + L.face.size;
+      const x = Math.round(cx - size / 2), y = by - size - lift;
+      // The shadow stays put while the face hops off it.
+      if (shadow && pop > 0.2) {
+        const d = Math.round(px * 0.5);
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.fillRect(x + d + px, by - size + d + px, size - 2 * px, size);
+        ctx.fillRect(x + d, by - size + d + 2 * px, size, size - 4 * px);
+      }
+      ctx.drawImage(P.faceCv, x, y, size, size);
+    }
+    const bctx = P.boxCv.getContext('2d');
+    bctx.clearRect(0, 0, P.boxCv.width, P.boxCv.height);
+    const last = ev.length ? ev[ev.length - 1] : null;
+    const finished = !last || lt > last.t + last.d + 0.08;
+    // The page holding the newest letter.
+    let shown = -1;
+    for (let i = 0; i < s.times.length; i++) if (lt >= s.times[i]) shown = i;
+    const page = Math.floor((shown < 0 ? 0 : s.lineOf[shown]) / L.rows);
+    const opts = {
+      text: s.res.text, speaker: L.anySpeaker ? s.speaker || ' ' : '', script: state.script, width: L.width, rows: L.rows, from: page * L.rows, theme: state.theme,
+      portrait: L.portrait ? { face: state.face, open: mouth, blink } : null,
+      open, visible: (i) => lt >= s.times[i], cursor: finished && Math.floor(t * 2.5) % 2 === 0,
+      level: lt >= 0 ? CV.talkLevel(ev, lt) : 0, meterPhase: t * 14, whisper: s.res.mood.includes('whisper'),
+    };
+    if (shadow && open >= 1) {
+      const sh = boxShadow(P, opts);
+      ctx.globalAlpha = 0.3;
+      ctx.drawImage(sh, L.box.x + L.scale * 2, L.box.y + L.scale * 2, L.box.w, L.box.h);
+      ctx.globalAlpha = 1;
+    }
+    CV.drawDialog(bctx, opts);
+    ctx.drawImage(P.boxCv, L.box.x, L.box.y, L.box.w, L.box.h);
+  }
+  // The box's silhouette in black, for its drop shadow; one per speaker name.
+  function boxShadow(P, o) {
+    const key = o.speaker || '';
+    if (P.shadows.has(key)) return P.shadows.get(key);
+    const c = makeCanvas(P.boxCv.width, P.boxCv.height);
+    const x = c.getContext('2d');
+    CV.drawDialog(x, { ...o, text: '', visible: () => false, cursor: false, portrait: o.portrait ? { face: o.portrait.face } : null });
+    x.globalCompositeOperation = 'source-in';
+    x.fillStyle = '#000';
+    x.fillRect(0, 0, c.width, c.height);
+    P.shadows.set(key, c);
+    return c;
+  }
+  function makeCanvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+  function prepFrame(L) {
+    const bgCanvas = L.bg === 'clear' ? null : makeCanvas(L.W, L.H);
+    if (bgCanvas) paintBackdrop(bgCanvas.getContext('2d'), L);
+    return { bgCanvas, boxCv: makeCanvas(L.box.M.width, L.box.M.height), faceCv: makeCanvas(20, 20), shadows: new Map() };
+  }
+  // A still of the video, halfway through the first line, with the apps'
+  // own buttons sketched in so you can see what stays clear.
+  let previewQueued = 0;
+  function refreshExportPreview() {
+    cancelAnimationFrame(previewQueued);
+    previewQueued = requestAnimationFrame(() => {
+      const list = exportTexts();
+      const cv = $('#exportPreview');
+      const F = FORMATS[state.exp.format];
+      const maxW = Math.min(cv.parentElement.clientWidth - 28, 320);
+      const maxH = 380;
+      const k = Math.min(maxW / F.W, maxH / F.H);
+      const w = Math.round(F.W * k), h = Math.round(F.H * k);
+      cv.width = Math.round(w * dpr()); cv.height = Math.round(h * dpr());
+      cv.style.width = w + 'px'; cv.style.height = h + 'px';
+      const ctx = cv.getContext('2d');
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      if (!list.length) return;
+      const L = videoLayout(state.exp.format, state.exp, list.slice(0, 1));
+      const full = makeCanvas(L.W, L.H);
+      const P = prepFrame(L);
+      const s = L.segs[0];
+      videoFrame(full.getContext('2d'), L, s.voiceAt + s.res.duration * 0.55, P);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(full, 0, 0, cv.width, cv.height);
+      if (state.exp.format === 'story') {
+        // where Instagram and TikTok draw their buttons and captions
+        const sx = cv.width / F.W;
+        ctx.fillStyle = 'rgba(255,255,255,0.18)';
+        for (let i = 0; i < 4; i++) ctx.fillRect(Math.round(985 * sx), Math.round((1120 + i * 150) * sx), Math.round(70 * sx), Math.round(70 * sx));
+        ctx.fillRect(Math.round(40 * sx), Math.round(1560 * sx), Math.round(560 * sx), Math.round(28 * sx));
+        ctx.fillRect(Math.round(40 * sx), Math.round(1610 * sx), Math.round(760 * sx), Math.round(22 * sx));
+      }
+    });
+  }
+
+  // Encoding: H.264 and AAC in an MP4 where the browser can make them
+  // (WebCodecs), VP9 or AV1 and Opus in an MP4 where it can't, and as a last
+  // resort a real-time recording of the canvas.
+  let muxerLoad = null;
+  function loadMuxer() {
+    if (window.Mp4Muxer) return Promise.resolve(window.Mp4Muxer);
+    if (!muxerLoad) {
+      muxerLoad = new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'vendor/mp4-muxer.js';
+        s.onload = () => resolve(window.Mp4Muxer);
+        s.onerror = () => { muxerLoad = null; reject(new Error('The video muxer couldn’t load.')); };
+        document.head.appendChild(s);
+      });
+    }
+    return muxerLoad;
+  }
+  async function pickCodecs(W, H) {
+    if (typeof VideoEncoder === 'undefined' || typeof AudioEncoder === 'undefined' || typeof VideoFrame === 'undefined') return null;
+    const vids = [['avc', 'avc1.640028'], ['avc', 'avc1.4d0028'], ['avc', 'avc1.42e028'], ['vp9', 'vp09.00.40.08'], ['av1', 'av01.0.08M.08']];
+    let video = null;
+    for (const [mux, codec] of vids) {
+      const cfg = { codec, width: W, height: H, bitrate: 8e6, framerate: 30 };
+      if (mux === 'avc') cfg.avc = { format: 'avc' };
+      try { if ((await VideoEncoder.isConfigSupported(cfg)).supported) { video = { mux, cfg }; break; } } catch (e) { /* try the next */ }
+    }
+    let audioC = null;
+    for (const [mux, codec] of [['aac', 'mp4a.40.2'], ['opus', 'opus']]) {
+      const cfg = { codec, sampleRate: 48000, numberOfChannels: 1, bitrate: 128000 };
+      try { if ((await AudioEncoder.isConfigSupported(cfg)).supported) { audioC = { mux, cfg }; break; } } catch (e) { /* try the next */ }
+    }
+    if (!video || !audioC) return null;
+    return { video, audio: audioC };
+  }
+  function mixAudio(L) {
+    const sr = 48000;
+    const out = new Float32Array(Math.ceil(L.duration * sr));
+    for (const s of L.segs) {
+      const off = Math.round(s.voiceAt * sr);
+      const x = s.res.samples;
+      for (let i = 0; i < x.length && off + i < out.length; i++) out[off + i] += x[i];
+    }
+    return out;
+  }
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  let job = null;
+  async function encodeWebCodecs(L, codecs, onProgress) {
+    const Mux = await loadMuxer();
+    const fps = 30;
+    const target = new Mux.ArrayBufferTarget();
+    const muxer = new Mux.Muxer({
+      target,
+      video: { codec: codecs.video.mux, width: L.W, height: L.H, frameRate: fps },
+      audio: { codec: codecs.audio.mux, numberOfChannels: 1, sampleRate: 48000 },
+      fastStart: 'in-memory',
+      firstTimestampBehavior: 'offset',
+    });
+    let failed = null;
+    const venc = new VideoEncoder({ output: (chunk, meta) => muxer.addVideoChunk(chunk, meta), error: (e) => { failed = e; } });
+    venc.configure(codecs.video.cfg);
+    const aenc = new AudioEncoder({ output: (chunk, meta) => muxer.addAudioChunk(chunk, meta), error: (e) => { failed = e; } });
+    aenc.configure(codecs.audio.cfg);
+    const pcm = mixAudio(L);
+    const block = 4800;
+    for (let i = 0; i < pcm.length; i += block) {
+      const n = Math.min(block, pcm.length - i);
+      const data = pcm.slice(i, i + n);
+      const ad = new AudioData({ format: 'f32-planar', sampleRate: 48000, numberOfFrames: n, numberOfChannels: 1, timestamp: Math.round((i / 48000) * 1e6), data });
+      aenc.encode(ad);
+      ad.close();
+    }
+    const cv = makeCanvas(L.W, L.H);
+    const ctx = cv.getContext('2d', { alpha: false });
+    const P = prepFrame(L);
+    const frames = Math.ceil(L.duration * fps);
+    for (let f = 0; f < frames; f++) {
+      if (job && job.cancelled) throw new Error('cancelled');
+      if (failed) throw failed;
+      videoFrame(ctx, L, f / fps, P);
+      const vf = new VideoFrame(cv, { timestamp: Math.round((f * 1e6) / fps), duration: Math.round(1e6 / fps) });
+      venc.encode(vf, { keyFrame: f % 60 === 0 });
+      vf.close();
+      if (venc.encodeQueueSize > 6) while (venc.encodeQueueSize > 2) await sleep(4);
+      if (f % 6 === 0) { onProgress(f / frames); await sleep(0); }
+    }
+    await venc.flush();
+    await aenc.flush();
+    if (failed) throw failed;
+    muxer.finalize();
+    venc.close();
+    aenc.close();
+    const NAMES = { avc: 'H.264', vp9: 'VP9', av1: 'AV1', aac: 'AAC', opus: 'Opus' };
+    return { blob: new Blob([target.buffer], { type: 'video/mp4' }), ext: 'mp4', codec: `${NAMES[codecs.video.mux]} + ${NAMES[codecs.audio.mux]}`, social: codecs.video.mux === 'avc' && codecs.audio.mux === 'aac' };
+  }
+  function recorderType() {
+    if (typeof MediaRecorder === 'undefined' || !HTMLCanvasElement.prototype.captureStream) return null;
+    for (const t of ['video/mp4;codecs="avc1.640028,mp4a.40.2"', 'video/mp4;codecs=avc1,mp4a', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm']) {
+      try { if (MediaRecorder.isTypeSupported(t)) return t; } catch (e) { /* next */ }
+    }
+    return null;
+  }
+  // Plays the video once into a recorder, in real time.
+  async function encodeRecorder(L, type, onProgress) {
+    const a = audio();
+    const cv = makeCanvas(L.W, L.H);
+    const ctx = cv.getContext('2d');
+    const P = prepFrame(L);
+    videoFrame(ctx, L, 0, P);
+    const vstream = cv.captureStream(30);
+    const dest = a.createMediaStreamDestination();
+    const buf = a.createBuffer(1, Math.ceil(L.duration * 48000), 48000);
+    buf.getChannelData(0).set(mixAudio(L));
+    const src = a.createBufferSource();
+    src.buffer = buf;
+    src.connect(dest);
+    const stream = new MediaStream([...vstream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
+    const rec = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 8e6, audioBitsPerSecond: 128000 });
+    const parts = [];
+    rec.ondataavailable = (e) => { if (e.data && e.data.size) parts.push(e.data); };
+    const done = new Promise((r) => { rec.onstop = r; });
+    rec.start(250);
+    const t0 = a.currentTime + 0.1;
+    src.start(t0);
+    await new Promise((resolve, reject) => {
+      const tick = () => {
+        if (job && job.cancelled) { reject(new Error('cancelled')); return; }
+        const t = a.currentTime - t0;
+        videoFrame(ctx, L, Math.max(0, t), P);
+        onProgress(Math.max(0, t) / L.duration);
+        if (t >= L.duration) resolve();
+        else requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }).finally(() => { try { src.stop(); } catch (e) { /* fine */ } rec.stop(); });
+    await done;
+    const mp4 = type.startsWith('video/mp4');
+    return { blob: new Blob(parts, { type: mp4 ? 'video/mp4' : 'video/webm' }), ext: mp4 ? 'mp4' : 'webm', codec: mp4 ? 'MP4' : 'WebM', social: mp4 };
+  }
+  // Transparent: every frame as a PNG, plus the sound, for editors that take
+  // image sequences.
+  async function encodePngs(L, onProgress) {
+    const fps = 30;
+    const cv = makeCanvas(L.W, L.H);
+    const ctx = cv.getContext('2d');
+    const P = prepFrame(L);
+    const frames = Math.ceil(L.duration * fps);
+    const files = [];
+    for (let f = 0; f < frames; f++) {
+      if (job && job.cancelled) throw new Error('cancelled');
+      videoFrame(ctx, L, f / fps, P);
+      const blob = await new Promise((r) => cv.toBlob(r, 'image/png'));
+      files.push({ name: `frames/frame_${String(f + 1).padStart(5, '0')}.png`, data: new Uint8Array(await blob.arrayBuffer()) });
+      if (f % 3 === 0) onProgress(f / frames);
+    }
+    files.push({ name: 'sound.wav', data: CV.encodeWav(mixAudio(L), 48000) });
+    files.push({ name: 'README.txt', data: new TextEncoder().encode(
+      `8-bit Voice ${APP_VERSION}: ${frames} frames, ${L.W} x ${L.H}, ${fps} frames per second, transparent background.\n` +
+      `Import the frames as an image sequence at ${fps} fps and put sound.wav under them; frame 1 starts at 0:00.\n`) });
+    return { blob: new Blob([CV.zip(files)], { type: 'application/zip' }), ext: 'zip', codec: `${frames} PNG frames + WAV` };
+  }
+
+  const vSheet = $('#videoSheet');
+  let lastVideo = null;
+  function videoName(L, ext) {
+    const who = CV.slug(state.speaker || presetName(state.face) || '8-bit-voice', 16);
+    const what = L.segs.length === 1 ? CV.slug(L.segs[0].res.text, 30) : `${L.segs.length}-lines`;
+    return `${who}-${what}-${L.F.ratio.replace(':', 'x')}.${ext}`;
+  }
+  async function makeVideo() {
+    if (job) return;
+    const list = exportTexts();
+    if (!list.length) { toast('Type a line first.'); showTab('lines', true); ta.focus(); return; }
+    stopAll();
+    const L = videoLayout(state.exp.format, state.exp, list);
+    job = { cancelled: false };
+    if (lastVideo) { URL.revokeObjectURL(lastVideo.url); lastVideo = null; }
+    const out = $('#videoOut');
+    out.removeAttribute('src');
+    $('#videoResult').hidden = true;
+    $('#videoSave').hidden = true;
+    $('#videoAgain').hidden = true;
+    $('#videoClose').textContent = 'Cancel';
+    $('#videoBar').hidden = false;
+    $('#videoBar i').style.width = '0%';
+    $('#videoTitle').textContent = state.exp.bg === 'clear' ? 'Making your frames' : 'Making your video';
+    $('#videoMeta').textContent = `${L.F.ratio} · ${L.W} × ${L.H} · ${L.duration.toFixed(1)} s · ${L.segs.length} ${L.segs.length === 1 ? 'line' : 'lines'}`;
+    $('#videoHint').textContent = 'This happens on your device, so it takes a moment.';
+    if (vSheet.showModal && !vSheet.open) vSheet.showModal();
+    const onProgress = (k) => { $('#videoBar i').style.width = Math.round(Math.min(1, k) * 100) + '%'; };
+    try {
+      let result;
+      if (state.exp.bg === 'clear') result = await encodePngs(L, onProgress);
+      else {
+        const codecs = await pickCodecs(L.W, L.H);
+        if (codecs) result = await encodeWebCodecs(L, codecs, onProgress);
+        else {
+          const type = recorderType();
+          if (!type) throw new Error('This browser can’t make videos. Try Chrome, Safari or the desktop app, or export PNG frames.');
+          $('#videoHint').textContent = 'Recording it in real time. Keep this screen open.';
+          result = await encodeRecorder(L, type, onProgress);
+        }
+      }
+      onProgress(1);
+      const name = videoName(L, result.ext);
+      lastVideo = { blob: result.blob, name, url: URL.createObjectURL(result.blob), type: result.blob.type };
+      $('#videoTitle').textContent = 'Your video is ready';
+      if (result.ext === 'zip') $('#videoTitle').textContent = 'Your frames are ready';
+      $('#videoHint').textContent = result.ext === 'zip' ? 'A zip of transparent PNG frames and the sound, for your editor.' : saveHint();
+      // Instagram and TikTok want H.264 with AAC sound; not every browser can make that.
+      if (result.ext !== 'zip' && !result.social) {
+        $('#videoHint').textContent += result.ext === 'webm'
+          ? ' This browser makes WebM videos, which YouTube takes. For Instagram or TikTok, make it on your phone or in Chrome or Safari on a Mac or Windows computer.'
+          : ` This browser can’t make AAC sound, so it’s ${result.codec}. YouTube takes it; if Instagram or TikTok refuses it, make it on your phone or in Chrome or Safari on a Mac or Windows computer.`;
+      }
+      $('#videoMeta').textContent = `${name} · ${(result.blob.size / 1048576).toFixed(1)} MB · ${result.codec}`;
+      $('#videoBar').hidden = true;
+      if (result.ext !== 'zip') {
+        out.src = lastVideo.url;
+        $('#videoResult').hidden = false;
+        out.play().catch(() => {});
+      }
+      const share = canShareFile(lastVideo);
+      $('#videoSave').innerHTML = share ? `${ICON.share}<span>Save or share</span>` : `${ICON.down}<span>Download ${result.ext === 'zip' ? 'the zip' : 'the video'}</span>`;
+      $('#videoSave').hidden = false;
+      $('#videoAgain').hidden = false;
+      $('#videoClose').textContent = 'Done';
+    } catch (e) {
+      if (e && e.message === 'cancelled') { if (vSheet.open) vSheet.close(); }
+      else {
+        $('#videoTitle').textContent = 'That didn’t work';
+        $('#videoHint').textContent = (e && e.message) || 'The video couldn’t be made here.';
+        $('#videoBar').hidden = true;
+        $('#videoClose').textContent = 'Close';
+      }
+    } finally {
+      job = null;
+    }
+  }
+  function saveHint() {
+    if (dlMode === 'share') return 'Tap Save or share, then Save Video to put it in Photos, or send it straight to Instagram or TikTok.';
+    return 'Download it, then upload it to Instagram, TikTok, YouTube or your editor.';
+  }
+  function canShareFile(v) {
+    if (dlMode !== 'share' || !v) return false;
+    try { return navigator.canShare({ files: [new File([v.blob], v.name, { type: v.type })] }); } catch (e) { return false; }
+  }
+  $('#videoSave').addEventListener('click', async () => {
+    if (!lastVideo) return;
+    if (canShareFile(lastVideo)) {
+      const ok = await shareFiles([{ name: lastVideo.name, data: lastVideo.blob, type: lastVideo.type }], lastVideo.name);
+      if (ok) return;
+    }
+    saveBytes(lastVideo.name, lastVideo.blob, lastVideo.type);
+  });
+  $('#videoClose').addEventListener('click', () => {
+    if (job) { job.cancelled = true; return; }
+    vSheet.close();
+  });
+  $('#videoAgain').addEventListener('click', () => { vSheet.close(); showTab('export', true); });
+  vSheet.addEventListener('close', () => { if (job) job.cancelled = true; $('#videoOut').pause(); });
+  vSheet.addEventListener('click', (e) => { if (e.target === vSheet && !job) vSheet.close(); });
+  $('#makeVideo').addEventListener('click', makeVideo);
+  $('#makeVideo2').addEventListener('click', makeVideo);
+
   // ── downloads ──
   let dlMode = 'anchor';
   let downloads = null;
   // On phones a download goes to the share sheet instead: Save to Files,
-  // AirDrop, Messages, straight into an editing app.
+  // Photos, AirDrop, Messages, straight into an editing app.
   const canShareFiles = (() => {
     try {
       if (!navigator.canShare || !matchMedia('(pointer: coarse)').matches) return false;
@@ -1423,18 +2335,21 @@
     $$('.dl-only').forEach((el) => { el.hidden = off || dlMode === 'pending'; });
     $('#dlOff').hidden = !off;
     const share = dlMode === 'share';
-    $('#dlAll').innerHTML = share ? `${ICON.share}<span>Save all</span>` : `${ICON.down}<span>Download all</span>`;
-    $('#dlOne').innerHTML = `${share ? ICON.share : ICON.down}<span>WAV</span>`;
+    const ic = share ? ICON.share : ICON.down;
+    $('#dlAll').innerHTML = `${ic}<span>Every line, separate WAVs</span>`;
+    $('#dlLineup').innerHTML = `${ic}<span>Every line, one WAV</span>`;
+    $('#dlWav').innerHTML = `${ic}<span>This line, WAV</span>`;
+    $('#dlOne').innerHTML = `${ICON.wave}<span>WAV</span>`;
     $('#dlOne').setAttribute('aria-label', share ? 'Save or share this line as WAV' : 'Download this line as WAV');
     $$('#clips .icon-btn').forEach((b, i) => {
-      b.innerHTML = share ? ICON.share : ICON.down;
+      b.innerHTML = ic;
       b.setAttribute('aria-label', `${share ? 'Save or share' : 'Download'} line ${i + 1}`);
     });
-    $('#dlNote').textContent = dlMode === 'host' ? 'WAV, 48 kHz, 16-bit, in a zip' : share ? 'WAV, 48 kHz, 16-bit, to Files or any app' : 'WAV, 48 kHz, 16-bit';
+    $('#dlNote').textContent = dlMode === 'host' ? 'WAV, 48 kHz, 16-bit, in a zip' : share ? 'WAV, 48 kHz, 16-bit, to Files or any app' : 'WAV, 48 kHz, 16-bit mono';
   }
   function fileBase(i) {
     const c = clips[i];
-    const who = CV.slug(speakerOf(c) || 'client', 16);
+    const who = CV.slug(speakerOf(c) || presetName(state.face) || 'voice', 16);
     return `${who}-${String(i + 1).padStart(2, '0')}-${CV.slug(c.parsed.text, 36)}`;
   }
   async function saveBytes(name, bytes, mime) {
@@ -1445,32 +2360,33 @@
         const code = e && e.code;
         if (code === 'declined') return;
         if (code === 'rate_limited') toast('Another download is still waiting for you.');
-        else if (code === 'extension_not_enabled') { toast('Zip downloads are switched off here.'); dlMode = 'none'; refreshDownloadUI(); }
+        else if (code === 'extension_not_enabled') { toast('That kind of file is switched off here.'); }
         else if (code === 'unavailable' || code === 'not_granted' || code === 'capability_disabled' || code === 'capability_removed') { dlMode = 'none'; refreshDownloadUI(); }
         else toast('That file couldn’t be saved.');
       }
       return;
     }
-    const url = URL.createObjectURL(new Blob([bytes], { type: mime }));
+    const url = URL.createObjectURL(bytes instanceof Blob ? bytes : new Blob([bytes], { type: mime }));
     const a = document.createElement('a');
     a.href = url;
     a.download = name;
     document.body.appendChild(a);
     a.click();
     a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+  }
+  function deliver(name, data, type, title) {
+    if (dlMode === 'share') {
+      shareFiles([{ name, data, type }], title).then((ok) => { if (!ok) saveBytes(name, data, type); });
+      return;
+    }
+    if (dlMode === 'host' && type === 'audio/wav') saveBytes(name.replace(/\.wav$/, '.zip'), CV.zip([{ name, data }]), 'application/zip');
+    else saveBytes(name, data, type);
   }
   function downloadClip(i) {
     const c = clips[i];
     if (!c) return;
-    const wav = CV.encodeWav(renderLine(c.raw, state.voice).samples);
-    const base = fileBase(i);
-    if (dlMode === 'share') {
-      shareFiles([{ name: base + '.wav', data: wav, type: 'audio/wav' }], c.parsed.text).then((ok) => { if (!ok) saveBytes(base + '.wav', wav, 'audio/wav'); });
-      return;
-    }
-    if (dlMode === 'host') saveBytes(base + '.zip', CV.zip([{ name: base + '.wav', data: wav }]), 'application/zip');
-    else saveBytes(base + '.wav', wav, 'audio/wav');
+    deliver(fileBase(i) + '.wav', CV.encodeWav(renderLine(c.raw, state.voice).samples), 'audio/wav', c.parsed.text);
   }
   function downloadAll() {
     if (!clips.length) return;
@@ -1482,32 +2398,52 @@
     }
     downloadZip(files);
   }
+  // Every line in one file, with a breath between them: for a voice-over track.
+  function downloadLineup() {
+    if (!clips.length) return;
+    const sr = CV.SAMPLE_RATE;
+    const gap = Math.round(sr * 0.6);
+    const parts = clips.map((c) => renderLine(c.raw, state.voice).samples);
+    const out = new Float32Array(parts.reduce((s, x) => s + x.length, 0) + gap * (parts.length - 1));
+    let o = 0;
+    parts.forEach((x, i) => { out.set(x, o); o += x.length + (i < parts.length - 1 ? gap : 0); });
+    const who = CV.slug(state.speaker || presetName(state.face) || 'voice', 16);
+    deliver(`${who}-${clips.length}-lines.wav`, CV.encodeWav(out, sr), 'audio/wav', `${clips.length} lines`);
+  }
   function downloadZip(files) {
     const info = {
       made_with: '8-bit Voice ' + APP_VERSION + ' (chipvoice ' + CV.VERSION + ')',
+      character: state.face,
       voice: state.voice,
       speaker: state.speaker,
       lines: clips.map((c) => c.raw),
     };
     files.push({ name: 'voice.json', data: new TextEncoder().encode(JSON.stringify(info, null, 2) + '\n') });
     const pid = matchingPreset();
-    const name = `8-bit-voice-${CV.slug(state.speaker || 'client', 16)}-${pid || state.voice.style}.zip`;
+    const name = `8-bit-voice-${CV.slug(state.speaker || presetName(state.face) || 'voice', 16)}-${pid || state.voice.style}.zip`;
     saveBytes(name, CV.zip(files), 'application/zip');
   }
 
-  // ── toast ──
+  // ── toast, with an optional action such as Undo ──
   let toastTimer = 0;
-  function toast(msg) {
+  function toast(msg, action, fn) {
     const el = $('#toast');
-    el.textContent = msg;
+    $('#toastText').textContent = msg;
+    const b = $('#toastBtn');
+    b.hidden = !action;
+    el.classList.toggle('has-action', !!action);
+    b.textContent = action || '';
+    b.onclick = action ? () => { el.classList.remove('show'); fn(); } : null;
     el.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+    toastTimer = setTimeout(() => el.classList.remove('show'), action ? 6000 : 2400);
   }
 
   // ── wiring ──
   const ta = $('#script');
+  const sp = $('#speaker');
   ta.value = state.text;
+  sp.value = state.speaker;
   // Typing only re-reads the lines at once; the clip list, the preview and
   // the durations (each a full render) wait for a pause, so phones keep up.
   let typeTimer = 0;
@@ -1516,13 +2452,14 @@
     readClips();
     persist();
     clearTimeout(typeTimer);
-    typeTimer = setTimeout(() => { onTextChange(); syncCaret(); }, clips.length > 1 ? 160 : 60);
+    typeTimer = setTimeout(() => { onTextChange(); syncCaret(); refreshExport(); }, clips.length > 1 ? 160 : 60);
   });
   function caretClip() {
     const row = ta.value.slice(0, ta.selectionStart).split('\n').length - 1;
     let best = -1;
     clips.forEach((c, i) => { if (c.row <= row) best = i; });
-    return clips.findIndex((c) => c.row === row) >= 0 ? clips.findIndex((c) => c.row === row) : best;
+    const exact = clips.findIndex((c) => c.row === row);
+    return exact >= 0 ? exact : best;
   }
   function syncCaret() {
     const i = caretClip();
@@ -1533,6 +2470,7 @@
       refreshNow();
       refreshSnippet();
       drawStage();
+      refreshExportPreview();
     }
   }
   ['click', 'keyup', 'focus'].forEach((ev) => ta.addEventListener(ev, syncCaret));
@@ -1543,25 +2481,22 @@
       if (i >= 0) playClip(i);
     }
   });
+  $('#clearLines').addEventListener('click', () => {
+    if (!state.text.trim()) { ta.focus(); return; }
+    const before = snapshot();
+    stopAll();
+    state.text = '';
+    ta.value = '';
+    state.active = 0;
+    onTextChange();
+    ta.focus();
+    toast('Lines cleared', 'Undo', () => restore(before));
+  });
   $('#play').addEventListener('click', () => {
     if (playing && !playing.hear) stopAll();
     else playClip(state.active);
   });
   $('#hearAll').addEventListener('click', hearAll);
-  $$('[data-script]').forEach((b) => b.addEventListener('click', () => { state.script = b.dataset.script; persist(); refreshSegs(); drawStage(); }));
-  $$('[data-boxtheme]').forEach((b) => b.addEventListener('click', () => { state.theme = b.dataset.boxtheme; persist(); refreshSegs(); drawStage(); }));
-  $$('[data-example]').forEach((b) => b.addEventListener('click', () => {
-    const ex = EXAMPLES[b.dataset.example];
-    stopAll();
-    state.text = ex.lines.join('\n');
-    ta.value = state.text;
-    state.speaker = ex.speaker;
-    $('#speaker').value = ex.speaker;
-    state.voice = CV.normVoice(Object.assign({}, CV.DEFAULT_VOICE, CV.PRESETS[ex.preset].voice, { phone: ex.phone, take: 1 }));
-    state.active = 0;
-    onTextChange();
-    onVoiceChange(false);
-  }));
   $('#phone').addEventListener('click', () => {
     state.voice = Object.assign({}, state.voice, { phone: !state.voice.phone });
     onVoiceChange(true);
@@ -1570,10 +2505,11 @@
     state.voice = Object.assign({}, state.voice, { take: state.voice.take + 1 });
     onVoiceChange(true);
   });
-  const sp = $('#speaker');
-  sp.value = state.speaker;
-  sp.addEventListener('input', () => { state.speaker = sp.value; persist(); refreshSnippet(); drawStage(); });
+  $('#resetVoice').addEventListener('click', () => chooseCharacter(state.face));
+  sp.addEventListener('input', () => { state.speaker = sp.value; persist(); refreshSnippet(); drawStage(); refreshExportPreview(); });
   $('#dlAll').addEventListener('click', downloadAll);
+  $('#dlLineup').addEventListener('click', downloadLineup);
+  $('#dlWav').addEventListener('click', () => downloadClip(state.active));
   $('#dlOne').addEventListener('click', () => downloadClip(state.active));
   $('#copy').addEventListener('click', async () => {
     const text = $('#snippet').textContent;
@@ -1592,7 +2528,8 @@
   document.addEventListener('keydown', (e) => {
     if (e.code !== 'Space' || e.repeat) return;
     const t = e.target;
-    if (t && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT' || t.tagName === 'BUTTON' || t.tagName === 'SUMMARY' || t.isContentEditable)) return;
+    if (t && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT' || t.tagName === 'BUTTON' || t.tagName === 'SUMMARY' || t.tagName === 'VIDEO' || t.isContentEditable)) return;
+    if (vSheet.open) return;
     e.preventDefault();
     if (playing || seq) stopAll();
     else playClip(state.active);
@@ -1617,12 +2554,14 @@
     file.text().then((txt) => {
       const lines = txt.replace(/\r\n?/g, '\n').split('\n').map((l) => l.trim()).filter(Boolean);
       if (!lines.length) { toast('There are no lines in that file.'); return; }
+      const before = snapshot();
       stopAll();
       state.text = lines.join('\n');
       ta.value = state.text;
       state.active = 0;
       onTextChange();
-      toast(`${lines.length} ${lines.length === 1 ? 'line' : 'lines'} from ${file.name}`);
+      showTab('lines');
+      toast(`${lines.length} ${lines.length === 1 ? 'line' : 'lines'} from ${file.name}`, 'Undo', () => restore(before));
     }).catch(() => toast('That file couldn’t be read.'));
   }
   const drop = $('#drop');
@@ -1656,7 +2595,7 @@
   $('#miniPlay').addEventListener('click', () => $('#play').click());
   $('#miniPrev').addEventListener('click', () => { if (state.active > 0) playClip(state.active - 1); });
   $('#miniNext').addEventListener('click', () => { if (state.active < clips.length - 1) playClip(state.active + 1); });
-  $('#miniNow').addEventListener('click', () => $('.hero').scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  $('#miniNow').addEventListener('click', () => $('.hero').scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' }));
   if ('IntersectionObserver' in window) {
     new IntersectionObserver(([e]) => {
       const show = !e.isIntersecting && e.boundingClientRect.top < 0;
@@ -1670,7 +2609,7 @@
   // ── Home Screen on iPhone and iPad: Safari has no install button, so show the steps ──
   const iOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Mac/.test(navigator.platform) && navigator.maxTouchPoints > 1);
   const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
-  $('#shareGlyph').innerHTML = pix(['...#...', '..###..', '.#.#.#.', '...#...', '...#...', '#..#..#', '#.....#', '#.....#', '#######'], 2);
+  $('#shareGlyph').innerHTML = ICON.share;
   if (iOS && !standalone && document.documentElement.dataset.shell === 'web') {
     const b = $('#addHome');
     b.hidden = false;
@@ -1702,7 +2641,7 @@
       { arch: 'arm', label: 'AppImage', file: '8-bit-Voice-linux-arm64.AppImage', minor: true },
       { arch: 'arm', label: '.deb', file: '8-bit-Voice-linux-arm64.deb', minor: true },
     ] },
-    { os: 'browser', name: 'Browser', req: 'Any computer or phone', links: [] },
+    { os: 'browser', name: 'Phone or browser', req: 'Any computer or phone', links: [] },
   ];
   const ua = navigator.userAgent || '';
   const uaPlatform = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
@@ -1711,9 +2650,14 @@
   let myArch = myOs === 'mac' ? 'arm' : 'x64';
   if (/aarch64|arm64/i.test(ua)) myArch = 'arm';
   let installEvt = null;
+  // On a phone the desktop downloads fold away behind one button.
+  let appsOpen = !mobile;
   function buildApps() {
     const host = $('#appsGrid');
     host.innerHTML = '';
+    $('#appsMore').hidden = appsOpen;
+    host.hidden = !appsOpen;
+    $('#appsNote').hidden = !appsOpen;
     for (const a of APPS) {
       const card = document.createElement('div');
       card.className = 'app-card' + (a.os === myOs ? ' is-yours' : '');
@@ -1732,7 +2676,7 @@
       if (a.os === 'browser') {
         links.push(installEvt
           ? `<a href="#" class="${myOs === 'browser' ? 'primary' : ''}" data-install data-pd-ui="action"><span>Install it</span><span class="ext" data-pd-ui="metadata">PWA</span></a>`
-          : `<span class="app-req" data-pd-ui="caption">${/iPhone|iPad|iPod/.test(ua) || (/Mac/.test(uaPlatform) && navigator.maxTouchPoints > 1) ? 'Tap Share, then Add to Home Screen.' : /Safari/.test(ua) && !/Chrome|Chromium|Edg/.test(ua) ? 'In Safari, choose File › Add to Dock.' : 'You’re using it. Your browser’s menu can install it as an app, and it keeps working offline.'}</span>`);
+          : `<span class="app-req" data-pd-ui="caption">${iOS ? 'Tap Share, then Add to Home Screen.' : /Safari/.test(ua) && !/Chrome|Chromium|Edg/.test(ua) ? 'In Safari, choose File › Add to Dock.' : 'You’re using it. Your browser’s menu can install it as an app, and it keeps working offline.'}</span>`);
       }
       card.innerHTML =
         `<div class="app-os"><span data-pd-ui="label">${a.name}</span>${a.os === myOs ? '<span class="app-yours" data-pd-ui="badge">Yours</span>' : OS_ICON[a.os]}</div>` +
@@ -1750,6 +2694,7 @@
     inst.hidden = !installEvt;
     inst.innerHTML = `${ICON.down}<span>Install</span>`;
   }
+  $('#appsMore').addEventListener('click', () => { appsOpen = true; buildApps(); });
   function promptInstall() {
     if (!installEvt) return;
     installEvt.prompt();
@@ -1760,7 +2705,7 @@
   $('#install').addEventListener('click', promptInstall);
   $('#getApp').addEventListener('click', (e) => {
     e.preventDefault();
-    $('#apps').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    $('#apps').scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
   });
   if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues && myOs !== 'browser') {
     navigator.userAgentData.getHighEntropyValues(['architecture']).then((h) => {
@@ -1775,7 +2720,7 @@
     window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
   }
 
-  // ── share link: the lines, the caller and the voice, in the address ──
+  // ── share link: the lines, the character and the voice, in the address ──
   // Everything rides in the part after #, which never leaves the browser, so
   // a shared link works offline and tells no server anything.
   const SITE = 'https://bomkino.github.io/8bit-Voice/';
@@ -1786,7 +2731,7 @@
   };
   function shareUrl() {
     const v = state.voice;
-    const data = { t: state.text, n: state.speaker, v: [v.style, v.pitch, v.speed, v.melody, v.character, v.grit, v.phone ? 1 : 0, v.take] };
+    const data = { t: state.text, n: state.speaker, v: [v.style, v.pitch, v.speed, v.melody, v.character, v.grit, v.phone ? 1 : 0, v.take], f: state.face, b: state.theme, s: state.script };
     const base = /^https?:$/.test(location.protocol) && location.hostname !== 'localhost' ? location.origin + location.pathname : SITE;
     return `${base}#l=${b64url.enc(JSON.stringify(data))}`;
   }
@@ -1800,6 +2745,9 @@
       state.text = d.t.slice(0, 20000);
       state.speaker = typeof d.n === 'string' ? d.n.slice(0, 18) : '';
       state.voice = CV.normVoice(Object.assign({}, CV.DEFAULT_VOICE, { style, pitch, speed, melody, character, grit, phone: !!phone, take }));
+      if (CV.FACES[d.f]) state.face = d.f;
+      if (CV.THEMES[d.b]) state.theme = d.b;
+      if (d.s === 'latin' || d.s === 'alien') state.script = d.s;
       state.active = 0;
       return true;
     } catch (e) {
@@ -1808,7 +2756,6 @@
       history.replaceState(null, '', location.pathname + location.search);
     }
   }
-  $('#shareLink').innerHTML = `${ICON.share}<span>${dlMode === 'share' ? 'Share link' : 'Copy link'}</span>`;
   $('#shareLink').addEventListener('click', async () => {
     const url = shareUrl();
     if (url.length > MAX_LINK) { toast('Too many lines for one link. Download them instead.'); return; }
@@ -1828,46 +2775,56 @@
     sp.value = state.speaker;
     onTextChange();
     onVoiceChange(false);
+    refreshLook();
     toast('Opened from a shared link');
   }
   const sharedAtStart = readShared();
   if (sharedAtStart) { ta.value = state.text; sp.value = state.speaker; persist(); }
   window.addEventListener('hashchange', () => { if (readShared()) applyShared(); });
 
-  // pixel mark: a speech bubble
-  (function mark() {
-    const cv = $('#mark');
-    const rows = ['.###########.', '#...........#', '#..##.##.##.#', '#..##.##.##.#', '#...........#', '.####..#####.', '....#.#......', '....##.......'];
-    const s = Math.max(1, Math.round(2 * dpr()));
-    const ctx = sizeCanvas(cv, 13, 8, s);
-    ctx.fillStyle = getComputedStyle(cv).color;
-    rows.slice(0, 8).forEach((r, y) => { for (let x = 0; x < r.length; x++) if (r[x] === '#') ctx.fillRect(x, y, 1, 1); });
-  })();
-
+  // ── start ──
   $('#version').innerHTML = `v${APP_VERSION}<span class="keys-only"> · Space plays and stops</span>`;
-  buildPresets();
+  $('#shareLink').innerHTML = `${ICON.link}<span>${dlMode === 'share' ? 'Share a link' : 'Copy a link'}</span>`;
+  drawWordmark();
+  buildRoster();
+  buildScenes();
   buildMachines();
   buildKnobs();
   buildMoods();
+  buildLook();
+  buildExport();
   readClips();
   measure();
-  refreshSegs();
+  showTab('lines');
   refreshVoiceUI();
+  refreshRoster();
   refreshClipList();
   refreshPlayState();
+  refreshExport();
   drawStage();
   drawGlyphs(null);
   refreshDownloadUI();
   buildApps();
+  if (!state.played) $('#play').classList.add('pulse');
   if (sharedAtStart) toast('Opened from a shared link');
 
   let resizeRaf = 0;
   new ResizeObserver(() => {
     cancelAnimationFrame(resizeRaf);
-    resizeRaf = requestAnimationFrame(() => { measure(); drawStage(); });
+    resizeRaf = requestAnimationFrame(() => { measure(); drawStage(); drawWordmark(); refreshExportPreview(); });
   }).observe(stageEl);
-  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { drawGlyphs(null); });
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { drawGlyphs(null); drawWordmark(); });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { measure(); drawStage(); });
+  // For the desktop app's menu and for tests.
+  // For scripts and tests: a frame of the current video at time t, as a canvas.
+  function videoStill(t, exp) {
+    const o = { ...state.exp, ...(exp || {}) };
+    const L = videoLayout(o.format, o, exportTexts());
+    const c = makeCanvas(L.W, L.H);
+    videoFrame(c.getContext('2d'), L, t, prepFrame(L));
+    return c;
+  }
+  window.EightBitVoice = { version: APP_VERSION, makeVideo, state: () => state, videoLayout, videoStill, pickCodecs };
 })();
 </script>
 </body>

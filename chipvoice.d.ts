@@ -1,15 +1,25 @@
-// Types for chipvoice.js, so TypeScript projects (like the Remotion one in
-// ./remotion) can import it: `import CV from '../../chipvoice'`.
+// Types for chipvoice.js, so TypeScript projects (a Remotion video, say) can
+// import it: `import CV from './chipvoice'`.
 
 declare namespace ChipVoice {
-  type StyleId = 'square' | 'pocket' | 'babble' | 'typewriter' | 'boss' | 'chip';
+  type StyleId = 'square' | 'pocket' | 'babble' | 'typewriter' | 'boss' | 'chip' | 'mouth';
   type PresetId =
-    | 'horror-director'
-    | 'romcom-director'
-    | 'heist-producer'
-    | 'space-director'
-    | 'period-director'
-    | 'studio-exec';
+    | 'hero'
+    | 'narrator'
+    | 'henchling'
+    | 'wizard'
+    | 'villain'
+    | 'sidekick'
+    | 'agent'
+    | 'computer'
+    | 'robot'
+    | 'fairy'
+    | 'ghost'
+    | 'golem'
+    | 'guard'
+    | 'critter';
+  type FaceId = PresetId;
+  type ThemeId = 'ink' | 'paper' | 'royal' | 'pocket' | 'amber' | 'candy';
   type MoodId =
     | 'whisper'
     | 'quiet'
@@ -34,7 +44,7 @@ declare namespace ChipVoice {
     speed: number;
     /** 0 is monotone, 1 is sing-song. */
     melody: number;
-    /** The machine's own knob (Bite, Nasal, Squeak, Click, Menace, Buzz), 0 to 1. */
+    /** The machine's own knob (Bite, Nasal, Squeak, Click, Menace, Buzz, Clarity), 0 to 1. */
     character: number;
     /** Bit-crush, 0 to 1. */
     grit: number;
@@ -58,7 +68,10 @@ declare namespace ChipVoice {
   }
   interface Preset {
     name: string;
-    episode: string;
+    /** A short genre label, such as "Fantasy". */
+    tag: string;
+    /** Which portrait in FACES is theirs. */
+    face: FaceId;
     note: string;
     voice: Partial<Voice> & { style: StyleId };
   }
@@ -107,6 +120,7 @@ declare namespace ChipVoice {
     rows: string[];
   }
   interface Theme {
+    name?: string;
     key: string;
     border: string;
     fill: string;
@@ -122,7 +136,13 @@ declare namespace ChipVoice {
     width?: number;
     /** Minimum number of text lines. */
     lines?: number;
-    theme?: 'ink' | 'paper' | Theme;
+    /** Exactly this many text lines, paging through longer text from line `from`. */
+    rows?: number;
+    /** With `rows`, the first line showing. */
+    from?: number;
+    theme?: ThemeId | Theme;
+    /** A framed picture of the speaker at the left of the box: one of the cast, or your own drawing. */
+    portrait?: FaceOptions & { face: FaceId } | { size: number; draw(ctx: CanvasRenderingContext2D, x: number, y: number): void };
     x?: number;
     y?: number;
     /** Whether character i of the text is showing. */
@@ -137,6 +157,23 @@ declare namespace ChipVoice {
     /** Dims the text. */
     whisper?: boolean;
   }
+  interface FaceOptions {
+    /** 0 to 1, how far the mouth is open. */
+    open?: number;
+    /** Closes the eyes. */
+    blink?: boolean;
+    /** false leaves the background out. */
+    bg?: boolean;
+  }
+  interface Face {
+    bg: string;
+    /** Space-separated palette entries: a letter, then a hex colour. */
+    pal: string;
+    /** x, y, width and palette letter of the mouth. */
+    mouth: [number, number, number, string];
+    /** Sixteen rows of sixteen palette letters, separated by "/". */
+    rows: string;
+  }
   interface DialogMetrics {
     width: number;
     height: number;
@@ -144,6 +181,9 @@ declare namespace ChipVoice {
     tab: number;
     lines: { items: { i: number; x: number; g: Glyph }[]; w: number }[];
     n: number;
+    /** Room taken by the portrait, in box pixels. */
+    pw: number;
+    ps: number;
   }
 }
 
@@ -166,7 +206,12 @@ declare const ChipVoice: {
   encodeWav(samples: Float32Array, sampleRate?: number): Uint8Array;
   zip(files: { name: string; data: Uint8Array }[], date?: Date): Uint8Array;
   slug(text: string, max?: number): string;
-  THEMES: Record<'ink' | 'paper', ChipVoice.Theme>;
+  THEMES: Record<ChipVoice.ThemeId, ChipVoice.Theme>;
+  THEME_ORDER: ChipVoice.ThemeId[];
+  FACES: Record<ChipVoice.FaceId, ChipVoice.Face>;
+  FACE_ORDER: ChipVoice.FaceId[];
+  /** Draws a 16×16 face with its top-left corner at x, y. Returns false for an unknown face. */
+  drawFace(ctx: CanvasRenderingContext2D, id: ChipVoice.FaceId, x: number, y: number, o?: ChipVoice.FaceOptions): boolean;
   glyph(ch: string, script?: 'alien' | 'latin'): ChipVoice.Glyph | null;
   layoutText(text: string, width: number, script?: 'alien' | 'latin'): ChipVoice.DialogMetrics['lines'];
   measureDialog(o: ChipVoice.DialogOptions): ChipVoice.DialogMetrics;
