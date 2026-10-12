@@ -171,7 +171,7 @@ declare namespace ChipVoice {
     pal: string;
     /** x, y, width and palette letter of the mouth. */
     mouth: [number, number, number, string];
-    /** Sixteen rows of sixteen palette letters, separated by "/". */
+    /** Sixteen rows of sixteen palette letters, separated by "/". "." is the background, "e" an eye and "E" its glint, which close on a blink. */
     rows: string;
   }
   interface DialogMetrics {

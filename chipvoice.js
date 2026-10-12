@@ -2254,32 +2254,32 @@
   // background. The mouth is drawn on top, open as far as the voice is loud.
 
   const FACES = {
-    hero: { bg: '#1f4f2a', pal: 'k141218 sffcfa0 he2a074 af2c14e bd64545 wffffff gc08a2a', mouth: [7, 12, 2, 'k'],
-      rows: '...k..k..k....../..kak.kak.kak.../..kaakaaakaak.../.kaaaaaaaaaaak../.kaaaaaaaaaaaak./.kbbbbbbbbbbbbk./.kbbbbbbbbbbbbbk/.kssssssssssssk./.kssweksswekssk./.ksswkksswkkssk./.kshssssssssshk./.kssssssssssssk./..kssssssssssk../...kssssssssk.../....kkkkkkkk..../................' },
-    narrator: { bg: '#3a2140', pal: 'k141218 sf2c49b hd29a72 a2e2e38 bff5a4a wf4efe6 g6a4128', mouth: [7, 12, 2, 'k'],
-      rows: '................/....kkkkkkkk..../...kaaaaaaaak.../..kakkkkkkkkak../..kakggggggkak../.kbkgggggggggkbk/kbbkssssssssskbk/kbbksggsssggskbk/kbbkswesssweskbk/kbbkswkssswkskbk/.kkkhssssssshkk./...kssggggssk.../...kssssssssk.../....kssssssk..../..kwwkkkkkkwwk../.kwwwwkbbkwwwwk.' },
+    hero: { bg: '#1f4f2a', pal: 'k141218 s74452a h5a341e a4a2c1d g7a4c32 be0484a wfff6ea cf2c14e f1d8a87', mouth: [7, 12, 2, 'k'],
+      rows: '.kkkk......kkkk./kagaak....kaagak/kgaaaakkkkaaaagk/kaaaakaaaakaaaak/.kkkaaaaaaaakkk./...kbbbbbbbbk.../..kabbbbbbbbakbb/..kassssssssakb./..ksEessssEesk../..kskksssskksk../.ckhsssssssshkc./.cksssssssssskc./..kssssssssssk../...kssssssssk.../...kffkkkkffk.../..kffffffffffk..' },
+    narrator: { bg: '#3a2140', pal: 'k141218 sb07a52 h8f5d3b a3a3a46 c24170f g6e4a35 bff5a4a dc23a30 wf4efe6 yfcf434 p9c59d1 qffffff z141218', mouth: [7, 12, 2, 'k'],
+      rows: '....kkkkkkkk..../...kaaaaaaaak.../..kakgcggcgkak../..kacgccccgcak../..kkgcgccgcgkk../.kbkcssssssckbk./kbbksssssssskbbk/kbbksssssssskbbk/kbbksEessEeskbbk/kbdkskksskkskdbk/.kkkhsssssshkkk./...kssssssssk.../...kssssssssk.../....kssssssk..../..kwwkkkkkyqwk../.kwwwwwkkwpzwwk.' },
     henchling: { bg: '#173a5e', pal: 'k141218 sff9a3c he0712a affd23f b3a3a46 wffffff gff6b8a', mouth: [6, 12, 4, 'k'],
       rows: '......kkkk....../....kkaaaakk..../...kaaaaaaaak.../...kaaaaaaaak.../..kkkkkkkkkkkk../kk.kssssssssk.kk/ksksswwsswwssksk/ksskswekswekssk./.kssswkkswkkssk./..ksssssssssssk./..kgsssssssssgk./..kssssssssssk../..kssssssssssk../...kssssssssk.../....kbbbbbbk..../...kbbbbbbbbk...' },
-    wizard: { bg: '#26285e', pal: 'k14141c sf0c6a0 hd39a74 a7b55d6 bf2c14e weeebe4 gb9b5ad', mouth: [7, 12, 2, 'k'],
-      rows: '......kkk......./.....kaaak....../....kaabaak...../...kaaaaaaak..../..kaaaaabaaak.../.kkkkkkkkkkkkk../..kssssssssssk../..ksseessseesk../..ksseessseesk../..khsssshsssshk./..kwwssssssswwk./..kwwwwwwwwwwwk./...kwwwwwwwwwk../....kwwwwwwwk.../.....kwwgwwk..../......kkkkk.....' },
-    villain: { bg: '#4a1020', pal: 'k0e0b10 sd9d2e6 ha99dbd aa8233a bff3b4e wffffff ge9b44c', mouth: [6, 11, 4, 'k'],
-      rows: '................/....kkkkkkkk..../...kkkkkkkkkk.../..kkkkkkkkkkkk../..kkkkksskkkkk../..kkkssssssskk../..kksssssssskk../..ksskkssskkssk./..ksbeesssebsk../..kshssssssshk../..kshssssssshk../..kssssssssssk../.aakssssssssk.../aaaakkkkkkkkaaa./aabaaaaaaaaaabaa/abbaaaaaaaaaabba' },
-    sidekick: { bg: '#14595a', pal: 'k14141c sffd2a6 heaa77b aff6b4a bffffff wffffff gff9e8a', mouth: [7, 11, 2, 'k'],
-      rows: '....kkkkkkk...../...kaaaaaaak..../..kaabaaaaaak.../..kaaaaaaaaakkk./..kkkkkkkkkkaak./..kssssssssskk../.kssssssssssssk./.ksswwsssswwssk./.kswekssswekssk./.kswkkssswkkssk./.kgssssssssssgk./.kssssssssssssk./..kssssssssssk../...kssssssssk.../....kkkkkkkk..../................' },
-    agent: { bg: '#1d2533', pal: 'k0d0d12 sc99a74 ha87b58 a2a2a33 b4b8bd6 wf4f4f4 g7a7a85', mouth: [7, 11, 3, 'k'],
-      rows: '....kkkkkkkk..../...kaaaaaaaak.../..kaaaaaaaaaak../..kaasssssssak../..kassssssssak../..ksssssssssssk./..kkkkkkkkkkkkk./..kkbbbkkbbbkkk./..kskkkkskkkkk../..ksssssssssk.../..kshssssssshk../..kssssssssssk../...kssssssssk.../..wkkssssssskw../.wwwakkkkkkawww./wwwwaaa..aaawwww' },
+    wizard: { bg: '#26285e', pal: 'k14141c sc48d5f ha5714a a7b55d6 bf2c14e gdcd6cc ca9a39a fe3b04b rd77a63 wffffff m5b3fb0', mouth: [7, 13, 2, 'k'],
+      rows: '..........kk..../.........kaak.../........kaabk.../......kkaaaak.../....kkaaaaaaak../...kaaabaaaaaak./kaaaaaaaaaaaaaak/kkgggssssssgggkk/..kgffssssffgk../..kfEefssfEefk../..kfkkfssfkkfk../..kgffrssrffgk../..kgssssssssgk../..kgssssssssgk../.kmkgsssssskgmk./kmmmkkkkkkkkmmmk' },
+    villain: { bg: '#4a1020', pal: 'k0e0b10 sc6acdc ha487c4 a1d1424 wff4d5e ge9b44c bff3b4e cb0283f x7a1528 d8a1236 p7d5aa6 qf4f0ff', mouth: [7, 12, 2, 'd'],
+      rows: '................/....kkkkkkkk..../...kaqaaaaaak.../..kaqqaaaaaaak../.kaqgggbbgggaak./.kaqsssaasssaak./.kaqssssssssaak./.kaasppssppsaak./.kaasEessEesaak./.kaaskksskksaak./.kaahsssssshaak./.kaassssssssaak./ckaassssssssaakc/ckaakksssskkaakc/cxkaakksskkaakxc/cxxkaakkkkaakxxc' },
+    sidekick: { bg: '#14595a', pal: 'k14141c sf1c6a2 hd99f7a aff6b4a bffffff gb8532a c8c3a1c f2a3d8f wffffff u5bcefa pf5a9b8 qffffff', mouth: [7, 11, 2, 'k'],
+      rows: '....kkkkkkkk..../...kaaabbaaaa.../..kaaaaaaaaaakk./..kkkkkkkkkkkaak/..kggggggggggk../..kgssssssssgk../..kgssssssssgk../..kgEessssEegk../.kgkkksssskkkgk./.kghshsssshshgk./kggksssssssskggk/kgk.kssssssk.kgk/.k...kkkkkk...k./....kfffffuk..../...kffffffpfk.../...kffffffqfk...' },
+    agent: { bg: '#1d2533', pal: 'k0d0d12 s8a5434 h6d3f25 a1a1414 c241a16 b4b8bd6 wf4f4f4 g9aa3ad t2a2a33', mouth: [7, 12, 2, 'k'],
+      rows: '................/....kkkkkkkk..../...kaaaaaaaak.../..kaaaaaaaaaak../..kassssssssak../..kssssssssssk../..kssssssssssk../..kkkkkkkkkkkk../..kkbbbkkbbbkk../..ksbbkkkkbbsk../..gshsssssshsk../..gcssssssssck../.gkccsssssscck../...kcccccccck.../..wkkcccccckkw../.wwttkkkkkkttww.' },
     computer: { bg: '#0b1d2e', pal: 'k0a0d12 s2c3e50 h1f2d3a a8fa3b5 b59f0c8 wd7e3ec gff5c7a', mouth: [5, 10, 6, 'b'],
       rows: '................/..kkkkkkkkkkkk../.kaaaaaaaaaaaak./.kakkkkkkkkkkak./.kaksssssssskak./.kaksssssssskak./.kaksbbssbbskak./.kaksbbssbbskak./.kaksssssssskak./.kaksssssssskak./.kaksssssssskak./.kakkkkkkkkkkak./.kaaaaaaaaagak../.kkkkkkkkkkkkkk./.....kaaaak...../...kkkkkkkkkk...' },
     robot: { bg: '#5a3a12', pal: 'k141218 sb8c0c8 h8a939c ae9b44c bff4d4d weef2f5 g5c646d', mouth: [5, 11, 6, 'b'],
       rows: '.......bb......./.......kk......./.......kk......./..kkkkkkkkkkkk../.kssssssssssssk./aksssssssssssska/aksskkkssskkkska/.kskbbkssskbbks./aksskkkssskkkska/aksssssssssssska/.ksgggggggggssk./.ksgkgkgkgkgssk./.kssssssssssssk./.kkkkkkkkkkkkkk./....kggggggk..../..kkkkkkkkkkkk..' },
-    fairy: { bg: '#3d2050', pal: 'k1b1224 sffe0d0 hf5b8b0 aff8fc8 b9ff3ff wffffff gffd84d', mouth: [7, 11, 2, 'k'],
-      rows: '................/bb....kkkk....bb/bbb..kaaaak..bbb/.bbbkaaaaaakbbb./..bkaaaaaaaakb../...kaassssaak.../..kassssssssak../..kassssssssak../..kasswksswksak./..kasskksskksak./..kahssssshak.../..kassssssssak../...kassssssak.../....kkkssskk..../.bb..kaaaak..bb./..b...kkkk...b..' },
+    fairy: { bg: '#3d2050', pal: 'k1b1224 s9b6240 h7e4c30 a7ef0c8 gc8fff0 b9ff3ff wffffff fffd84d rc46a5a', mouth: [7, 11, 2, 'k'],
+      rows: '...f........f.../bb....kkkk....bb/bbb..kaggak..bbb/.bbbkaaaaaakbbb./..bkaaaaaaaakb../...kaassssaak.../..kassssssssak../..kassssssssak../..kasEessEesak../..kaskksskksak../..kahrssssrhak../..kassssssssak../...kassssssak.../....kksssskk..../.bb..kaaaak..bb./..b...kkkk...b..' },
     ghost: { bg: '#1c2a3a', pal: 'k141a26 seaf2ff hb9c8e4 a7f93b8 b9ff3ff wffffff gc8d6ee', mouth: [7, 10, 2, 'k'],
       rows: '................/.....kkkkkk...../....kssssssk..../...kssssssssk.../..kssssssssssk../..kskkssssskksk./..kskkssssskksk./..kssssssssssk../..khssssssssshk./..kssssssssssk../..kssssssssssk../..khssssssssshk./..kssssssssssk../..ksshsssshssk../..ksk.kssk.ksk../..kk...kk...kk..' },
     golem: { bg: '#2c3324', pal: 'k141412 s8d8a7c h6b6a5e a5f8a3a b7fbf4a wffe28a g4d4c44', mouth: [6, 12, 4, 'k'],
       rows: '..kkkkkkkkkkk.../.khsssshsssssk../.ksssssssshssk../kssshssssssssbk./ksbsssssshsssak./kssssssssssssak./kshkkkkssskkkkk./kssskwkssskwksk./ksssskkssskksssk/khsssssssssshssk/kssssshkhssssssk/ksssssssssssssk./kshsssssssssshk./ksssssssssssssk./.kkssssssssskk../...kkkkkkkkk....' },
-    guard: { bg: '#4a3b2a', pal: 'k141218 se3b48f hc08a66 a9aa3ad bd0d6dc wffffff g6b7480', mouth: [6, 12, 4, 'k'],
-      rows: '.......kk......./......kbbk....../....kkkbbkkk..../...kaaaaaaaak.../..kabbaaaaaaak../..kaaaaaaaaaak../..kkkkkkkkkkkk../..kgkggkkggkgk../..kssssssssssk../..ksekksskkesk../..kssssssssssk../..kshssssssshk../..kssssssssssk../..kaakkkkkkaak../.kaaaaaaaaaaaak./kaaaaaaaaaaaaaak' },
+    guard: { bg: '#4a3b2a', pal: 'k141218 sf2c4a2 hd9a07c a9aa3ad bd0d6dc g6b7480 cc8642f d9a4a22 re04848 wffffff', mouth: [6, 12, 4, 'k'],
+      rows: '......krk......./.....krrrk....../....kkkkkkkk..../...kaaaaaaaak.../..kabbaaaaaaak../..kaaaaaaaaaak../..kkkkkkkkkkkk../..kgkggkkggkgk../..kssssssssssk../..ksEessssEesk../..kskksssskksk../..kcssshhsssck../..kccsssssscck../..kcccdccdccck../...kcccccccck.../..kakkcccckkaka.' },
     critter: { bg: '#5a2a3a', pal: 'k1a1214 se8a86a hc9824a afff1e0 bff8fa8 wffffff gffb4c4', mouth: [7, 11, 2, 'k'],
       rows: '.kkk........kkk./kshsk......kshsk/ksbsk......ksbsk/kssskkkkkkkkssk./.kssssssssssssk./kssssssssssssssk/ksswkssssssswksk/kswekssssssweksk/ksskkssssssskksk/kgssssakkassssgk/ksssssaaaassssk./kssssaaaaaassssk/.ksssaaaaaasssk./..kssaaaaaassk../...kkkkkkkkkk.../................' },
   };
@@ -2309,7 +2309,8 @@
         const ch = row[c];
         let e = c + 1;
         while (e < 16 && row[e] === ch) e++;
-        let col = ch === 'e' ? (o.blink ? f.pal.s : '#14141c') : f.pal[ch];
+        // 'e' is an eye and 'E' its glint; both close to skin on a blink
+        let col = ch === 'e' ? (o.blink ? f.pal.s : '#14141c') : ch === 'E' ? (o.blink ? f.pal.s : f.pal.w || '#ffffff') : f.pal[ch];
         if (!(ch === '.' && o.bg === false) && col) {
           ctx.fillStyle = col;
           ctx.fillRect(x + c, y + r, e - c, 1);
