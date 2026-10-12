@@ -1,5 +1,10 @@
 # Puts the web app on GitHub Pages: https://bomkino.github.io/8bit-Voice/
-# Needs Settings > Pages > Source set to "GitHub Actions".
+#
+# It publishes both ways GitHub Pages can serve a site, so either setting of
+# Settings > Pages > Source works:
+#   "GitHub Actions"            the deploy job below
+#   "Deploy from a branch"      the gh-pages branch, which this workflow keeps
+#                               up to date (choose gh-pages, / (root))
 name: Website
 
 on:
@@ -9,19 +14,14 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v5
       - name: Gather the site
@@ -31,9 +31,44 @@ jobs:
           cp -r fonts icons _site/
           touch _site/.nojekyll
           find _site -type f | sort
-      - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
+
+  branch:
+    name: Update the gh-pages branch
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: github-pages
+      - name: Push the site, as one commit
+        run: |
+          mkdir site && tar -xf artifact.tar -C site
+          cd site
+          git init -q -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Website from ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
+
+  deploy:
+    name: Deploy (when Pages is set to GitHub Actions)
+    needs: build
+    runs-on: ubuntu-latest
+    # A repository whose Pages serve the gh-pages branch refuses this; the
+    # branch job has the site covered then.
+    continue-on-error: true
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - id: deployment
         uses: actions/deploy-pages@v4
