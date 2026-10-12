@@ -2192,6 +2192,14 @@
     return best;
   }
 
+  function silentRecording() {
+    const z = () => new Float32Array(0);
+    return {
+      version: VERSION, fps: REC_FPS, duration: 0, frames: 0, order: REC_ORDER, pitch: 120, whisper: false,
+      f0: z(), voicing: z(), rms: z(), gain: z(), k: z(), syllables: [],
+    };
+  }
+
   // Listens to a recording. Takes mono samples at any rate; gives back the
   // frames and the syllables, as plain numbers, ready for renderRecording.
   function analyzeRecording(samples, sampleRate) {
@@ -2213,19 +2221,12 @@
     let a = -1, b = -1;
     for (let f = 0; f + 2 < n && a < 0; f++) if (lv[f] > thr && lv[f + 1] > thr && lv[f + 2] > thr) a = f;
     for (let f = n - 1; f >= 2 && b < 0; f--) if (lv[f] > thr && lv[f - 1] > thr && lv[f - 2] > thr) b = f;
-    const empty = {
-      version: VERSION, fps: REC_FPS, duration: 0, frames: 0, order: REC_ORDER, pitch: 120, whisper: false,
-      f0: new Float32Array(0), voicing: new Float32Array(0), rms: new Float32Array(0), gain: new Float32Array(0),
-      k: new Float32Array(0), syllables: [],
-    };
-    if (a < 0) return empty;
+    if (a < 0) return silentRecording();
     const s0 = Math.max(0, a * REC_HOP - Math.round(0.06 * REC_RATE));
     const s1 = Math.min(x.length, (b + 1) * REC_HOP + Math.round(0.1 * REC_RATE));
     x = x.slice(s0, s1);
 
     // Level it: the loud part of the speech at -20 dB, and no peak over 0.95.
-    let loud = 0;
-    for (let f = a; f <= b; f++) loud = Math.max(loud, lv[f]);
     const active = [];
     for (let f = a; f <= b; f++) if (lv[f] > thr) active.push(lv[f]);
     let peak = 0;
@@ -2355,12 +2356,13 @@
       cn[f] = m;
     }
     // The path: unvoiced costs a little, unless the frame is quiet or hissing.
-    const S = MAXC + 1;
-    const cost = new Float32Array(n * S).fill(Infinity);
-    const back = new Int8Array(n * S);
+    // Shorter periods win a tie, and every octave jumped costs a lot.
+    const NS = MAXC + 1;
+    const cost = new Float32Array(n * NS).fill(Infinity);
+    const back = new Int8Array(n * NS);
     const local = (f, j) => {
       if (j === 0) return rms[f] < quietV ? 0 : bright[f] > 1 ? 0.12 : 0.3;
-      return cs[f * MAXC + j - 1] - 0.03 * Math.log2(cf[f * MAXC + j - 1] / 60) + (rms[f] < quietV ? 2 : 0);
+      return cs[f * MAXC + j - 1] - 0.03 * Math.log2(cf[f * MAXC + j - 1] / 60);
     };
     const freq = (f, j) => cf[f * MAXC + j - 1];
     for (let f = 0; f < n; f++) {
@@ -2372,30 +2374,29 @@
         }
         let best = Infinity, bi = 0;
         for (let i = 0; i <= cn[f - 1]; i++) {
-          let tc = cost[(f - 1) * S + i];
-          if (i === 0 && j === 0) tc += 0;
-          else if (i === 0 || j === 0) tc += 0.2;
-          else tc += 0.5 * Math.abs(Math.log2(freq(f, j) / freq(f - 1, i)));
+          let tc = cost[(f - 1) * NS + i];
+          if (i && j) tc += 0.5 * Math.abs(Math.log2(freq(f, j) / freq(f - 1, i)));
+          else if (i || j) tc += 0.2;
           if (tc < best) {
             best = tc;
             bi = i;
           }
         }
-        cost[f * S + j] = best + lc;
-        back[f * S + j] = bi;
+        cost[f * NS + j] = best + lc;
+        back[f * NS + j] = bi;
       }
     }
     const f0 = new Float32Array(n);
     const voicing = new Float32Array(n);
     if (n) {
       let j = 0;
-      for (let i = 1; i <= cn[n - 1]; i++) if (cost[(n - 1) * S + i] < cost[(n - 1) * S + j]) j = i;
+      for (let i = 1; i <= cn[n - 1]; i++) if (cost[(n - 1) * NS + i] < cost[(n - 1) * NS + j]) j = i;
       for (let f = n - 1; f >= 0; f--) {
         if (j > 0) {
           f0[f] = freq(f, j);
           voicing[f] = clamp(1.25 - 2.2 * cs[f * MAXC + j - 1], 0.35, 1);
         }
-        j = back[f * S + j];
+        j = back[f * NS + j];
       }
     }
     // A voiced blip shorter than 40 ms is a mistake; then a light median.
@@ -2477,8 +2478,8 @@
       }
       if (isMax) peaks.push(f);
     }
-    // Two peaks are one syllable unless the loudness dips by 2.5 dB between
-    // them, or the voice stops, or they are under 70 ms apart.
+    // Two peaks under 70 ms apart are one syllable, and so are two with less
+    // than a 2.5 dB dip between them while the voice keeps going.
     for (let changed = true; changed; ) {
       changed = false;
       for (let i = 0; i + 1 < peaks.length; i++) {
@@ -2542,10 +2543,10 @@
       let a = p, b = p;
       while (a > start[i] && buzz(a - 1) && Ld[a - 1] > Ld[p] - 6) a--;
       while (b < end[i] - 1 && buzz(b + 1) && Ld[b + 1] > Ld[p] - 6) b++;
-      const at = (f0, f1) => {
+      const at = (fa, fb) => {
         const env = new Float32Array(ENV_BINS);
         let cnt = 0;
-        for (let f = f0; f <= f1; f++) {
+        for (let f = fa; f <= fb; f++) {
           const e = lpcEnvelope(rec.k, f * rec.order, rec.order);
           for (let j = 0; j < ENV_BINS; j++) env[j] += e[j];
           cnt++;
@@ -2566,9 +2567,9 @@
     }
 
     // What kind of consonant a stretch of frames sounds like.
-    const consonant = (f0, f1, onset) => {
+    const consonant = (fa, fb, onset) => {
       let hiss = 0, hb = 0, quiet = 0, voicedSoft = 0;
-      for (let f = f0; f < f1; f++) {
+      for (let f = fa; f < fb; f++) {
         if (!act[f]) quiet++;
         else if (!buzz(f) || rec.whisper) { hiss++; hb += bright[f]; }
         else voicedSoft++;
@@ -2598,9 +2599,10 @@
         p0 = quantile(vs.slice(0, m), 0.5);
         p1 = quantile(vs.slice(-m), 0.5);
       } else {
+        // No pitch of its own: the nearest one.
         for (let r = 1; r < n; r++) {
-          const j = f0[p - r] ? p - r : f0[p + r] ? p + r : -1;
-          if (j >= 0 && j < n) { p0 = p1 = st(j); break; }
+          const j = p - r >= 0 && f0[p - r] ? p - r : p + r < n && f0[p + r] ? p + r : -1;
+          if (j >= 0) { p0 = p1 = st(j); break; }
         }
       }
       const v0 = vowelClass(fm.F0, scale);
@@ -2823,7 +2825,7 @@
     const bits = c < 0.7 ? Math.round(lerp(3, 7, c / 0.7)) : 0;
     if (bits) {
       const q = Math.pow(2, bits - 1) / (Math.PI / 2);
-      for (let i = 0; i < K.length; i++) K[i] = Math.sin(Math.round(Math.asin(K[i]) * q) / q);
+      for (let i = 0; i < K.length; i++) K[i] = clamp(Math.sin(Math.round(Math.asin(K[i]) * q) / q), -0.98, 0.98);
     }
     const hold = Math.max(1, Math.round(lerp(3, 1, clamp(c / 0.7, 0, 1))));
 
@@ -2838,10 +2840,12 @@
     const noiseAmt = lerp(0.45, 1, c);
     const b = new Float64Array(P + 1);
     const kk = new Float64Array(P);
-    const lat = (fp) => {
-      if (hold > 1) fp = Math.floor(fp / hold) * hold;
+    // Where frame position fp falls: the two frames around it and how far
+    // between them. The mouth shape can step instead, like a speech chip.
+    const at = (fp, step) => {
+      if (step > 1) fp = Math.floor(fp / step) * step;
       const f = Math.floor(fp);
-      return [clamp(f, 0, n - 1), clamp(f + 1, 0, n - 1), hold > 1 ? 0 : fp - f];
+      return [clamp(f, 0, n - 1), clamp(f + 1, 0, n - 1), step > 1 ? 0 : fp - f];
     };
     // Above a cutoff that rises with the voicing, real voices turn breathy:
     // the buzz is low-passed there and the noise high-passed, so the top end
@@ -2855,9 +2859,10 @@
       let p1 = 0, p2 = 0, n1 = 0, n2 = 0;
       for (let i0 = 0; i0 < NI; i0 += blk) {
         const fp = ((i0 + blk / 2) / fsI) * speed * REC_FPS - 0.5;
-        const [f0, f1, a] = lat(fp);
+        const [k0, k1, ka] = at(fp, hold);
+        for (let j = 0; j < order; j++) kk[j] = K[k0 * P + j] + (K[k1 * P + j] - K[k0 * P + j]) * ka;
+        const [f0, f1, a] = at(fp, 1);
         const live = fp > -1 && fp < n;
-        for (let j = 0; j < order; j++) kk[j] = K[f0 * P + j] + (K[f1 * P + j] - K[f0 * P + j]) * a;
         const g = live ? lerp(G[f0], G[f1], a) * lerp(corr[f0], corr[f1], a) : 0;
         const vo = clamp(lerp(V[f0], V[f1], a), 0, 1);
         const hz = clamp(rec.pitch * shift * semis(lerp(st[f0], st[f1], a)), 40, 1400);
@@ -2928,7 +2933,7 @@
   function renderRecording(rec, voice, opts) {
     opts = opts || {};
     const sr = opts.sampleRate || SAMPLE_RATE;
-    rec = rec && rec.frames != null ? rec : analyzeRecording(new Float32Array(0), REC_RATE);
+    rec = rec && rec.frames != null ? rec : silentRecording();
     return voiceClip(planRecording(rec, voice, opts.text), sr, rec);
   }
 
