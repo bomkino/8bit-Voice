@@ -237,7 +237,7 @@ declare const ChipVoice: {
   /** Draws a 16×16 face, one of the cast or your own, with its top-left corner at x, y. Returns false for an unknown face. */
   drawFace(ctx: CanvasRenderingContext2D, id: ChipVoice.FaceId | ChipVoice.Face, x: number, y: number, o?: ChipVoice.FaceOptions): boolean;
   /** Every part of the character creator and its options, as [name, data] pairs. Lists only grow at the end, so codes stay valid. */
-  LOOK_PARTS: Record<ChipVoice.LookKey, [string, unknown][]>;
+  LOOK_PARTS: Record<ChipVoice.LookKey, [string, ...unknown[]][]>;
   LOOK_KEYS: ChipVoice.LookKey[];
   /** The human cast as looks, to start from. */
   STARTER_LOOKS: Partial<Record<ChipVoice.PresetId, ChipVoice.LookInput>>;

@@ -2379,11 +2379,18 @@
     ['Moss', '#2c3324'], ['Brick', '#6a2a1a'],
   ];
   const LIP_COLORS = [['None', ''], ['Red', '#b0283f'], ['Berry', '#8a1236'], ['Coral', '#d9645a'], ['Plum', '#6b2a5a'], ['Rose', '#c97b84']];
-  // Pins are tiny flags of three stripes.
+  // Pins are three pixels of a flag; the whole flag's stripes come after,
+  // for pickers.
   const PINS = [
-    ['None', null], ['Trans', ['#5bcefa', '#f5a9b8', '#ffffff']], ['Nonbinary', ['#fcf434', '#ffffff', '#9c59d1']],
-    ['Rainbow', ['#e40303', '#ffed00', '#004dff']], ['Bi', ['#d60270', '#9b4f96', '#0038a8']], ['Lesbian', ['#d52d00', '#ffffff', '#a30262']],
-    ['Pan', ['#ff218c', '#ffd800', '#21b1ff']], ['Ace', ['#a3a3a3', '#ffffff', '#800080']], ['Heart', ['#e0484a', '#ff6b6b', '#e0484a']],
+    ['None', null],
+    ['Trans', ['#5bcefa', '#f5a9b8', '#ffffff'], ['#5bcefa', '#f5a9b8', '#ffffff', '#f5a9b8', '#5bcefa']],
+    ['Nonbinary', ['#fcf434', '#ffffff', '#9c59d1'], ['#fcf434', '#ffffff', '#9c59d1', '#2c2c2c']],
+    ['Rainbow', ['#e40303', '#ffed00', '#004dff'], ['#e40303', '#ff8c00', '#ffed00', '#008026', '#004dff', '#750787']],
+    ['Bi', ['#d60270', '#9b4f96', '#0038a8'], ['#d60270', '#d60270', '#9b4f96', '#0038a8', '#0038a8']],
+    ['Lesbian', ['#d52d00', '#ffffff', '#a30262'], ['#d52d00', '#ff9a56', '#ffffff', '#d362a4', '#a30262']],
+    ['Pan', ['#ff218c', '#ffd800', '#21b1ff']],
+    ['Ace', ['#a3a3a3', '#ffffff', '#800080'], ['#000000', '#a3a3a3', '#ffffff', '#800080']],
+    ['Heart', ['#e0484a', '#ff6b6b', '#e0484a']],
     ['Star', ['#f2c14e', '#fff2b0', '#f2c14e']],
   ];
 

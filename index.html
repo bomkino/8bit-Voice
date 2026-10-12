@@ -238,6 +238,56 @@
   .card.dice:hover .dice-face { animation: wobble 0.5s ease; }
   @keyframes wobble { 30% { transform: rotate(-12deg); } 60% { transform: rotate(9deg); } }
 
+  .card.own { background: transparent; border-style: dashed; border-color: var(--accent); }
+  .card.own .dice-face { width: 48px; height: 48px; display: grid; place-items: center; color: var(--accent); }
+  .card.own:hover .dice-face { animation: wobble 0.5s ease; }
+  .card.mine .card-tag { color: var(--accent); }
+  .cast-note .link { font: inherit; }
+
+  /* make your own */
+  .sheet.maker { width: min(720px, 100%); }
+  .maker .sheet-body { gap: 16px; padding-top: 0; }
+  .maker-head { position: sticky; top: 0; z-index: 2; display: grid; gap: 12px; margin: 0 -22px; padding: 10px 22px 12px; background: var(--surface); border-bottom: 1px solid var(--line); }
+  .maker-top { display: flex; gap: 16px; align-items: center; }
+  .maker-face { flex: none; display: grid; justify-items: center; gap: 6px; padding: 10px 10px 7px; border-radius: 16px; background: var(--sunk); border: 1px solid var(--line); color: var(--ink-3); transition: transform 0.12s, color 0.15s; }
+  .maker-face:hover { color: var(--ink); transform: translateY(-1px); }
+  .maker-face canvas { border-radius: 8px; box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--accent); }
+  .maker-face .px { fill: currentColor; }
+  .maker-hear { display: inline-flex; align-items: center; gap: 5px; }
+  .maker-id { display: grid; gap: 10px; flex: 1; min-width: 0; }
+  .maker-id h2 { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .maker-name { min-height: 44px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--bg); color: var(--ink); width: 100%; }
+  .maker-acts { display: flex; gap: 8px; }
+  .maker-acts .btn { flex: 1; min-height: 40px; padding: 0 10px; }
+  .maker-acts .btn:disabled { opacity: 0.45; pointer-events: none; }
+  .maker-starts { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; align-items: center; margin: 0 -22px; padding: 2px 22px; }
+  .maker-starts::-webkit-scrollbar { display: none; }
+  .maker-starts .ex { flex: none; padding: 0 10px 0 4px; }
+  .maker-starts .muted { flex: none; margin-right: 2px; }
+  .maker-parts { display: grid; gap: 20px; }
+  .part { display: grid; gap: 8px; }
+  .part[hidden] { display: none; }
+  .part-head { display: flex; align-items: center; gap: 8px; min-height: 32px; }
+  .part-val { flex: 1; min-width: 0; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lock { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px; color: var(--ink-3); border: 1px solid var(--line); transition: background-color 0.15s, color 0.15s; }
+  .lock:hover { color: var(--ink); }
+  .lock[aria-pressed="true"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+  .opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: 6px; }
+  .opts.sw { display: flex; flex-wrap: wrap; gap: 8px; }
+  .opt { display: grid; place-items: center; aspect-ratio: 1; border-radius: 12px; border: 1px solid var(--line); background: var(--sunk); transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s; }
+  .opt:hover { transform: translateY(-1px); border-color: var(--line-2); }
+  .opt[aria-checked="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); background: var(--surface); }
+  .opt canvas { border-radius: 5px; }
+  .opt.chip { width: 36px; height: 36px; aspect-ratio: auto; border-radius: 50%; background: var(--c); border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--line-2); }
+  .opt.chip[aria-checked="true"] { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink); }
+  .opt.chip.none { background: linear-gradient(135deg, transparent 45%, var(--ink-3) 45% 55%, transparent 55%), var(--sunk); }
+  .voices { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ex[aria-checked="true"] { border-color: var(--ink); color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+  .sheet-btns.maker-btns { display: flex; gap: 8px; }
+  .maker-btns .btn { min-height: 50px; padding: 0 16px; }
+  .maker-btns #makerSave { flex: 1; }
+  .maker .sheet-btns { position: sticky; bottom: 0; z-index: 2; margin: 0 -22px calc(-22px - env(safe-area-inset-bottom)); padding: 12px 22px calc(14px + env(safe-area-inset-bottom)); background: var(--surface); border-top: 1px solid var(--line); }
+
   /* tabs: one panel at a time on phones, all of them side by side on big screens */
   .tabs { display: none; }
   .panels { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); gap: 20px; margin-top: 20px; align-items: start; }
@@ -806,6 +856,33 @@
   </div>
 </dialog>
 
+<dialog class="sheet maker" id="makerSheet" aria-labelledby="makerTitle">
+  <div class="sheet-body">
+    <div class="maker-head">
+      <div class="sheet-grab" aria-hidden="true"></div>
+      <div class="maker-top">
+        <button type="button" class="maker-face" id="makerHear" aria-label="Hear them say hello"><canvas id="makerFace" aria-hidden="true"></canvas><span class="maker-hear" data-pd-ui="caption"></span></button>
+        <div class="maker-id">
+          <h2 id="makerTitle" data-pd-ui="section-title">Make your own</h2>
+          <input class="maker-name" id="makerName" maxlength="18" autocomplete="off" spellcheck="false" aria-label="Their name" placeholder="Their name" data-pd-ui="body">
+          <div class="maker-acts">
+            <button type="button" class="btn gold" id="makerRandom" data-pd-ui="action"></button>
+            <button type="button" class="btn" id="makerUndo" data-pd-ui="action"></button>
+          </div>
+        </div>
+      </div>
+      <div class="seg fill" id="makerTabs" role="tablist" aria-label="Parts"></div>
+    </div>
+    <div class="maker-starts" id="makerStarts"></div>
+    <div class="maker-parts" id="makerParts"></div>
+    <div class="sheet-btns maker-btns">
+      <button type="button" class="btn" id="makerClose" data-pd-ui="action">Cancel</button>
+      <button type="button" class="btn" id="makerDelete" data-pd-ui="action" hidden>Remove</button>
+      <button type="button" class="btn hot" id="makerSave" data-pd-ui="action-big">Use this character</button>
+    </div>
+  </div>
+</dialog>
+
 <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastText" data-pd-ui="label"></span><button type="button" id="toastBtn" data-pd-ui="action" hidden></button></div>
 
 <script src="chipvoice.js"></script>
@@ -884,6 +961,10 @@
     video: pix(['#######....', '#.....#..##', '#.....#.###', '#.....#####', '#.....#.###', '#.....#..##', '#######....'], 2),
     wave: pix(['....#....', '..#.#....', '..#.#.#..', '#.#.#.#.#', '..#.#.#..', '..#.#....', '....#....'], 2),
     link: pix(['..###....', '.#...#...', '#...#.#..', '#..#...#.', '.#.#...#.', '..#...#..', '...#.#...', '....#....'], 2),
+    plus: pix(['....###....', '....###....', '....###....', '....###....', '###########', '###########', '###########', '....###....', '....###....', '....###....', '....###....'], 3),
+    lock: pix(['.###.', '#...#', '#...#', '#####', '##.##', '##.##', '#####'], 2),
+    unlock: pix(['.###.', '#...#', '#....', '#####', '##.##', '##.##', '#####'], 2),
+    undo: pix(['..#......', '.##......', '########.', '.##.....#', '..#.....#', '........#', '.......#.', '..#####..'], 2),
     dice: pix(['.#########.', '#.........#', '#.##...##.#', '#.##...##.#', '#....#....#', '#...###...#', '#....#....#', '#.##...##.#', '#.##...##.#', '#.........#', '.#########.'], 3),
   };
 
@@ -894,6 +975,8 @@
     text: firstScene.lines.join('\n'),
     voice: Object.assign({}, CV.DEFAULT_VOICE, CV.PRESETS[FIRST].voice, { take: 1 }),
     face: FIRST, speaker: 'Narrator', script: 'latin', theme: 'ink', portrait: true, active: 0,
+    // a character you made: their look's code, and everyone you've made
+    look: null, mine: [],
     exp: { format: 'story', bg: 'color', layout: 'face', scope: 'line' },
     played: false,
   });
@@ -905,6 +988,9 @@
     }
   } catch (e) { /* storage blocked: start fresh */ }
   if (!CV.FACES[state.face]) state.face = FIRST;
+  const isLook = (k) => typeof k === 'string' && /^1[0-9a-z]+$/.test(k);
+  if (!isLook(state.look)) state.look = null;
+  state.mine = (Array.isArray(state.mine) ? state.mine : []).filter((m) => m && isLook(m.look) && typeof m.name === 'string').slice(0, 30);
   if (!CV.THEMES[state.theme]) state.theme = 'ink';
   let saveTimer = 0;
   function persist() {
@@ -941,6 +1027,10 @@
     return r;
   }
   const speakerOf = (c) => (c && c.parsed.speaker) || state.speaker || '';
+  // Who is talking: one of the cast, or a character you made.
+  const speakerFace = () => (state.look ? CV.buildFace(state.look) : state.face);
+  const speakerBg = () => (state.look ? CV.buildFace(state.look).bg : CV.FACES[state.face].bg);
+  const whoName = () => state.speaker || (state.look ? 'character' : presetName(state.face)) || 'voice';
   const activeClip = () => clips[state.active] || null;
 
   // ── faces: mouths that move with the voice, eyes that blink ──
@@ -1181,7 +1271,7 @@
     const o = {
       text: res ? res.text : '', speaker: (speakerOf(c) || '').slice(0, 18), script: state.script,
       width: fit.W, lines: fit.lines, theme: state.theme,
-      portrait: state.portrait ? { face: state.face, open: 0, blink: !REDUCED && blinkAt(now) } : null,
+      portrait: state.portrait ? { face: speakerFace(), open: 0, blink: !REDUCED && blinkAt(now) } : null,
     };
     const M = CV.measureDialog(o);
     const ctx = sizeCanvas(boxCv, M.width, M.height, fit.sDev);
@@ -1206,9 +1296,9 @@
     const open = res && t != null ? mouthAt(res.events, t) : 0;
     const now = (performance.now() - idleT0) / 1000;
     const blink = !REDUCED && blinkAt(now + 1.3);
-    const card = $(`#roster [data-preset="${state.face}"] canvas`);
-    if (card) faceCanvas(card, state.face, 48, { open, blink });
-    faceCanvas($('#miniFace'), state.face, 32, { open, blink });
+    const card = $(state.look ? '#roster .card[data-mine][aria-checked="true"] canvas' : `#roster [data-preset="${state.face}"] canvas`);
+    if (card) faceCanvas(card, speakerFace(), 48, { open, blink });
+    faceCanvas($('#miniFace'), speakerFace(), 32, { open, blink });
   }
   let raf = 0;
   function loop() {
@@ -1361,7 +1451,8 @@
     const p = CV.PRESETS[id];
     if (!p) return;
     const prevName = presetName(state.face);
-    const named = state.speaker && state.speaker !== prevName && !CV.PRESET_ORDER.some((x) => presetName(x) === state.speaker);
+    const named = !state.look && state.speaker && state.speaker !== prevName && !CV.PRESET_ORDER.some((x) => presetName(x) === state.speaker);
+    state.look = null;
     state.face = p.face;
     state.voice = CV.normVoice(Object.assign({}, CV.DEFAULT_VOICE, p.voice, { phone: state.voice.phone, take: 1 }, (opts && opts.voice) || {}));
     if (!named) { state.speaker = p.name; sp.value = p.name; }
@@ -1378,6 +1469,26 @@
     dice.innerHTML = `<span class="dice-face">${ICON.dice}</span><span class="card-name" data-pd-ui="label">Surprise me</span><span class="card-tag" data-pd-ui="metadata">Random</span>`;
     dice.addEventListener('click', surprise);
     host.appendChild(dice);
+    const own = document.createElement('button');
+    own.type = 'button';
+    own.className = 'card own';
+    own.id = 'makeOwn';
+    own.innerHTML = `<span class="dice-face">${ICON.plus}</span><span class="card-name" data-pd-ui="label">Make one</span><span class="card-tag" data-pd-ui="metadata">Your own</span>`;
+    own.addEventListener('click', () => openMaker(-1));
+    host.appendChild(own);
+    state.mine.forEach((m, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'card mine';
+      b.setAttribute('role', 'radio');
+      b.dataset.mine = i;
+      b.title = `${m.name}. Tap again to change how they look.`;
+      b.innerHTML = `<canvas class="card-face" aria-hidden="true"></canvas><span class="card-name" data-pd-ui="label"></span><span class="card-tag" data-pd-ui="metadata">Yours</span>`;
+      b.querySelector('.card-name').textContent = m.name;
+      faceCanvas(b.querySelector('canvas'), CV.buildFace(m.look), 48, {});
+      b.addEventListener('click', () => (b.getAttribute('aria-checked') === 'true' ? openMaker(i) : chooseMine(i)));
+      host.appendChild(b);
+    });
     for (const id of CV.PRESET_ORDER) {
       const p = CV.PRESETS[id];
       const b = document.createElement('button');
@@ -1397,8 +1508,13 @@
   }
   function refreshRoster() {
     const pid = matchingPreset();
+    $$('#roster .card[data-mine]').forEach((b) => {
+      const m = state.mine[+b.dataset.mine];
+      b.setAttribute('aria-checked', String(!!m && m.look === state.look));
+      if (m) faceCanvas(b.querySelector('canvas'), CV.buildFace(m.look), 48, {});
+    });
     $$('#roster .card[data-preset]').forEach((b) => {
-      const on = b.dataset.preset === state.face;
+      const on = !state.look && b.dataset.preset === state.face;
       b.setAttribute('aria-checked', String(on));
       faceCanvas(b.querySelector('canvas'), CV.PRESETS[b.dataset.preset].face, 48, {});
     });
@@ -1406,6 +1522,18 @@
     const S = CV.STYLES[state.voice.style];
     const note = $('#castNote');
     note.innerHTML = '';
+    if (state.look) {
+      const b = document.createElement('b');
+      b.textContent = (state.speaker || 'Your character') + '. ';
+      const edit = document.createElement('button');
+      edit.type = 'button';
+      edit.className = 'link';
+      edit.textContent = 'Change their look';
+      const i = state.mine.findIndex((m) => m.look === state.look);
+      edit.addEventListener('click', () => openMaker(i));
+      note.append(b, `Made by you, with ${pid ? presetName(pid) + '’s' : 'their own'} voice on the ${S.name} machine. `, edit);
+      return;
+    }
     const b = document.createElement('b');
     b.textContent = p ? p.name + '. ' : '';
     note.append(b, (p ? p.note : '') + (pid === state.face ? ` ${S.name} machine.` : ` Their face, your own voice: ${S.name}.`));
@@ -1423,9 +1551,299 @@
     if (b && b.scrollIntoView) b.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'nearest', inline: 'center' });
   }
 
+  // ── make your own: a character from parts ──
+  // Each part says what it's called and how its options show: a little face,
+  // a colour, or a flag.
+  const PARTS = {
+    skin: ['Skin', 'color'], head: ['Face shape'], eyes: ['Eyes'], brows: ['Brows'], mouth: ['Mouth'], lips: ['Lips', 'color'],
+    cheeks: ['Cheeks'], age: ['Lines'], facial: ['Facial hair'], hair: ['Hair'], hairColor: ['Hair colour', 'color'],
+    cover: ['Headwear'], coverColor: ['Headwear colour', 'color'], glasses: ['Glasses'], earrings: ['Earrings'], pin: ['Pin', 'flag'],
+    outfit: ['Clothes'], outfitColor: ['Clothes colour', 'color'], bg: ['Backdrop', 'color'],
+  };
+  const MAKER_TABS = [
+    ['face', 'Face', ['skin', 'head', 'eyes', 'brows', 'mouth', 'lips', 'cheeks', 'age', 'facial']],
+    ['hair', 'Hair', ['hair', 'hairColor', 'cover', 'coverColor']],
+    ['extras', 'Extras', ['glasses', 'earrings', 'pin']],
+    ['clothes', 'Clothes', ['outfit', 'outfitColor', 'bg']],
+    ['voice', 'Voice', []],
+  ];
+  const MAKER_NAMES = [
+    'Ari', 'Noor', 'Kai', 'Zola', 'Mei', 'Rio', 'Sasha', 'Ife', 'Juno', 'Ravi', 'Amara', 'Tomás', 'Yuki', 'Lior', 'Dara', 'Nia',
+    'Kofi', 'Leilani', 'Sol', 'Ezra', 'Mina', 'Ayo', 'Priya', 'Rowan', 'Isa', 'Femi', 'Luz', 'Tavi', 'Wren', 'Arjun', 'Hana',
+    'Marisol', 'Tolu', 'Sami', 'Taini', 'Bao', 'Kemi', 'Elif', 'Remy', 'Inés', 'Jae', 'Nadia', 'Quinn', 'Dev', 'Tala', 'Uma',
+    'Vida', 'Xochi', 'Yaw', 'Zuri', 'Alexis', 'Moana', 'Oz', 'Pema', 'Robin', 'Shai', 'Teo', 'Ximena', 'Aziz', 'Freya',
+  ];
+  const MAKER_LINES = ['Hi! I’m {n}.', '(excited) {n}, at your service!', 'The name’s {n}. Nice to meet you.', '(whisper) Psst. It’s me, {n}.', '(proud) {n} has entered the game!'];
+  const makerSheet = $('#makerSheet');
+  const maker = { look: null, name: '', auto: true, face: FIRST, voice: null, idx: -1, hist: [], locks: new Set(), tab: 'face', built: {} };
+  const randomName = () => MAKER_NAMES[Math.floor(Math.random() * MAKER_NAMES.length)];
+  const randomSeed = () => Math.floor(Math.random() * 4294967296);
+  const presetVoice = (id) => CV.normVoice(Object.assign({}, CV.DEFAULT_VOICE, CV.PRESETS[id].voice, { take: 1 }));
+  const makerVoice = () => maker.voice || presetVoice(maker.face);
+  const makerSize = () => (innerWidth < 640 ? 72 : 112);
+
+  function openMaker(idx) {
+    stopAll();
+    const m = state.mine[idx];
+    maker.idx = m ? idx : -1;
+    maker.look = CV.normLook(m ? m.look : CV.randomLook(randomSeed()));
+    maker.name = m ? m.name : randomName();
+    maker.auto = !m;
+    maker.face = m && CV.PRESETS[m.face] ? m.face : state.face;
+    maker.voice = m && m.voice ? CV.normVoice(m.voice) : Object.assign({}, state.voice);
+    maker.hist = [];
+    $('#makerName').value = maker.name;
+    $('#makerTitle').textContent = m ? `Change ${m.name}` : 'Make your own';
+    $('#makerSave').textContent = m ? 'Save' : 'Use this character';
+    $('#makerDelete').hidden = !m;
+    showMakerTab(maker.tab);
+    makerSheet.showModal();
+    makerSheet.scrollTop = 0;
+  }
+  function closeMaker() {
+    if (playing && playing.maker) stopAll();
+    makerSheet.close();
+  }
+  function remember() {
+    maker.hist.push({ look: Object.assign({}, maker.look), face: maker.face, voice: maker.voice, name: maker.name });
+    if (maker.hist.length > 60) maker.hist.shift();
+  }
+  function setPart(key, i) {
+    if (maker.look[key] === i) return;
+    remember();
+    maker.look[key] = i;
+    // a hat picked with no colour yet gets one that isn't the clothes'
+    if (key === 'cover' && i && maker.look.coverColor === maker.look.outfitColor) maker.look.coverColor = (maker.look.outfitColor + 5) % CV.LOOK_PARTS.coverColor.length;
+    refreshMaker();
+  }
+  function randomizeMaker() {
+    remember();
+    const keep = {};
+    for (const k of maker.locks) keep[k] = maker.look[k];
+    maker.look = CV.randomLook(randomSeed(), keep);
+    if (maker.auto) { maker.name = randomName(); $('#makerName').value = maker.name; }
+    refreshMaker();
+    if (!REDUCED) {
+      const f = $('#makerFace');
+      f.animate([{ transform: 'scale(0.86) rotate(-4deg)' }, { transform: 'scale(1.05) rotate(2deg)' }, { transform: 'none' }], { duration: 260, easing: 'cubic-bezier(.3,.7,.3,1)' });
+    }
+  }
+  function undoMaker() {
+    const h = maker.hist.pop();
+    if (!h) return;
+    Object.assign(maker, h);
+    $('#makerName').value = maker.name;
+    refreshMaker();
+  }
+  function hearMaker() {
+    if (playing && playing.maker) { stopAll(); return; }
+    const n = ($('#makerName').value.trim() || maker.name || 'me').slice(0, 18);
+    const line = MAKER_LINES[Math.floor(Math.random() * MAKER_LINES.length)].replace('{n}', n);
+    playRes(renderLine(line, makerVoice()), { hear: 'maker', maker: true });
+    const step = () => {
+      const t = playing && playing.maker ? playhead() : null;
+      drawMakerFace(t != null ? mouthAt(playing.res.events, t) : 0);
+      if (t != null) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+  function drawMakerFace(open, blink) {
+    faceCanvas($('#makerFace'), CV.buildFace(maker.look), makerSize(), { open: open || 0, blink: !!blink });
+  }
+
+  function showMakerTab(name) {
+    maker.tab = name;
+    $$('#makerTabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
+    $$('#makerTabs button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tab === name)));
+    const host = $('#makerParts');
+    host.innerHTML = '';
+    const tab = MAKER_TABS.find((t) => t[0] === name);
+    if (name === 'voice') host.appendChild(buildMakerVoices());
+    else for (const key of tab[2]) host.appendChild(buildMakerPart(key));
+    refreshMaker();
+  }
+  function buildMakerPart(key) {
+    const [label, kind] = PARTS[key];
+    const el = document.createElement('div');
+    el.className = 'part';
+    el.dataset.key = key;
+    el.innerHTML = `<div class="part-head"><span class="part-label" data-pd-ui="label"></span><span class="part-val" data-pd-ui="metadata"></span><button type="button" class="lock" aria-pressed="false"></button></div><div class="opts" role="radiogroup"></div>`;
+    el.querySelector('.part-label').textContent = label;
+    const lock = el.querySelector('.lock');
+    lock.setAttribute('aria-label', `Keep ${label.toLowerCase()} when you randomize`);
+    lock.title = `Keep ${label.toLowerCase()} when you randomize`;
+    lock.addEventListener('click', () => {
+      if (maker.locks.has(key)) maker.locks.delete(key); else maker.locks.add(key);
+      refreshMaker();
+    });
+    const opts = el.querySelector('.opts');
+    opts.setAttribute('aria-label', label);
+    if (kind) opts.classList.add('sw');
+    CV.LOOK_PARTS[key].forEach(([name, data], i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'opt';
+      b.setAttribute('role', 'radio');
+      b.setAttribute('aria-label', name);
+      b.title = name;
+      b.dataset.i = i;
+      if (kind === 'color') {
+        b.classList.add('chip');
+        if (data) b.style.setProperty('--c', data); else b.classList.add('none');
+      } else if (kind === 'flag') {
+        b.classList.add('chip');
+        // the chip shows the whole flag; the pin on the face is three pixels of it
+        const flag = CV.LOOK_PARTS.pin[i][2] || data;
+        if (flag) b.style.setProperty('--c', `linear-gradient(${flag.map((c, j) => `${c} ${(j / flag.length) * 100}% ${((j + 1) / flag.length) * 100}%`).join(', ')})`); else b.classList.add('none');
+      } else {
+        b.innerHTML = '<canvas aria-hidden="true"></canvas>';
+      }
+      b.addEventListener('click', () => setPart(key, i));
+      opts.appendChild(b);
+    });
+    return el;
+  }
+  function buildMakerVoices() {
+    const el = document.createElement('div');
+    el.className = 'part';
+    el.innerHTML = `<div class="part-head"><span class="part-label" data-pd-ui="label">Sounds like</span><span class="part-val" data-pd-ui="metadata"></span></div><div class="voices" role="radiogroup" aria-label="Sounds like"></div><p class="hint" data-pd-ui="caption">Any voice fits any face. You can fine-tune it after, under Voice.</p>`;
+    const host = el.querySelector('.voices');
+    for (const id of CV.PRESET_ORDER) {
+      const p = CV.PRESETS[id];
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ex';
+      b.setAttribute('role', 'radio');
+      b.dataset.voice = id;
+      b.innerHTML = `<canvas aria-hidden="true"></canvas><span data-pd-ui="action"></span>`;
+      b.querySelector('span').textContent = p.name;
+      faceCanvas(b.querySelector('canvas'), p.face, 24, {});
+      b.addEventListener('click', () => {
+        remember();
+        maker.face = id;
+        maker.voice = null;
+        refreshMaker();
+        if (playing && playing.maker) stopAll();
+        hearMaker();
+      });
+      host.appendChild(b);
+    }
+    return el;
+  }
+  function buildMaker() {
+    $('#makerRandom').innerHTML = `${pix(['#######', '#.....#', '#.#.#.#', '#..#..#', '#.#.#.#', '#.....#', '#######'], 2)}<span>Randomize</span>`;
+    $('#makerUndo').innerHTML = `${ICON.undo}<span>Undo</span>`;
+    $('.maker-hear').innerHTML = `${ICON.playSm}<span>Hear them</span>`;
+    const tabs = $('#makerTabs');
+    for (const [id, label] of MAKER_TABS) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('role', 'tab');
+      b.setAttribute('data-pd-ui', 'action');
+      b.dataset.tab = id;
+      b.textContent = label;
+      b.addEventListener('click', () => showMakerTab(id));
+      tabs.appendChild(b);
+    }
+    const starts = $('#makerStarts');
+    starts.innerHTML = '<span class="muted" data-pd-ui="caption">Start from</span>';
+    for (const [id, look] of Object.entries(CV.STARTER_LOOKS)) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ex';
+      b.innerHTML = `<canvas aria-hidden="true"></canvas><span data-pd-ui="action"></span>`;
+      b.querySelector('span').textContent = presetName(id);
+      faceCanvas(b.querySelector('canvas'), CV.buildFace(look), 24, {});
+      b.addEventListener('click', () => {
+        remember();
+        maker.look = CV.normLook(look);
+        maker.face = id;
+        maker.voice = null;
+        refreshMaker();
+      });
+      starts.appendChild(b);
+    }
+    $('#makerRandom').addEventListener('click', randomizeMaker);
+    $('#makerUndo').addEventListener('click', undoMaker);
+    $('#makerHear').addEventListener('click', hearMaker);
+    $('#makerName').addEventListener('input', (e) => { maker.name = e.target.value; maker.auto = false; });
+    $('#makerClose').addEventListener('click', closeMaker);
+    makerSheet.addEventListener('close', () => { if (playing && playing.maker) stopAll(); });
+    makerSheet.addEventListener('click', (e) => { if (e.target === makerSheet) closeMaker(); });
+    $('#makerSave').addEventListener('click', saveMaker);
+    $('#makerDelete').addEventListener('click', removeMaker);
+  }
+  function refreshMaker() {
+    if (!maker.look) return;
+    drawMakerFace(0);
+    $('#makerUndo').disabled = !maker.hist.length;
+    const L = maker.look;
+    $$('#makerParts .part[data-key]').forEach((el) => {
+      const key = el.dataset.key;
+      const list = CV.LOOK_PARTS[key];
+      el.querySelector('.part-val').textContent = list[L[key]][0];
+      const lock = el.querySelector('.lock');
+      const locked = maker.locks.has(key);
+      lock.setAttribute('aria-pressed', String(locked));
+      lock.innerHTML = locked ? ICON.lock : ICON.unlock;
+      // a colour for headwear only matters with something on
+      if (key === 'coverColor') el.hidden = !L.cover;
+      el.querySelectorAll('.opt').forEach((b) => {
+        const i = +b.dataset.i;
+        b.setAttribute('aria-checked', String(i === L[key]));
+        const cv = b.querySelector('canvas');
+        if (cv) faceCanvas(cv, CV.buildFace(Object.assign({}, L, { [key]: i })), 40, {});
+      });
+    });
+    $$('#makerParts [data-voice]').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.voice === maker.face && !maker.voice)));
+    const val = $('#makerParts .voices') && $('#makerParts .part-val');
+    if (val) val.textContent = maker.voice ? 'Your own tuning' : presetName(maker.face);
+  }
+  function saveMaker() {
+    const name = ($('#makerName').value.trim() || maker.name || randomName()).slice(0, 18);
+    const entry = { name, look: CV.encodeLook(maker.look), face: maker.face, voice: makerVoice() };
+    const isNew = maker.idx < 0;
+    if (isNew) { state.mine.unshift(entry); state.mine.length = Math.min(state.mine.length, 30); } else state.mine[maker.idx] = entry;
+    closeMaker();
+    buildRoster();
+    chooseMine(isNew ? 0 : maker.idx);
+    toast(isNew ? `${name} joined your cast` : `${name} saved`);
+    const b = $(`#roster [data-mine="${isNew ? 0 : maker.idx}"]`);
+    if (b && b.scrollIntoView) b.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'nearest', inline: 'center' });
+  }
+  function removeMaker() {
+    const i = maker.idx;
+    const m = state.mine[i];
+    if (!m) return;
+    const wasOn = state.look === m.look;
+    closeMaker();
+    state.mine.splice(i, 1);
+    if (wasOn) chooseCharacter(m.face && CV.PRESETS[m.face] ? m.face : FIRST, { silent: true });
+    buildRoster();
+    refreshRoster();
+    persist();
+    toast(`Removed ${m.name}`, 'Undo', () => {
+      state.mine.splice(i, 0, m);
+      buildRoster();
+      if (wasOn) chooseMine(i, false); else refreshRoster();
+      persist();
+    });
+  }
+  function chooseMine(i, play) {
+    const m = state.mine[i];
+    if (!m) return;
+    state.look = m.look;
+    state.speaker = m.name;
+    sp.value = m.name;
+    if (CV.PRESETS[m.face]) state.face = m.face;
+    state.voice = CV.normVoice(Object.assign({}, m.voice || presetVoice(state.face), { phone: state.voice.phone }));
+    refreshRoster();
+    onVoiceChange(play !== false);
+  }
+
   // ── scenes ──
   let undoTimer = 0;
-  function snapshot() { return JSON.stringify({ text: state.text, voice: state.voice, face: state.face, speaker: state.speaker, active: state.active }); }
+  function snapshot() { return JSON.stringify({ text: state.text, voice: state.voice, face: state.face, look: state.look, speaker: state.speaker, active: state.active }); }
   function restore(snap) {
     const s = JSON.parse(snap);
     stopAll();
@@ -1459,6 +1877,7 @@
     state.speaker = sc.speaker;
     sp.value = sc.speaker;
     state.face = CV.PRESETS[sc.preset].face;
+    state.look = null;
     state.voice = CV.normVoice(Object.assign({}, CV.DEFAULT_VOICE, CV.PRESETS[sc.preset].voice, { take: 1 }));
     onTextChange();
     onVoiceChange(true);
@@ -1538,7 +1957,8 @@
     const pid = matchingPreset();
     const own = CV.PRESETS[state.face];
     $('#custom').hidden = pid === state.face;
-    $('#customText').textContent = pid ? `This is ${presetName(pid)}’s voice on ${own.name}’s face.` : `Your own voice for ${own.name}.`;
+    const ownName = state.look ? state.speaker || 'your character' : own.name;
+    $('#customText').textContent = pid ? `This is ${presetName(pid)}’s voice on ${ownName}’s face.` : `Your own voice for ${ownName}.`;
     $('#resetVoice').textContent = `Back to ${own.name}’s voice`;
     $$('.machine').forEach((m) => {
       const on = m.dataset.style === v.style;
@@ -1706,6 +2126,9 @@
 
   let voiceTimer = 0;
   function onVoiceChange(play) {
+    // a character you made keeps the voice you give them
+    const mine = state.look && state.mine.find((m) => m.look === state.look && m.name === state.speaker);
+    if (mine) { mine.voice = Object.assign({}, state.voice); mine.face = state.face; }
     persist();
     refreshVoiceUI();
     refreshRoster();
@@ -1845,7 +2268,7 @@
     const F = FORMATS[fmtId];
     const [x0, y0, x1, y1] = F.safe;
     const withFace = opts.layout === 'face';
-    const portrait = !withFace && state.portrait ? { face: state.face } : null;
+    const portrait = !withFace && state.portrait ? { face: speakerFace() } : null;
     // With the face in the box, the text gets a little smaller to keep its width.
     const scale = withFace ? F.scale : F.scale - 1;
     const width = Math.floor((x1 - x0) / scale);
@@ -1893,7 +2316,7 @@
     const { W, H } = L;
     if (L.bg === 'clear') { ctx.clearRect(0, 0, W, H); return; }
     if (L.bg === 'green') { ctx.fillStyle = '#00ff00'; ctx.fillRect(0, 0, W, H); return; }
-    const base = L.bg === 'stage' ? '#151621' : CV.FACES[state.face].bg;
+    const base = L.bg === 'stage' ? '#151621' : speakerBg();
     const [r, g, b] = hexRgb(base);
     const bands = 9;
     for (let i = 0; i < bands; i++) {
@@ -1934,7 +2357,7 @@
       fctx.clearRect(0, 0, 20, 20);
       fctx.fillStyle = T.key; fctx.fillRect(1, 0, 18, 20); fctx.fillRect(0, 1, 20, 18);
       fctx.fillStyle = T.border; fctx.fillRect(1, 1, 18, 18);
-      CV.drawFace(fctx, state.face, 2, 2, { open: mouth, blink });
+      CV.drawFace(fctx, speakerFace(), 2, 2, { open: mouth, blink });
       // Pops in, hops on every syllable, breathes in between.
       const pop = t < 0.34 ? easeOutBack(Math.min(1, t / 0.34)) : 1;
       const px = L.faceS;
@@ -1968,7 +2391,7 @@
     const page = Math.floor((shown < 0 ? 0 : s.lineOf[shown]) / L.rows);
     const opts = {
       text: s.res.text, speaker: L.anySpeaker ? s.speaker || ' ' : '', script: state.script, width: L.width, rows: L.rows, from: page * L.rows, theme: state.theme,
-      portrait: L.portrait ? { face: state.face, open: mouth, blink } : null,
+      portrait: L.portrait ? { face: speakerFace(), open: mouth, blink } : null,
       open, visible: (i) => lt >= s.times[i], cursor: finished && Math.floor(t * 2.5) % 2 === 0,
       level: lt >= 0 ? CV.talkLevel(ev, lt) : 0, meterPhase: t * 14, whisper: s.res.mood.includes('whisper'),
     };
@@ -2201,7 +2624,7 @@
   const vSheet = $('#videoSheet');
   let lastVideo = null;
   function videoName(L, ext) {
-    const who = CV.slug(state.speaker || presetName(state.face) || '8-bit-voice', 16);
+    const who = CV.slug(whoName(), 16);
     const what = L.segs.length === 1 ? CV.slug(L.segs[0].res.text, 30) : `${L.segs.length}-lines`;
     return `${who}-${what}-${L.F.ratio.replace(':', 'x')}.${ext}`;
   }
@@ -2349,7 +2772,7 @@
   }
   function fileBase(i) {
     const c = clips[i];
-    const who = CV.slug(speakerOf(c) || presetName(state.face) || 'voice', 16);
+    const who = CV.slug(speakerOf(c) || whoName(), 16);
     return `${who}-${String(i + 1).padStart(2, '0')}-${CV.slug(c.parsed.text, 36)}`;
   }
   async function saveBytes(name, bytes, mime) {
@@ -2407,20 +2830,21 @@
     const out = new Float32Array(parts.reduce((s, x) => s + x.length, 0) + gap * (parts.length - 1));
     let o = 0;
     parts.forEach((x, i) => { out.set(x, o); o += x.length + (i < parts.length - 1 ? gap : 0); });
-    const who = CV.slug(state.speaker || presetName(state.face) || 'voice', 16);
+    const who = CV.slug(whoName(), 16);
     deliver(`${who}-${clips.length}-lines.wav`, CV.encodeWav(out, sr), 'audio/wav', `${clips.length} lines`);
   }
   function downloadZip(files) {
     const info = {
       made_with: '8-bit Voice ' + APP_VERSION + ' (chipvoice ' + CV.VERSION + ')',
       character: state.face,
+      look: state.look || undefined,
       voice: state.voice,
       speaker: state.speaker,
       lines: clips.map((c) => c.raw),
     };
     files.push({ name: 'voice.json', data: new TextEncoder().encode(JSON.stringify(info, null, 2) + '\n') });
     const pid = matchingPreset();
-    const name = `8-bit-voice-${CV.slug(state.speaker || presetName(state.face) || 'voice', 16)}-${pid || state.voice.style}.zip`;
+    const name = `8-bit-voice-${CV.slug(whoName(), 16)}-${pid || state.voice.style}.zip`;
     saveBytes(name, CV.zip(files), 'application/zip');
   }
 
@@ -2505,7 +2929,11 @@
     state.voice = Object.assign({}, state.voice, { take: state.voice.take + 1 });
     onVoiceChange(true);
   });
-  $('#resetVoice').addEventListener('click', () => chooseCharacter(state.face));
+  $('#resetVoice').addEventListener('click', () => {
+    if (!state.look) { chooseCharacter(state.face); return; }
+    state.voice = CV.normVoice(Object.assign({}, CV.DEFAULT_VOICE, CV.PRESETS[state.face].voice, { phone: state.voice.phone, take: 1 }));
+    onVoiceChange(true);
+  });
   sp.addEventListener('input', () => { state.speaker = sp.value; persist(); refreshSnippet(); drawStage(); refreshExportPreview(); });
   $('#dlAll').addEventListener('click', downloadAll);
   $('#dlLineup').addEventListener('click', downloadLineup);
@@ -2731,7 +3159,7 @@
   };
   function shareUrl() {
     const v = state.voice;
-    const data = { t: state.text, n: state.speaker, v: [v.style, v.pitch, v.speed, v.melody, v.character, v.grit, v.phone ? 1 : 0, v.take], f: state.face, b: state.theme, s: state.script };
+    const data = { t: state.text, n: state.speaker, v: [v.style, v.pitch, v.speed, v.melody, v.character, v.grit, v.phone ? 1 : 0, v.take], f: state.face, k: state.look || undefined, b: state.theme, s: state.script };
     const base = /^https?:$/.test(location.protocol) && location.hostname !== 'localhost' ? location.origin + location.pathname : SITE;
     return `${base}#l=${b64url.enc(JSON.stringify(data))}`;
   }
@@ -2746,6 +3174,12 @@
       state.speaker = typeof d.n === 'string' ? d.n.slice(0, 18) : '';
       state.voice = CV.normVoice(Object.assign({}, CV.DEFAULT_VOICE, { style, pitch, speed, melody, character, grit, phone: !!phone, take }));
       if (CV.FACES[d.f]) state.face = d.f;
+      // a character someone made comes with the link, and joins your cast
+      state.look = isLook(d.k) ? d.k : null;
+      if (state.look && !state.mine.some((m) => m.look === state.look && m.name === state.speaker)) {
+        state.mine.unshift({ name: state.speaker || 'Guest', look: state.look, face: state.face, voice: Object.assign({}, state.voice) });
+        state.mine.length = Math.min(state.mine.length, 30);
+      }
       if (CV.THEMES[d.b]) state.theme = d.b;
       if (d.s === 'latin' || d.s === 'alien') state.script = d.s;
       state.active = 0;
@@ -2774,6 +3208,7 @@
     ta.value = state.text;
     sp.value = state.speaker;
     onTextChange();
+    buildRoster();
     onVoiceChange(false);
     refreshLook();
     toast('Opened from a shared link');
@@ -2787,6 +3222,7 @@
   $('#shareLink').innerHTML = `${ICON.link}<span>${dlMode === 'share' ? 'Share a link' : 'Copy a link'}</span>`;
   drawWordmark();
   buildRoster();
+  buildMaker();
   buildScenes();
   buildMachines();
   buildKnobs();
