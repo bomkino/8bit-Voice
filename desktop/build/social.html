@@ -1,0 +1,45 @@
+<!doctype html>
+<!-- The link preview image (icons/social.png, 1200×630). Rendered from this
+     page with a headless browser at 1200×630; see README › Building. It uses
+     the app's own engine to draw the dialogue box, so it matches the app. -->
+<html><head><meta charset="utf-8">
+<style>
+  @font-face { font-family: "PD Body"; src: url("../../fonts/pd-body.woff2") format("woff2"); font-weight: 100 900; }
+  @font-face { font-family: "PD Eyebrow"; src: url("../../fonts/pd-eyebrow.woff2") format("woff2"); font-weight: 400 700; }
+  html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    background-color: #0c0d12;
+    background-image: radial-gradient(rgba(241, 234, 219, 0.075) 1.5px, transparent 1.8px), linear-gradient(#1a1b24, #08090d);
+    background-size: 18px 18px, 100% 100%; background-position: 9px 9px, 0 0;
+    color: #f1eadb; font-family: "PD Body", sans-serif; -webkit-font-smoothing: antialiased;
+    display: grid; grid-template-columns: 1fr; align-content: center; padding: 0 92px; box-sizing: border-box;
+  }
+  .eyebrow { font: 600 20px/1 "PD Eyebrow", monospace; letter-spacing: 0.08em; text-transform: uppercase; color: #a39f97; display: flex; align-items: center; gap: 14px; }
+  .eyebrow canvas { image-rendering: pixelated; }
+  h1 { margin: 22px 0 0; font: 700 112px/0.95 "PD Body"; letter-spacing: -0.035em; }
+  p { margin: 22px 0 0; font: 400 30px/1.35 "PD Body"; color: #b9b3a8; max-width: 22em; }
+  #box { margin-top: 44px; image-rendering: pixelated; }
+  .gold { color: #e9b44c; }
+</style></head>
+<body>
+  <div class="eyebrow"><canvas id="mark"></canvas><span>pitch.dog · Mac · Windows · Linux · Web</span></div>
+  <h1>8-bit Voice</h1>
+  <p>Type a line. Hear it as a video-game voice.</p>
+  <canvas id="box"></canvas>
+<script src="../../chipvoice.js"></script>
+<script>
+  const CV = window.ChipVoice;
+  const mark = document.getElementById('mark');
+  const rows = ['.###########.', '#...........#', '#..##.##.##.#', '#..##.##.##.#', '#...........#', '.####..#####.', '....#.#......', '....##.......'];
+  mark.width = 13 * 3; mark.height = 8 * 3;
+  const m = mark.getContext('2d'); m.fillStyle = '#e9b44c';
+  rows.forEach((r, y) => { for (let x = 0; x < r.length; x++) if (r[x] === '#') m.fillRect(x * 3, y * 3, 3, 3); });
+  const o = { text: 'I never said I’d call.', speaker: 'PRODUCER', script: 'alien', width: 200, lines: 1, theme: 'ink' };
+  const M = CV.measureDialog(o);
+  const s = 5, cv = document.getElementById('box');
+  cv.width = M.width * s; cv.height = M.height * s;
+  const ctx = cv.getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.setTransform(s, 0, 0, s, 0, 0);
+  CV.drawDialog(ctx, Object.assign(o, { cursor: true, level: 0 }));
+  document.fonts.ready.then(() => document.body.dataset.ready = '1');
+</script>
+</body></html>
