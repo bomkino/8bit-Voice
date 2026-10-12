@@ -208,6 +208,7 @@
   .btn.on-stage:focus-visible { outline-color: var(--stage-ink); }
   .btn.gold { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); }
   .btn.gold:hover { filter: brightness(1.06); background: var(--gold); border-color: var(--gold); }
+  .btn:disabled { opacity: 0.4; pointer-events: none; }
   .btn.big { min-height: 54px; padding: 0 22px; border-radius: 14px; }
   .btn:active { transform: scale(0.98); }
   .btn svg { flex: none; }
@@ -254,7 +255,7 @@
   .mic-rec.is-on { animation: mic-pulse 1.2s ease-in-out infinite; }
   .mic-rec.is-on .mic-dot { width: 22px; height: 22px; border-radius: 4px; }
   @keyframes mic-pulse { 50% { box-shadow: 0 0 0 4px var(--surface), 0 0 0 10px var(--accent); } }
-  .mic-meta { flex: 1; min-width: 0; display: grid; gap: 6px; }
+  .mic-meta { flex: 1; min-width: 0; display: grid; gap: 6px; overflow: hidden; }
   #micWave { width: 100%; height: 56px; display: block; }
   .mic-row { display: flex; gap: 10px; align-items: baseline; }
   .mic-after { display: grid; gap: 12px; }
@@ -283,7 +284,7 @@
     .maker-acts #makerUndo { flex: none; width: 44px; padding: 0; }
     .maker-acts #makerUndo span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   }
-  .sheet.maker { overflow-x: hidden; }
+  .sheet { overflow-x: hidden; }
   .shuffle .px { transition: transform 0.2s; }
   .shuffle:hover .px { transform: rotate(-14deg); }
   .maker-starts { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; align-items: center; margin: 0 -22px; padding: 2px 22px; }
@@ -1018,6 +1019,7 @@
     video: pix(['#######....', '#.....#..##', '#.....#.###', '#.....#####', '#.....#.###', '#.....#..##', '#######....'], 2),
     wave: pix(['....#....', '..#.#....', '..#.#.#..', '#.#.#.#.#', '..#.#.#..', '..#.#....', '....#....'], 2),
     link: pix(['..###....', '.#...#...', '#...#.#..', '#..#...#.', '.#.#...#.', '..#...#..', '...#.#...', '....#....'], 2),
+    up: pix(['#######', '.......', '...#...', '..###..', '.#.#.#.', '#..#..#', '...#...', '...#...', '...#...'], 2),
     mic: pix(['..###..', '.#####.', '.#####.', '.#####.', '.#####.', '#.###.#', '#.....#', '.#####.', '...#...', '.#####.'], 2),
     plus: pix(['....###....', '....###....', '....###....', '....###....', '###########', '###########', '###########', '....###....', '....###....', '....###....', '....###....'], 3),
     lock: pix(['.###.', '#...#', '#...#', '#####', '##.##', '##.##', '#####'], 2),
@@ -1986,8 +1988,8 @@
     $('#micState').textContent = navigator.mediaDevices && navigator.mediaDevices.getUserMedia ? `Tap to record. Up to ${MIC_MAX} seconds.` : 'Recording needs a secure page. You can still open a recording.';
     $('#micRec').hidden = !(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
     mic.peaks = [];
-    drawMicWave();
     micSheet.showModal();
+    drawMicWave();
   }
   function closeMic() {
     stopRecording(false);
@@ -2116,8 +2118,9 @@
   }
   function drawMicWave() {
     const cv = $('#micWave');
-    const w = cv.clientWidth || 260, h = 56;
+    const w = cv.parentElement.clientWidth || 200, h = 56;
     const ctx = sizeCanvas(cv, Math.round(w / 3), Math.round(h / 3), 3 * dpr());
+    cv.style.width = '100%';
     const W = Math.round(w / 3), H = Math.round(h / 3);
     ctx.clearRect(0, 0, W, H);
     const pk = mic.peaks;
@@ -2168,7 +2171,7 @@
   }
   function buildMic() {
     $('#useMic').innerHTML = `${ICON.mic}<span>Your voice</span>`;
-    $('#micOpen').innerHTML = `${ICON.down}<span>Open a recording</span>`;
+    $('#micOpen').innerHTML = `${ICON.up}<span>Open a recording</span>`;
     $('#micOrig').innerHTML = `${ICON.playSm}<span>Your original</span>`;
     $('#useMic').addEventListener('click', openMic);
     $('#micRec').addEventListener('click', () => (mic.node ? stopRecording(true) : startRecording()));
