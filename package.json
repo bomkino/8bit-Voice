@@ -1,9 +1,9 @@
 {
   "name": "8bit-voice-engine",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "description": "BleepBloop: type a line and hear it as a video-game voice. The engine, the web app and the CLI.",
-  "license": "MIT",
+  "license": "CC0-1.0",
   "homepage": "https://bomkino.github.io/8bit-Voice/",
   "repository": "github:bomkino/8bit-Voice",
   "type": "commonjs",

@@ -4,4 +4,4 @@
 
 The files here are cut down for the web: Latin characters only, and PD Eyebrow fixed at its narrow width. Both still come from the v3.0.0 release of the pitch.dog type system.
 
-CC0 covers the font files only. The pitch.dog name and marks aren't covered.
+The pitch.dog name and marks aren't covered.

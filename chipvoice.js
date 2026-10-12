@@ -1,6 +1,6 @@
 /*!
  * chipvoice.js · the engine behind BleepBloop, by pitch.dog
- * https://github.com/bomkino/8bit-Voice · MIT License
+ * https://github.com/bomkino/8bit-Voice · Public domain (CC0 1.0)
  *
  * Type a line and get it back as a video-game voice. The words stay unreadable;
  * the rhythm, the melody and the punctuation stay human, so anyone listening
@@ -19,7 +19,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  const VERSION = '1.2.0';
+  const VERSION = '1.2.1';
   const SAMPLE_RATE = 48000;
 
   // ───────────────────────────── small utilities ─────────────────────────────
@@ -306,7 +306,7 @@
       voice: { style: 'mouth', pitch: 15, speed: 1.3, melody: 0.95, character: 0.08, grit: 0 },
     },
   };
-  const PRESET_ORDER = ['hero', 'narrator', 'henchling', 'wizard', 'villain', 'sidekick', 'agent', 'computer', 'robot', 'fairy', 'ghost', 'golem', 'guard', 'critter'];
+  const PRESET_ORDER = ['hero', 'henchling', 'sidekick', 'wizard', 'villain', 'critter', 'narrator', 'agent', 'computer', 'robot', 'fairy', 'ghost', 'golem', 'guard'];
 
   const DEFAULT_VOICE = { style: 'square', pitch: 0, speed: 1, melody: 0.5, character: 0.5, grit: 0, phone: false, take: 1 };
 

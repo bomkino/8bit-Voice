@@ -34,7 +34,7 @@ The apps aren't signed with an Apple or Microsoft developer certificate, so each
 
 ## Using it
 
-1. **Pick a character.** Fourteen of them, each with a face and a voice: a hero, a narrator whose voice is almost human, a henchling who sings everything, a wizard, a villain, a sidekick, a secret agent, a ship's computer, a robot, a fairy, a ghost, a stone golem, a guard and a villager. **Surprise me** picks one at random.
+1. **Pick a character.** Fourteen of them, each with a face and a voice: a hero, a henchling who sings everything, a sidekick, a wizard, a villain, a villager, a narrator whose voice is almost human, a secret agent, a ship's computer, a robot, a fairy, a ghost, a stone golem and a guard. **Surprise me** picks one at random.
 2. **Or make your own.** Choose skin, face shape, hair and its colour, headwear (hijab, headwrap, turban, durag, cap, crown and more), eyes, brows, mouth, lips, cheeks, facial hair, glasses, earrings, a pin, clothes, a backdrop and the light. **Randomize** rolls a whole new person; lock the parts you love first. Each part also has its own shuffle, and **Undo** steps back. Give them a name and a voice, and save them as a picture if you like. They're kept on your device and travel with shared links.
 3. **Type what they say,** one line per clip, or start from a scene. Stage directions go in brackets: `(slow, awed) ...That's the future.`
 4. **Or use your voice.** Record a line, or open a recording, and your character says it back in their own voice with your timing and your tune. The Narrator's machine keeps your words almost clear; the others turn them into game talk. Recordings never leave your device.
@@ -145,4 +145,6 @@ The character creator learned from open-source avatar makers that came before it
 
 ## License
 
-The code and art are under the [MIT License](LICENSE). The fonts in `fonts/` are pitch.dog's PD Body and PD Eyebrow, dedicated to the public domain under [CC0](fonts/LICENSE.md). The pitch.dog name and marks aren't covered by either license.
+BleepBloop is in the public domain. Its code, art and sounds are dedicated to the public domain under [CC0 1.0](LICENSE), and so are the fonts in `fonts/`, pitch.dog's PD Body and PD Eyebrow ([fonts/LICENSE.md](fonts/LICENSE.md)). Copy it, change it, sell it or build on it, with no permission or credit needed (credit is always nice). The few parts made by others, such as the MP4 muxer, Electron and Sparkle, keep their own licences, listed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). The pitch.dog name and marks aren't covered.
+
+Releases up to 1.2.0 came out under the MIT License; from 1.2.1 it's all CC0.

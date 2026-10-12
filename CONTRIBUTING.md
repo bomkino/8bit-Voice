@@ -32,7 +32,7 @@ The desktop app lives in `desktop/` (`npm ci`, then `npm start`). The README's "
 
 - **It's a commons.** Free for everyone, with no accounts, ads, tracking or paywalls. Everything runs on the device, and nothing is sent anywhere. Please don't add anything that changes that.
 - **Everyone belongs in it.** Characters, examples and copy are a real mix of people: women, men, nonbinary and trans people, a wide range of skin tones, hair and features, people with disabilities, all ages. Nobody is a man by default, voice pitch isn't tied to gender, and no group is a punchline.
-- **It's original.** Only add art, sounds or code you made yourself or that comes with a licence compatible with MIT (MIT, BSD, Apache 2.0, ISC, CC0, or CC BY with the credit added to `THIRD-PARTY-NOTICES.md`). No samples of real voices, and no art traced from games.
+- **It's original.** Only add art, sounds or code you made yourself, or that comes with a permissive licence (CC0, MIT, BSD, ISC, Apache 2.0, or CC BY) with its credit added to `THIRD-PARTY-NOTICES.md`. No samples of real voices, and no art traced from games.
 - **It's accessible.** Buttons have labels, everything works with a keyboard, motion respects "reduce motion", and text has enough contrast.
 
 ## Pull requests
@@ -41,6 +41,6 @@ The desktop app lives in `desktop/` (`npm ci`, then `npm start`). The README's "
 2. Make your change, and run `npm test`.
 3. Open a pull request saying what changed and how you checked it. Screenshots or a short recording are great for anything you can see or hear.
 
-Everyone who contributes gets credited in the release notes. By contributing, you agree your work is released under the [MIT License](LICENSE), like the rest of the project.
+Everyone who contributes gets credited in the release notes. By contributing, you agree to give your work to the public domain under [CC0 1.0](LICENSE), like the rest of the project.
 
 Please read our [Code of Conduct](CODE_OF_CONDUCT.md). In short: be kind, assume good faith, and make room for people.
