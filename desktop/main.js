@@ -1,6 +1,7 @@
 // 8-bit Voice as a desktop app: the same page as ../index.html in its own
 // window. Nothing here talks to the network; every sound is made on the page.
-const { app, BrowserWindow, Menu, nativeTheme, session, shell } = require('electron');
+const { app, BrowserWindow, Menu, nativeTheme, screen, session, shell, systemPreferences } = require('electron');
+const fs = require('node:fs');
 const path = require('node:path');
 
 const PAGE = app.isPackaged
@@ -10,12 +11,54 @@ const groundColor = () => (nativeTheme.shouldUseDarkColors ? '#0c0d12' : '#e3e0d
 
 let win = null;
 
+// The window opens where it was left, at the size it was left, if that spot
+// is still on a screen.
+const STATE = path.join(app.getPath('userData'), 'window.json');
+function savedBounds() {
+  try {
+    const b = JSON.parse(fs.readFileSync(STATE, 'utf8'));
+    if (![b.x, b.y, b.width, b.height].every(Number.isFinite)) return {};
+    const area = screen.getDisplayMatching(b).workArea;
+    const visible = b.x < area.x + area.width - 80 && b.x + b.width > area.x + 80
+      && b.y >= area.y - 10 && b.y < area.y + area.height - 80;
+    return visible ? b : { width: b.width, height: b.height };
+  } catch {
+    return {};
+  }
+}
+function saveBounds() {
+  if (!win || win.isMinimized() || win.isFullScreen()) return;
+  try {
+    fs.writeFileSync(STATE, JSON.stringify({ ...win.getNormalBounds(), maximized: win.isMaximized() }));
+  } catch {}
+}
+
+// Sparkle, on the Mac only: the same updater as pitch.dog's other Mac apps.
+// The bridge and Sparkle.framework are added by build/after-pack.cjs; a build
+// without them simply has no updater.
+let updater = null;
+function startUpdater() {
+  if (process.platform !== 'darwin' || !app.isPackaged) return;
+  try {
+    const bridge = require(path.join(process.resourcesPath, 'sparkle.node'));
+    if (bridge.start()) updater = bridge;
+  } catch (err) {
+    console.error('8-bit Voice: no updater:', err.message);
+  }
+  // Release testing (docs/UPDATES.md): a copy told where to write says which
+  // version is running, once it is up.
+  const ready = systemPreferences.getUserDefault('UpdateTestReadyFile', 'string');
+  if (ready) setTimeout(() => fs.writeFile(ready, `${app.getVersion()} ${process.pid}\n`, () => {}), 1000);
+}
+
 if (!app.requestSingleInstanceLock()) app.quit();
 
 function createWindow() {
+  const { maximized, ...bounds } = savedBounds();
   win = new BrowserWindow({
     width: 1280,
     height: 900,
+    ...bounds,
     minWidth: 380,
     minHeight: 560,
     title: '8-bit Voice',
@@ -30,7 +73,11 @@ function createWindow() {
       autoplayPolicy: 'no-user-gesture-required',
     },
   });
-  win.once('ready-to-show', () => win.show());
+  win.once('ready-to-show', () => {
+    if (maximized) win.maximize();
+    win.show();
+  });
+  win.on('close', saveBounds);
   win.on('closed', () => { win = null; });
 
   // Links leave for the browser; the window only ever shows the tool.
@@ -55,8 +102,26 @@ app.whenReady().then(() => {
     win.webContents.executeJavaScript(`document.getElementById(${JSON.stringify(id)})?.click()`, true).catch(() => {});
   };
   const open = (url) => () => shell.openExternal(url);
+  startUpdater();
+  const appMenu = updater
+    ? {
+        label: app.name,
+        submenu: [
+          { role: 'about' },
+          { label: 'Check for Updates…', click: () => updater.check() },
+          { type: 'separator' },
+          { role: 'services' },
+          { type: 'separator' },
+          { role: 'hide' },
+          { role: 'hideOthers' },
+          { role: 'unhide' },
+          { type: 'separator' },
+          { role: 'quit' },
+        ],
+      }
+    : { role: 'appMenu' };
   Menu.setApplicationMenu(Menu.buildFromTemplate([
-    ...(isMac ? [{ role: 'appMenu' }] : []),
+    ...(isMac ? [appMenu] : []),
     {
       label: 'File',
       submenu: [
@@ -86,7 +151,7 @@ app.whenReady().then(() => {
         { label: '8-bit Voice on the Web', click: open('https://bomkino.github.io/8bit-Voice/') },
         { label: 'Source Code', click: open('https://github.com/bomkino/8bit-Voice') },
         { label: 'Report a Problem', click: open('https://github.com/bomkino/8bit-Voice/issues/new') },
-        { label: 'Check for a New Version', click: open('https://github.com/bomkino/8bit-Voice/releases/latest') },
+        ...(updater ? [] : [{ label: 'Check for a New Version', click: open('https://github.com/bomkino/8bit-Voice/releases/latest') }]),
       ],
     },
   ]));

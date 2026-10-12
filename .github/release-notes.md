@@ -12,4 +12,6 @@ Type a line and hear it as a video-game voice: six chip machines, stage directio
 
 These apps aren't signed by Apple or Microsoft, so each system asks once before it opens one. [Here's what to click.](https://github.com/bomkino/8bit-Voice#opening-it-the-first-time)
 
+On a Mac, 8-bit Voice keeps itself up to date from here on: it checks once a day, and **8-bit Voice › Check for Updates…** checks now. `appcast-arm64.xml` and `appcast-x64.xml` are its update feeds.
+
 `SHA256SUMS.txt` has a checksum for every file.

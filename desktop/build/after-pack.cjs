@@ -7,12 +7,23 @@
 // AppImage there would otherwise refuse to open. The app only ever loads its
 // own bundled page.
 //
-// macOS, when building on another system: give the app an ad-hoc signature with
-// rcodesign (set RCODESIGN to its path), since Apple Silicon won't run unsigned
-// code. On a Mac, electron-builder signs it ad hoc itself (mac.identity "-").
+// macOS: add Sparkle, the updater pitch.dog's other Mac apps use, then give
+// the app an ad-hoc signature, since Apple silicon won't run unsigned code.
+// There are no certificates: updates are trusted by their EdDSA signature
+// against SUPublicEDKey, not by Apple (docs/UPDATES.md). The order matters:
+//   1. Info.plist names the feed for this architecture and the public key;
+//   2. the bridge (native/sparkle/sparkle.node) goes into Resources;
+//   3. the app is signed ad hoc, deep;
+//   4. Sparkle.framework is copied in with ditto, keeping its makers' signature;
+//   5. the outer app is signed again, not deep, sealing Sparkle as it is.
+// build/sparkle.sh fetches Sparkle and builds the bridge; without them the
+// app is built without updates (REQUIRE_SPARKLE=1 makes that an error).
+// Off a Mac, there's no Sparkle, and rcodesign (set RCODESIGN to its path)
+// signs the app.
 const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
+const { Arch } = require('electron-builder');
 
 const LAUNCHER = (bin, exe, optDir) => `#!/bin/sh
 here=$(dirname "$(readlink -f "$0")")
@@ -40,8 +51,9 @@ exports.default = async function afterPack(context) {
     return;
   }
 
-  if (electronPlatformName === 'darwin' && process.platform !== 'darwin') {
+  if (electronPlatformName === 'darwin') {
     const appPath = path.join(appOutDir, `${packager.appInfo.productFilename}.app`);
+    if (process.platform === 'darwin') return signMac(appPath, Arch[context.arch]);
     const rcodesign = process.env.RCODESIGN || 'rcodesign';
     try {
       execFileSync(rcodesign, ['sign', appPath], { stdio: ['ignore', 'ignore', 'inherit'] });
@@ -50,3 +62,40 @@ exports.default = async function afterPack(context) {
     }
   }
 };
+
+const FEED = 'https://github.com/bomkino/8bit-Voice/releases/latest/download';
+// pitch.dog's update key, the same one OOO, Backdrop, Deck Beat, Drift and
+// Galileo trust. Only its public half is here.
+const PUBLIC_KEY = 'P43E8I+FgVyAW3QkS4J9bnDRRhAnsS4y3dT2WDce1lQ=';
+
+function signMac(appPath, arch) {
+  const run = (cmd, args) => execFileSync(cmd, args, { stdio: 'inherit' });
+  const root = path.join(__dirname, '..');
+  const framework = path.join(root, 'vendor', 'sparkle', 'Sparkle.framework');
+  const bridge = path.join(root, 'native', 'sparkle', 'sparkle.node');
+  const sparkle = fs.existsSync(framework) && fs.existsSync(bridge);
+  if (!sparkle) {
+    const why = 'Sparkle or its bridge is missing (run build/sparkle.sh)';
+    if (process.env.REQUIRE_SPARKLE === '1') throw new Error(why);
+    console.warn(`  • ${why}: building without in-app updates`);
+  }
+
+  if (sparkle) {
+    const plist = path.join(appPath, 'Contents', 'Info.plist');
+    for (const [key, type, value] of [
+      ['SUFeedURL', 'string', `${FEED}/appcast-${arch}.xml`],
+      ['SUPublicEDKey', 'string', process.env.SPARKLE_PUBLIC_KEY_OVERRIDE || PUBLIC_KEY],
+      ['SUEnableAutomaticChecks', 'bool', 'true'],
+    ]) {
+      try { execFileSync('/usr/libexec/PlistBuddy', ['-c', `Delete :${key}`, plist], { stdio: 'ignore' }); } catch {}
+      run('/usr/libexec/PlistBuddy', ['-c', `Add :${key} ${type} ${value}`, plist]);
+    }
+    fs.copyFileSync(bridge, path.join(appPath, 'Contents', 'Resources', 'sparkle.node'));
+  }
+
+  run('codesign', ['--force', '--deep', '--sign', '-', appPath]);
+  if (!sparkle) return;
+  const frameworks = path.join(appPath, 'Contents', 'Frameworks');
+  run('ditto', [framework, path.join(frameworks, 'Sparkle.framework')]);
+  run('codesign', ['--force', '--sign', '-', appPath]);
+}

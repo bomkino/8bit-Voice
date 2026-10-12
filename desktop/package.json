@@ -10,10 +10,11 @@
   "desktopName": "8bit-voice.desktop",
   "scripts": {
     "start": "electron .",
-    "dist:mac": "electron-builder --mac dmg zip --arm64 --x64 --publish never",
+    "dist:mac": "bash build/sparkle.sh && electron-builder --mac dmg --arm64 --x64 --publish never && node build/zip-mac.cjs",
     "dist:win": "electron-builder --win nsis --x64 --publish never && electron-builder --win nsis --arm64 --publish never",
     "dist:linux": "electron-builder --linux AppImage deb --x64 --arm64 --publish never",
-    "dist:mac-off-mac": "electron-builder --mac dir --arm64 --x64 --publish never && node build/zip-mac.cjs"
+    "dist:mac-off-mac": "electron-builder --mac dir --arm64 --x64 --publish never && node build/zip-mac.cjs",
+    "test:update": "bash build/test-update.sh"
   },
   "devDependencies": {
     "electron": "44.5.1",
@@ -22,7 +23,7 @@
   "build": {
     "appId": "dog.pitch.8bitvoice",
     "productName": "8-bit Voice",
-    "copyright": "\u00a9 2026 pitch.dog \u00b7 MIT License",
+    "copyright": "© 2026 pitch.dog · MIT License",
     "directories": {
       "buildResources": "build",
       "output": "dist"
@@ -47,12 +48,11 @@
     "publish": null,
     "mac": {
       "target": [
-        "dmg",
-        "zip"
+        "dmg"
       ],
       "category": "public.app-category.music",
       "icon": "build/icon.icns",
-      "identity": "-",
+      "identity": null,
       "hardenedRuntime": false,
       "darkModeSupport": true,
       "minimumSystemVersion": "12.0",

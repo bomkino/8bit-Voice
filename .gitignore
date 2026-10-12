@@ -2,3 +2,5 @@ node_modules/
 desktop/dist/
 clips/
 .DS_Store
+desktop/vendor/
+desktop/native/sparkle/sparkle.node

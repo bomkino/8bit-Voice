@@ -28,7 +28,7 @@ The macOS, Windows and Linux apps are the same tool in their own window, with me
 
 The apps aren't signed with an Apple or Microsoft developer certificate yet, so each system asks once before it opens one.
 
-- **macOS (12 or later).** Open the .dmg and drag 8-bit Voice to Applications. The first time you open it, macOS says it can't verify the app: click **Done**. Then go to **System Settings › Privacy & Security**, scroll down and click **Open Anyway** next to 8-bit Voice. After that it opens normally. In Terminal, `xattr -dr com.apple.quarantine "/Applications/8-bit Voice.app"` does the same thing.
+- **macOS (12 or later).** Open the .dmg and drag 8-bit Voice to Applications. The first time you open it, macOS says it can't verify the app: click **Done**. Then go to **System Settings › Privacy & Security**, scroll down and click **Open Anyway** next to 8-bit Voice. After that it opens normally. In Terminal, `xattr -dr com.apple.quarantine "/Applications/8-bit Voice.app"` does the same thing. From then on the app updates itself (**8-bit Voice › Check for Updates…**), the same way pitch.dog's other Mac apps do: [docs/UPDATES.md](docs/UPDATES.md).
 - **Windows.** If SmartScreen says "Windows protected your PC", click **More info**, then **Run anyway**. The installer puts 8-bit Voice in your Start menu. No admin rights are needed.
 - **Linux.** For the AppImage, run `chmod +x 8-bit-Voice-linux-x86_64.AppImage` and open it. Some distros need `libfuse2` first. For the .deb, run `sudo apt install ./8-bit-Voice-linux-amd64.deb`, then find it in your app menu.
 
@@ -101,7 +101,8 @@ npm start                # the web app at http://localhost:8080
 cd desktop
 npm ci
 npm start                # the desktop app, from source
-npm run dist:mac         # .dmg and .zip, Apple silicon and Intel (on a Mac)
+npm run dist:mac         # .dmg and .zip, Apple silicon and Intel, with Sparkle (on a Mac)
+npm run test:update      # proves a Mac copy updates itself (on a Mac, after dist:mac)
 npm run dist:win         # installers for x64 and Arm (on Windows)
 npm run dist:linux       # AppImage and .deb, x64 and Arm
 ```
@@ -111,10 +112,11 @@ Building the Mac app off a Mac needs [rcodesign](https://github.com/indygreg/app
 - `index.html` is the whole web app. The desktop apps load the same page, so a change there reaches every platform.
 - `sw.js` and `manifest.webmanifest` make it installable and offline.
 - `desktop/` is the Electron wrapper. Its `build/make_icon.py` draws every icon and the disk image background, and `build/social.html` renders `icons/social.png`.
-- `.github/workflows/build.yml` tests the engine and builds and opens the apps on macOS, Windows and Linux for every pull request. On `main`, when `desktop/package.json` has a new version, it publishes them as a release.
+- `desktop/build/sparkle.sh`, `desktop/native/sparkle/` and `desktop/build/sign-update.sh` are the Mac app's updater: [docs/UPDATES.md](docs/UPDATES.md).
+- `.github/workflows/build.yml` tests the engine, builds and opens the apps on macOS, Windows and Linux, and tests the Mac updater, for every pull request. On `main`, when `desktop/package.json` has a new version, it publishes them as a release with signed update feeds.
 - `.github/workflows/pages.yml` puts the web app on GitHub Pages from `main`.
 
-To ship a new version, raise `version` in `desktop/package.json` (and `APP_VERSION` in `index.html`, the cache name in `sw.js` and `version` in `package.json` to match), then merge to `main`.
+To ship a new version, raise `version` in `desktop/package.json` (and `APP_VERSION` in `index.html`, the cache name in `sw.js` and `version` in `package.json` to match), add a section to `CHANGELOG.md`, then merge to `main`.
 
 Issues and pull requests are welcome.
 
