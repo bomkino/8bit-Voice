@@ -1531,7 +1531,7 @@
       edit.textContent = 'Change their look';
       const i = state.mine.findIndex((m) => m.look === state.look);
       edit.addEventListener('click', () => openMaker(i));
-      note.append(b, `Made by you, with ${pid ? presetName(pid) + '’s' : 'their own'} voice on the ${S.name} machine. `, edit);
+      note.append(b, `One of yours, with ${pid ? presetName(pid) + '’s' : 'their own'} voice on the ${S.name} machine. `, edit);
       return;
     }
     const b = document.createElement('b');
@@ -3260,7 +3260,7 @@
     videoFrame(c.getContext('2d'), L, t, prepFrame(L));
     return c;
   }
-  window.EightBitVoice = { version: APP_VERSION, makeVideo, state: () => state, videoLayout, videoStill, pickCodecs };
+  window.EightBitVoice = { version: APP_VERSION, makeVideo, state: () => state, videoLayout, videoStill, pickCodecs, shareUrl };
 })();
 </script>
 </body>
