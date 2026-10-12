@@ -144,6 +144,7 @@ app.whenReady().then(() => {
         { label: 'Speakerphone On or Off', click: press('phone') },
         { type: 'separator' },
         { label: 'Make a Character…', accelerator: 'CmdOrCtrl+Shift+N', click: press('makeOwn') },
+        { label: 'Use Your Voice…', accelerator: 'CmdOrCtrl+Shift+R', click: press('useMic') },
       ],
     },
     { label: 'View', submenu: [{ role: 'resetZoom' }, { role: 'zoomIn' }, { role: 'zoomOut' }, { type: 'separator' }, { role: 'togglefullscreen' }] },

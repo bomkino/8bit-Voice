@@ -58,6 +58,9 @@
       "hardenedRuntime": false,
       "darkModeSupport": true,
       "minimumSystemVersion": "12.0",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "8-bit Voice listens only while you record a line, so a character can say it back. Nothing leaves your Mac."
+      },
       "artifactName": "8-bit-Voice-mac-${arch}.${ext}"
     },
     "linux": {

@@ -244,6 +244,24 @@
   .card.mine .card-tag { color: var(--accent); }
   .cast-note .link { font: inherit; }
 
+  /* your voice */
+  .mic-open { min-height: 36px; padding: 0 12px; border-radius: 10px; }
+  .mic-open .px { fill: currentColor; }
+  .mic-stage { display: flex; align-items: center; gap: 16px; padding: 16px; border-radius: 18px; background: var(--sunk); border: 1px solid var(--line); }
+  .mic-rec { flex: none; width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); box-shadow: 0 0 0 4px var(--surface), 0 0 0 6px var(--line-2); transition: transform 0.12s; }
+  .mic-rec:hover { transform: scale(1.04); }
+  .mic-dot { width: 26px; height: 26px; border-radius: 50%; background: var(--accent-ink); transition: border-radius 0.2s, width 0.2s, height 0.2s; }
+  .mic-rec.is-on { animation: mic-pulse 1.2s ease-in-out infinite; }
+  .mic-rec.is-on .mic-dot { width: 22px; height: 22px; border-radius: 4px; }
+  @keyframes mic-pulse { 50% { box-shadow: 0 0 0 4px var(--surface), 0 0 0 10px var(--accent); } }
+  .mic-meta { flex: 1; min-width: 0; display: grid; gap: 6px; }
+  #micWave { width: 100%; height: 56px; display: block; }
+  .mic-row { display: flex; gap: 10px; align-items: baseline; }
+  .mic-after { display: grid; gap: 12px; }
+  .mic-after .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .mic-after .row .btn { flex: 1; }
+  @media (prefers-reduced-motion: reduce) { .mic-rec.is-on { animation: none; } }
+
   /* make your own */
   .sheet.maker { width: min(720px, 100%); }
   .maker .sheet-body { gap: 16px; padding-top: 0; }
@@ -669,6 +687,7 @@
       <div class="panel-head">
         <h2 id="linesTitle" data-pd-ui="section-title">Lines</h2>
         <div class="links">
+          <button type="button" class="btn hot mic-open" id="useMic" data-pd-ui="action"></button>
           <button type="button" class="link" id="openTxt" data-pd-ui="caption">Open a .txt</button>
           <button type="button" class="link" id="clearLines" data-pd-ui="caption">Clear</button>
         </div>
@@ -864,6 +883,35 @@
   </div>
 </dialog>
 
+<dialog class="sheet" id="micSheet" aria-labelledby="micTitle">
+  <div class="sheet-body">
+    <div class="sheet-grab" aria-hidden="true"></div>
+    <h2 id="micTitle" data-pd-ui="section-title">Your voice</h2>
+    <p class="hint" id="micHint" data-pd-ui="caption">Say a line, or open a recording. Your character says it back in their own voice, with your timing and your tune. It never leaves this device.</p>
+    <div class="mic-stage">
+      <button type="button" class="mic-rec" id="micRec" aria-label="Record"><span class="mic-dot" aria-hidden="true"></span></button>
+      <div class="mic-meta">
+        <canvas id="micWave" aria-hidden="true"></canvas>
+        <div class="mic-row"><span id="micTime" data-pd-ui="data">0:00</span><span class="muted" id="micState" data-pd-ui="caption">Tap to record. Up to 30 seconds.</span></div>
+      </div>
+    </div>
+    <button type="button" class="btn" id="micOpen" data-pd-ui="action"></button>
+    <input type="file" id="micFile" accept="audio/*,video/*,.m4a,.mp3,.wav,.ogg,.webm,.mov,.mp4" hidden>
+    <div class="mic-after" id="micAfter" hidden>
+      <label class="field"><span data-pd-ui="label">What did you say?</span>
+        <input id="micText" class="text-input" data-pd-ui="input" maxlength="200" autocomplete="off" placeholder="Optional. The box types it along with you."></label>
+      <div class="row">
+        <button type="button" class="btn gold" id="micHear" data-pd-ui="action"></button>
+        <button type="button" class="btn" id="micOrig" data-pd-ui="action"></button>
+      </div>
+    </div>
+    <div class="sheet-btns">
+      <button type="button" class="btn hot big" id="micAdd" data-pd-ui="action-big" disabled>Add it as a line</button>
+      <button type="button" class="btn" id="micClose" data-pd-ui="action">Cancel</button>
+    </div>
+  </div>
+</dialog>
+
 <dialog class="sheet maker" id="makerSheet" aria-labelledby="makerTitle">
   <div class="sheet-body">
     <div class="maker-head">
@@ -970,6 +1018,7 @@
     video: pix(['#######....', '#.....#..##', '#.....#.###', '#.....#####', '#.....#.###', '#.....#..##', '#######....'], 2),
     wave: pix(['....#....', '..#.#....', '..#.#.#..', '#.#.#.#.#', '..#.#.#..', '..#.#....', '....#....'], 2),
     link: pix(['..###....', '.#...#...', '#...#.#..', '#..#...#.', '.#.#...#.', '..#...#..', '...#.#...', '....#....'], 2),
+    mic: pix(['..###..', '.#####.', '.#####.', '.#####.', '.#####.', '#.###.#', '#.....#', '.#####.', '...#...', '.#####.'], 2),
     plus: pix(['....###....', '....###....', '....###....', '....###....', '###########', '###########', '###########', '....###....', '....###....', '....###....', '....###....'], 3),
     lock: pix(['.###.', '#...#', '#...#', '#####', '##.##', '##.##', '#####'], 2),
     die: pix(['#######', '#.....#', '#.#.#.#', '#..#..#', '#.#.#.#', '#.....#', '#######'], 2),
@@ -1012,14 +1061,19 @@
 
   // ── clips and renders ──
   let clips = [];
+  // A line that starts with 🎤 and a number is one of your recordings, said
+  // again by the character; the words after it are what the box shows.
+  const MIC_RE = /^🎤\s*(\d+)\s*/u;
+  const recs = new Map();
   function readClips() {
     const out = [];
     state.text.split('\n').forEach((raw, row) => {
       const line = raw.trim();
       if (!line) return;
-      const parsed = CV.parseLine(line);
-      if (!parsed.text.trim()) return;
-      out.push({ raw: line, row, parsed });
+      const m = MIC_RE.exec(line);
+      const parsed = CV.parseLine(m ? line.slice(m[0].length) : line);
+      if (!parsed.text.trim() && !m) return;
+      out.push({ raw: line, row, parsed, mic: m ? +m[1] : 0 });
     });
     clips = out;
     if (state.active >= clips.length) state.active = Math.max(0, clips.length - 1);
@@ -1030,7 +1084,13 @@
     const k = raw + '\u0000' + vkey(v);
     let r = cache.get(k);
     if (!r) {
-      r = CV.render(raw, v);
+      const m = MIC_RE.exec(raw);
+      const R = m && recs.get(+m[1]);
+      if (R) {
+        if (!R.rec) R.rec = CV.analyzeRecording(R.samples, R.sampleRate);
+        const p = CV.parseLine(raw.slice(m[0].length));
+        r = CV.renderRecording(R.rec, v, { text: p.text, mood: p.mood });
+      } else r = CV.render(m ? raw.slice(m[0].length) || '...' : raw, v);
       cache.set(k, r);
       if (cache.size > 160) cache.delete(cache.keys().next().value);
     }
@@ -1873,6 +1933,256 @@
     onVoiceChange(play !== false);
   }
 
+  // ── your voice: record or open a recording, and a character says it ──
+  const micSheet = $('#micSheet');
+  const MIC_MAX = 30;
+  const mic = { stream: null, node: null, src: null, chunks: [], len: 0, sr: 48000, take: null, peaks: [], t0: 0, timer: 0 };
+  // Recordings are kept on this device only, in the browser's own storage,
+  // so they're still here next time. Nothing is uploaded.
+  const recStore = {
+    db: null,
+    open() {
+      if (this.db) return this.db;
+      this.db = new Promise((resolve) => {
+        try {
+          const req = indexedDB.open('8bit-voice', 1);
+          req.onupgradeneeded = () => req.result.createObjectStore('recordings');
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => resolve(null);
+        } catch (e) { resolve(null); }
+      });
+      return this.db;
+    },
+    async put(id, R) {
+      const db = await this.open();
+      if (!db) return;
+      try { db.transaction('recordings', 'readwrite').objectStore('recordings').put({ samples: R.samples, sampleRate: R.sampleRate }, id); } catch (e) { /* fine */ }
+    },
+    async load() {
+      const db = await this.open();
+      if (!db) return;
+      await new Promise((resolve) => {
+        try {
+          const req = db.transaction('recordings').objectStore('recordings').openCursor();
+          req.onsuccess = () => {
+            const cur = req.result;
+            if (!cur) { resolve(); return; }
+            if (cur.value && cur.value.samples) recs.set(+cur.key, { samples: cur.value.samples, sampleRate: cur.value.sampleRate });
+            cur.continue();
+          };
+          req.onerror = () => resolve();
+        } catch (e) { resolve(); }
+      });
+    },
+  };
+  function micLabel() { return (state.speaker || presetName(state.face) || 'them').slice(0, 18); }
+  function openMic() {
+    stopAll();
+    mic.take = null;
+    $('#micAfter').hidden = true;
+    $('#micAdd').disabled = true;
+    $('#micText').value = '';
+    $('#micTime').textContent = '0:00';
+    $('#micState').textContent = navigator.mediaDevices && navigator.mediaDevices.getUserMedia ? `Tap to record. Up to ${MIC_MAX} seconds.` : 'Recording needs a secure page. You can still open a recording.';
+    $('#micRec').hidden = !(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+    mic.peaks = [];
+    drawMicWave();
+    micSheet.showModal();
+  }
+  function closeMic() {
+    stopRecording(false);
+    if (playing && playing.mic) stopAll();
+    micSheet.close();
+  }
+  async function startRecording() {
+    const a = audio();
+    try {
+      mic.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+    } catch (e) {
+      $('#micState').textContent = e && e.name === 'NotAllowedError'
+        ? 'The microphone is blocked. Allow it for this page in your browser’s settings, or open a recording instead.'
+        : 'No microphone found. You can open a recording instead.';
+      return;
+    }
+    stopAll();
+    mic.sr = a.sampleRate;
+    mic.chunks = [];
+    mic.len = 0;
+    mic.peaks = [];
+    mic.src = a.createMediaStreamSource(mic.stream);
+    // A script processor is old, but it's the one way to get the raw samples
+    // that works in every browser, iPhones included.
+    mic.node = a.createScriptProcessor(4096, 1, 1);
+    const mute = a.createGain();
+    mute.gain.value = 0;
+    mic.node.onaudioprocess = (e) => {
+      const x = e.inputBuffer.getChannelData(0);
+      mic.chunks.push(new Float32Array(x));
+      mic.len += x.length;
+      let pk = 0;
+      for (let i = 0; i < x.length; i++) pk = Math.max(pk, Math.abs(x[i]));
+      mic.peaks.push(pk);
+      if (mic.len / mic.sr >= MIC_MAX) stopRecording(true);
+    };
+    mic.src.connect(mic.node);
+    mic.node.connect(mute);
+    mute.connect(a.destination);
+    mic.t0 = performance.now();
+    $('#micRec').classList.add('is-on');
+    $('#micRec').setAttribute('aria-label', 'Stop recording');
+    $('#micState').textContent = 'Recording. Tap to stop.';
+    const tick = () => {
+      if (!mic.node) return;
+      const t = (performance.now() - mic.t0) / 1000;
+      $('#micTime').textContent = `0:${String(Math.floor(t)).padStart(2, '0')}`;
+      drawMicWave();
+      mic.timer = requestAnimationFrame(tick);
+    };
+    tick();
+  }
+  function stopRecording(keep) {
+    if (!mic.node) return;
+    cancelAnimationFrame(mic.timer);
+    try { mic.src.disconnect(); mic.node.disconnect(); } catch (e) { /* fine */ }
+    mic.node.onaudioprocess = null;
+    mic.node = null;
+    if (mic.stream) mic.stream.getTracks().forEach((t) => t.stop());
+    mic.stream = null;
+    $('#micRec').classList.remove('is-on');
+    $('#micRec').setAttribute('aria-label', 'Record again');
+    if (!keep) return;
+    const x = new Float32Array(mic.len);
+    let o = 0;
+    for (const c of mic.chunks) { x.set(c, o); o += c.length; }
+    mic.chunks = [];
+    useTake(x, mic.sr);
+  }
+  async function openRecording(file) {
+    if (!file) return;
+    $('#micState').textContent = 'Opening…';
+    try {
+      const buf = await audio().decodeAudioData(await file.arrayBuffer());
+      const n = Math.min(buf.length, Math.round(buf.sampleRate * MIC_MAX));
+      const x = new Float32Array(n);
+      for (let ch = 0; ch < buf.numberOfChannels; ch++) {
+        const d = buf.getChannelData(ch);
+        for (let i = 0; i < n; i++) x[i] += d[i] / buf.numberOfChannels;
+      }
+      mic.peaks = [];
+      for (let i = 0; i < n; i += 4096) { let pk = 0; for (let j = i; j < Math.min(n, i + 4096); j++) pk = Math.max(pk, Math.abs(x[j])); mic.peaks.push(pk); }
+      useTake(x, buf.sampleRate, buf.length > n);
+    } catch (e) {
+      $('#micState').textContent = 'That file couldn’t be opened. Try a WAV, MP3 or M4A.';
+    }
+  }
+  function useTake(x, sr, trimmed) {
+    let pk = 0;
+    for (let i = 0; i < x.length; i++) pk = Math.max(pk, Math.abs(x[i]));
+    if (x.length < sr * 0.3 || pk < 0.01) {
+      $('#micState').textContent = 'That was very quiet. Try again a little closer to the microphone.';
+      return;
+    }
+    $('#micState').textContent = 'Listening…';
+    // let the message paint before the analysis, which takes a moment
+    setTimeout(() => {
+      try {
+        mic.take = { samples: x, sampleRate: sr, rec: CV.analyzeRecording(x, sr) };
+      } catch (e) {
+        $('#micState').textContent = 'Something went wrong listening to that. Try another take.';
+        return;
+      }
+      const secs = x.length / sr;
+      $('#micTime').textContent = `0:${String(Math.round(secs)).padStart(2, '0')}`;
+      $('#micState').textContent = trimmed ? `Got it. Kept the first ${MIC_MAX} seconds.` : 'Got it.';
+      $('#micAfter').hidden = false;
+      $('#micAdd').disabled = false;
+      $('#micHear').innerHTML = `${ICON.playSm}<span>Hear it as ${micLabel()}</span>`;
+      drawMicWave();
+      hearTake();
+    }, 30);
+  }
+  function hearTake() {
+    if (!mic.take) return;
+    if (playing && playing.mic === 'take') { stopAll(); return; }
+    const p = CV.parseLine($('#micText').value.trim());
+    const res = CV.renderRecording(mic.take.rec, state.voice, { text: p.text, mood: p.mood });
+    playRes(res, { hear: 'mic', mic: 'take' });
+  }
+  function hearOriginal() {
+    if (!mic.take) return;
+    if (playing && playing.mic === 'orig') { stopAll(); return; }
+    const { samples, sampleRate } = mic.take;
+    playRes({ samples, sampleRate, duration: samples.length / sampleRate, text: '', mood: [], events: [] }, { hear: 'mic', mic: 'orig' });
+  }
+  function drawMicWave() {
+    const cv = $('#micWave');
+    const w = cv.clientWidth || 260, h = 56;
+    const ctx = sizeCanvas(cv, Math.round(w / 3), Math.round(h / 3), 3 * dpr());
+    const W = Math.round(w / 3), H = Math.round(h / 3);
+    ctx.clearRect(0, 0, W, H);
+    const pk = mic.peaks;
+    const per = Math.max(1, Math.ceil(pk.length / W));
+    ctx.fillStyle = css('--accent');
+    for (let x = 0; x < W; x++) {
+      let v = 0;
+      for (let j = x * per; j < Math.min(pk.length, (x + 1) * per); j++) v = Math.max(v, pk[j]);
+      if (x * per >= pk.length) { ctx.fillStyle = css('--line-2'); v = 0.02; }
+      const bh = Math.max(1, Math.round(Math.min(1, v * 1.6) * (H - 2)));
+      ctx.fillRect(x, Math.round((H - bh) / 2), 1, bh);
+    }
+  }
+  // Something to show in the box when you didn't say what you said: made-up
+  // words, a syllable for each of yours.
+  function babble(n) {
+    const S = ['ba', 'lo', 'mi', 'ne', 'ta', 'ku', 'ri', 'so', 'pe', 'do', 'la', 'yu', 'fi', 'ko', 'ma', 'zu'];
+    const words = [];
+    let left = Math.max(1, n);
+    while (left > 0) {
+      const k = Math.min(left, 1 + Math.floor(Math.random() * 3));
+      let wd = '';
+      for (let i = 0; i < k; i++) wd += S[Math.floor(Math.random() * S.length)];
+      words.push(wd);
+      left -= k;
+    }
+    const t = words.join(' ');
+    return t[0].toUpperCase() + t.slice(1) + '!';
+  }
+  function addTake() {
+    if (!mic.take) return;
+    const id = Math.max(0, ...recs.keys()) + 1;
+    const R = { samples: mic.take.samples, sampleRate: mic.take.sampleRate, rec: mic.take.rec };
+    recs.set(id, R);
+    recStore.put(id, R);
+    let words = $('#micText').value.trim();
+    if (!words) words = babble(CV.renderRecording(R.rec, state.voice, { text: '' }).events.length);
+    const line = `🎤${id} ${words}`;
+    const lines = state.text.split('\n');
+    const row = state.text.trim() ? lines.length : 0;
+    state.text = state.text.trim() ? state.text.replace(/\s+$/, '') + '\n' + line : line;
+    ta.value = state.text;
+    closeMic();
+    onTextChange();
+    const i = clips.findIndex((c) => c.row === row || c.raw === line);
+    if (i >= 0) playClip(i);
+    toast('Added. Change the voice or the character and it says it again.');
+  }
+  function buildMic() {
+    $('#useMic').innerHTML = `${ICON.mic}<span>Your voice</span>`;
+    $('#micOpen').innerHTML = `${ICON.down}<span>Open a recording</span>`;
+    $('#micOrig').innerHTML = `${ICON.playSm}<span>Your original</span>`;
+    $('#useMic').addEventListener('click', openMic);
+    $('#micRec').addEventListener('click', () => (mic.node ? stopRecording(true) : startRecording()));
+    $('#micOpen').addEventListener('click', () => $('#micFile').click());
+    $('#micFile').addEventListener('change', (e) => { openRecording(e.target.files[0]); e.target.value = ''; });
+    $('#micHear').addEventListener('click', hearTake);
+    $('#micOrig').addEventListener('click', hearOriginal);
+    $('#micAdd').addEventListener('click', addTake);
+    $('#micClose').addEventListener('click', closeMic);
+    micSheet.addEventListener('close', () => stopRecording(false));
+    micSheet.addEventListener('click', (e) => { if (e.target === micSheet) closeMic(); });
+    recStore.load().then(() => { if (clips.some((c) => c.mic)) { cache.clear(); refreshClipList(); drawStage(); } });
+  }
+
   // ── scenes ──
   let undoTimer = 0;
   function snapshot() { return JSON.stringify({ text: state.text, voice: state.voice, face: state.face, look: state.look, speaker: state.speaker, active: state.active }); }
@@ -2034,6 +2344,7 @@
       const tags = c.parsed.mood.keys.map((k) => (c.parsed.mood.very[k] ? 'Very ' + CV.MOODS[k].label.toLowerCase() : CV.MOODS[k].label));
       if (c.parsed.phone) tags.push('Speakerphone');
       if (c.parsed.speaker) tags.unshift(c.parsed.speaker);
+      if (c.mic) tags.unshift(recs.has(c.mic) ? 'Your voice' : 'Recording not on this device');
       li.innerHTML =
         `<button type="button" class="clip-main" aria-label="Play line ${i + 1}">` +
         `<span class="clip-n" data-pd-ui="data">${String(i + 1).padStart(2, '0')}</span>` +
@@ -3255,6 +3566,7 @@
   drawWordmark();
   buildRoster();
   buildMaker();
+  buildMic();
   buildScenes();
   buildMachines();
   buildKnobs();
