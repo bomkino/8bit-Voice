@@ -142,7 +142,7 @@ declare namespace ChipVoice {
     from?: number;
     theme?: ThemeId | Theme;
     /** A framed picture of the speaker at the left of the box: one of the cast, or your own drawing. */
-    portrait?: FaceOptions & { face: FaceId } | { size: number; draw(ctx: CanvasRenderingContext2D, x: number, y: number): void };
+    portrait?: FaceOptions & { face: FaceId | Face } | { size: number; draw(ctx: CanvasRenderingContext2D, x: number, y: number): void };
     x?: number;
     y?: number;
     /** Whether character i of the text is showing. */
@@ -174,6 +174,30 @@ declare namespace ChipVoice {
     /** Sixteen rows of sixteen palette letters, separated by "/". "." is the background, "e" an eye and "E" its glint, which close on a blink. */
     rows: string;
   }
+  type LookKey =
+    | 'skin'
+    | 'head'
+    | 'hair'
+    | 'hairColor'
+    | 'cover'
+    | 'coverColor'
+    | 'eyes'
+    | 'brows'
+    | 'mouth'
+    | 'lips'
+    | 'cheeks'
+    | 'age'
+    | 'facial'
+    | 'glasses'
+    | 'earrings'
+    | 'outfit'
+    | 'outfitColor'
+    | 'pin'
+    | 'bg';
+  /** A made-up character: which option of each part, by index. */
+  type Look = Record<LookKey, number>;
+  /** Parts by name ("Umber", "Locs") or index; anything left out is the first option. */
+  type LookInput = Partial<Record<LookKey, number | string>> | string;
   interface DialogMetrics {
     width: number;
     height: number;
@@ -210,8 +234,21 @@ declare const ChipVoice: {
   THEME_ORDER: ChipVoice.ThemeId[];
   FACES: Record<ChipVoice.FaceId, ChipVoice.Face>;
   FACE_ORDER: ChipVoice.FaceId[];
-  /** Draws a 16×16 face with its top-left corner at x, y. Returns false for an unknown face. */
-  drawFace(ctx: CanvasRenderingContext2D, id: ChipVoice.FaceId, x: number, y: number, o?: ChipVoice.FaceOptions): boolean;
+  /** Draws a 16×16 face, one of the cast or your own, with its top-left corner at x, y. Returns false for an unknown face. */
+  drawFace(ctx: CanvasRenderingContext2D, id: ChipVoice.FaceId | ChipVoice.Face, x: number, y: number, o?: ChipVoice.FaceOptions): boolean;
+  /** Every part of the character creator and its options, as [name, data] pairs. Lists only grow at the end, so codes stay valid. */
+  LOOK_PARTS: Record<ChipVoice.LookKey, [string, unknown][]>;
+  LOOK_KEYS: ChipVoice.LookKey[];
+  /** The human cast as looks, to start from. */
+  STARTER_LOOKS: Partial<Record<ChipVoice.PresetId, ChipVoice.LookInput>>;
+  normLook(look?: ChipVoice.LookInput): ChipVoice.Look;
+  /** A short code for links, such as "1a060900210000010200". */
+  encodeLook(look: ChipVoice.LookInput): string;
+  decodeLook(code: string): Partial<ChipVoice.Look>;
+  /** A random look from the whole range; `keep` holds parts to leave as they are. */
+  randomLook(seed: number | string, keep?: Partial<ChipVoice.Look>): ChipVoice.Look;
+  /** Paints a look into a face drawFace() and portraits can use. */
+  buildFace(look: ChipVoice.LookInput): ChipVoice.Face;
   glyph(ch: string, script?: 'alien' | 'latin'): ChipVoice.Glyph | null;
   layoutText(text: string, width: number, script?: 'alien' | 'latin'): ChipVoice.DialogMetrics['lines'];
   measureDialog(o: ChipVoice.DialogOptions): ChipVoice.DialogMetrics;

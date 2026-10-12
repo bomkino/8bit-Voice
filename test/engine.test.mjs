@@ -91,3 +91,37 @@ test("the Mouth copes with words that have no vowels, digits and odd spelling", 
     assert.ok(peak > 0.05 && peak <= 1, line);
   }
 });
+
+test("a made-up character survives its share code and draws", () => {
+  const ctx = { fillRect() {}, fillStyle: "" };
+  for (let i = 0; i < 200; i++) {
+    const look = CV.randomLook(i);
+    const code = CV.encodeLook(look);
+    assert.deepEqual(CV.normLook(CV.decodeLook(code)), look, code);
+    const face = CV.buildFace(code);
+    const rows = face.rows.split("/");
+    assert.equal(rows.length, 16);
+    assert.ok(rows.every((r) => r.length === 16));
+    const pal = new Set(face.pal.split(" ").map((e) => e[0]));
+    for (const ch of new Set(rows.join(""))) assert.ok(ch === "." || ch === "e" || ch === "E" || pal.has(ch), `${code} uses ${ch}`);
+    assert.ok(pal.has(face.mouth[3]));
+    assert.ok(CV.drawFace(ctx, face, 0, 0, { open: 1, blink: true }));
+  }
+});
+
+test("random characters cover the whole range", () => {
+  const seen = Object.fromEntries(CV.LOOK_KEYS.map((k) => [k, new Set()]));
+  for (let i = 0; i < 3000; i++) {
+    const look = CV.randomLook("seed" + i);
+    for (const k of CV.LOOK_KEYS) seen[k].add(look[k]);
+  }
+  for (const k of CV.LOOK_KEYS) assert.equal(seen[k].size, CV.LOOK_PARTS[k].length, k);
+});
+
+test("looks take names, and the starting cast all resolve", () => {
+  assert.equal(CV.normLook({ skin: "umber" }).skin, CV.LOOK_PARTS.skin.findIndex((p) => p[0] === "Umber"));
+  for (const [id, look] of Object.entries(CV.STARTER_LOOKS)) {
+    assert.ok(CV.PRESETS[id], id);
+    for (const [k, v] of Object.entries(look)) assert.ok(CV.LOOK_PARTS[k].some((p) => p[0] === v), `${id} ${k} ${v}`);
+  }
+});

@@ -2285,15 +2285,24 @@
   };
   const FACE_ORDER = Object.keys(FACES);
   const faceCache = new Map();
+  const faceObjCache = new WeakMap();
+  // `id` is one of the cast, or a face of your own (from buildFace, say).
   function faceData(id) {
+    if (id && typeof id === 'object') {
+      if (!faceObjCache.has(id)) faceObjCache.set(id, parseFace(id));
+      return faceObjCache.get(id);
+    }
     if (faceCache.has(id)) return faceCache.get(id);
     const f = FACES[id];
     if (!f) return null;
-    const pal = { '.': f.bg };
-    for (const e of f.pal.split(' ')) pal[e[0]] = '#' + e.slice(1);
-    const d = { bg: f.bg, pal, mouth: f.mouth, rows: f.rows.split('/') };
+    const d = parseFace(f);
     faceCache.set(id, d);
     return d;
+  }
+  function parseFace(f) {
+    const pal = { '.': f.bg };
+    for (const e of f.pal.split(' ')) pal[e[0]] = '#' + e.slice(1);
+    return { bg: f.bg, pal, mouth: f.mouth, rows: f.rows.split('/') };
   }
   // Draws face `id` with its top-left corner at x, y, one unit per pixel of
   // the face. o.open, 0..1, opens the mouth; o.blink closes the eyes;
@@ -2329,6 +2338,334 @@
     }
     return true;
   }
+  // ─────────────────────────────── character creator ───────────────────────────────
+
+  // Anyone can make their own speaker from parts. A look says which option of
+  // each part, by name or index: { skin: 'Umber', hair: 'Locs', ... }, or as
+  // a short code from encodeLook(). buildFace(look) turns it into a face
+  // drawFace() can draw. Parts are painted in layers onto the same
+  // 16 x 16 grid as the cast, with these palette letters: k outline, s skin,
+  // h skin shade, a hair, g hair highlight, B brows, b covering, n its shade,
+  // o clothes, d their shade, x trim, f frames, j lenses, i earrings, r blush,
+  // l lips, w white, 1 2 3 a pin's stripes, e and E eyes.
+  //
+  // Every list only ever grows at the end, so a shared look stays the same.
+
+  // A layer: rows from `top` down, '.' leaves what's under it. Eight-letter
+  // rows are the left half and are mirrored.
+  function layer(top, rows, opts) {
+    const out = rows.map((r) => (r.length === 8 ? r + r.split('').reverse().join('') : r));
+    for (const r of out) if (r.length !== 16) throw new Error('layer row ' + r);
+    return Object.assign({ top, rows: out }, opts || {});
+  }
+  const SKIN_TONES = [
+    ['Porcelain', '#fbe2d2'], ['Rose', '#f5cfb4'], ['Ivory', '#eec29b'], ['Sand', '#e2ad80'], ['Honey', '#d39a69'], ['Golden', '#c38655'],
+    ['Caramel', '#ad7146'], ['Bronze', '#966039'], ['Chestnut', '#7f4e2e'], ['Umber', '#6b4027'], ['Espresso', '#58331f'], ['Ebony', '#472a1a'],
+    ['Leaf', '#8fcf7e'], ['Sky', '#8ab8e8'], ['Lilac', '#c6acdc'], ['Stone', '#a3a59c'], ['Coral', '#f29a8a'], ['Gold', '#e8c25a'],
+  ];
+  const HAIR_COLORS = [
+    ['Black', '#2a1d18'], ['Dark brown', '#432a1c'], ['Brown', '#6b4428'], ['Chestnut', '#8a4f2a'], ['Ginger', '#c8642f'], ['Copper', '#b0452a'],
+    ['Blonde', '#e0b04e'], ['Platinum', '#f0dfa8'], ['Grey', '#9b958d'], ['Silver', '#dcd6cc'], ['Pink', '#ff8fc8'], ['Mint', '#6fe3bd'],
+    ['Blue', '#5f98f0'], ['Purple', '#9466e0'], ['Red', '#e0484a'],
+  ];
+  const CLOTH_COLORS = [
+    ['Red', '#e0484a'], ['Coral', '#ff7a55'], ['Gold', '#f2c14e'], ['Green', '#5fae4e'], ['Teal', '#1d8a87'], ['Blue', '#4b8bd6'],
+    ['Navy', '#2a3d8f'], ['Purple', '#7b55d6'], ['Pink', '#ff8fc8'], ['Cream', '#f4efe6'], ['Silver', '#a9b1ba'], ['Charcoal', '#3a3a46'],
+    ['Brown', '#8a5a3a'], ['Rust', '#c8642f'], ['Mint', '#59e0b8'], ['Black', '#24242c'],
+  ];
+  const BACKDROPS = [
+    ['Forest', '#1f4f2a'], ['Plum', '#3a2140'], ['Ocean', '#173a5e'], ['Indigo', '#26285e'], ['Wine', '#4a1020'], ['Teal', '#14595a'],
+    ['Slate', '#1d2533'], ['Violet', '#3d2050'], ['Umber', '#4a3b2a'], ['Rose', '#5a2a3a'], ['Night', '#0b1d2e'], ['Amber', '#5a3a12'],
+    ['Moss', '#2c3324'], ['Brick', '#6a2a1a'],
+  ];
+  const LIP_COLORS = [['None', ''], ['Red', '#b0283f'], ['Berry', '#8a1236'], ['Coral', '#d9645a'], ['Plum', '#6b2a5a'], ['Rose', '#c97b84']];
+  // Pins are tiny flags of three stripes.
+  const PINS = [
+    ['None', null], ['Trans', ['#5bcefa', '#f5a9b8', '#ffffff']], ['Nonbinary', ['#fcf434', '#ffffff', '#9c59d1']],
+    ['Rainbow', ['#e40303', '#ffed00', '#004dff']], ['Bi', ['#d60270', '#9b4f96', '#0038a8']], ['Lesbian', ['#d52d00', '#ffffff', '#a30262']],
+    ['Pan', ['#ff218c', '#ffd800', '#21b1ff']], ['Ace', ['#a3a3a3', '#ffffff', '#800080']], ['Heart', ['#e0484a', '#ff6b6b', '#e0484a']],
+    ['Star', ['#f2c14e', '#fff2b0', '#f2c14e']],
+  ];
+
+  // Face shapes: the head down to the chin, ears included.
+  const HEADS = [
+    ['Round', layer(3, ['....kkkk', '...kssss', '..ksssss', '..ksssss', '..ksssss', 'khksssss', 'khksssss', '..ksssss', '..ksssss', '...kssss', '....kkkk'])],
+    ['Square', layer(3, ['...kkkkk', '..kkssss', '..ksssss', '..ksssss', '..ksssss', 'khksssss', 'khksssss', '..ksssss', '..ksssss', '..ksssss', '...kkkkk'])],
+    ['Heart', layer(3, ['...kkkkk', '..kkssss', '..ksssss', '..ksssss', '..ksssss', 'khksssss', 'khksssss', '..ksssss', '...kssss', '....ksss', '.....kkk'])],
+    ['Long', layer(2, ['....kkkk', '...kssss', '..ksssss', '..ksssss', '..ksssss', '..ksssss', 'khksssss', 'khksssss', '..ksssss', '..ksssss', '...kssss', '....kkkk'])],
+  ];
+  // Hair: `front` goes over the head, `back` behind it and over the clothes
+  // (long hair). In hair and coverings '.' lets the face show through.
+  // `ears: false` hides earrings.
+  const H = (name, front, back, ears) => [name, { front, back, ears: ears !== false }];
+  const overlay = (a, b) => {
+    const top = Math.min(a.top, b.top), end = Math.max(a.top + a.rows.length, b.top + b.rows.length);
+    const rows = [];
+    for (let y = top; y < end; y++) {
+      const ra = a.rows[y - a.top] || '................', rb = b.rows[y - b.top] || '................';
+      rows.push(ra.split('').map((c, x) => (rb[x] !== '.' ? rb[x] : c)).join(''));
+    }
+    return layer(top, rows);
+  };
+  const SHORT = layer(2, ['....kkkkkkkk....', '...kaaaaaaaak...', '..kaaggaaaaaak..', '..kaaaaaaaaaak..', '..kaaaaaaaaaak..', '..ka........ak..']);
+  const HAIRS = [
+    H('Bald', null, null),
+    H('Buzz', layer(3, ['....kkkk', '...kaaaa', '..kaaaaa', '..ka....', '..ka....']), null),
+    H('Short', SHORT, null),
+    H('Side part', layer(2, ['....kkkkkkkk....', '...kaaaaagaak...', '..kaaaagaaaaak..', '..kaaaaaaaaaak..', '..kaaaaaaaa.ak..', '..ka..aaa....k..']), null),
+    H('Curls', layer(1, ['....kkkkkkkk....', '...kagaaagaak...', '..kaaagaaaagak..', '..kgaaaagaaaak..', '..kaagaaaagaak..', '..kaaa.ag.aaak..', '..ka........ak..']), null),
+    H('Afro', layer(0, ['...kkkkk', '..kaagaa', '.kagaaag', 'kaaaagaa', 'kagaaaaa', 'kaaagaaa', 'kaaa....', 'kgaa....', 'kaaa....', 'kaaa....', '.kaa....', '..ka....']), null, false),
+    H('Puffs', layer(0, ['.kkkk...', 'kagaak..', 'kgaaaakk', 'kaaaakaa', '.kkkaaaa', '..kaaaaa', '..ka....']), null),
+    H('Locs', layer(1, ['....kkkk', '...kaaaa', '..kagaag', '..kaaaaa', '.kagaaga', '.kaa.a..', '.kga....', '.kaa....']),
+      layer(9, ['kgk.....', 'kak.....', 'kgk.....', 'kak.....', 'kgk.....', '.kak....', '.kgk....']), false),
+    H('Braids', layer(2, ['....kkkk', '...kaaaa', '..kaaaga', '..kaaaaa', '..ka.aa.', '..ka....']),
+      layer(9, ['ka......', 'kg......', 'ka......', 'kg......', 'ka......', '.kak....', '.kgk....']), false),
+    H('Long', layer(2, ['....kkkk', '...kaaaa', '..kagaaa', '..kaaaaa', '..kaa.aa', '.kaa....']),
+      layer(7, ['ka......', 'ka......', 'kg......', 'ka......', 'ka......', 'ka......', 'kg......', 'kaak....', 'kaak....']), false),
+    H('Bob', layer(2, ['....kkkk', '...kaaaa', '..kagaaa', '.kaaaaaa', '.kaaaaaa', '.kaa....', '.kaa....', '.kaa....', '.kga....', '.kaa....', '..kk....']), null, false),
+    H('Bun', layer(0, ['......kk', '.....kag', '.....kaa', '....kkkk', '...kaaaa', '..kagaaa', '..kaaaaa', '..ka....']), null),
+    H('Ponytail', overlay(SHORT, layer(4, ['..............kk', '.............kak', '.............kgk', '.............kak', '..............ka', '..............kk'])), null),
+    H('Mohawk', layer(0, ['.......k', '......ka', '......kg', '......ka', '...khhka', '..khhhka']), null),
+    H('Spiky', layer(0, ['...k...k', '..kak.ka', '.kagakga', '..kaaaaa', '..kaagaa', '..kaa.aa', '..ka....']), null),
+    H('Waves', layer(2, ['....kkkk', '...kagaa', '..kaaaga', '.kgaaaaa', '.kaaga..', '.kga....', '.kaa....', '.kga....', '.kaa....']),
+      layer(11, ['kga.....', 'kaak....', '.kgk....', '..k.....']), false),
+    H('Pixie', layer(2, ['....kkkkkkkk....', '...kaaaaaaaak...', '..kaaaaaaggaak..', '..kaaaaaaaaaak..', '..kaaaaaaaa..k..', '..kaaaa......k..', '..ka.........k..']), null),
+  ];
+  // Head coverings go over the hair; `hides` leaves the hair out, or with
+  // 'front' only the hair under the hat, so long hair still hangs below.
+  const C = (name, ly, opts) => [name, ly ? Object.assign(ly, opts || {}) : null];
+  const COVERS = [
+    C('None', null),
+    C('Hijab', layer(1, ['....kkkkkkkk....', '...kbbbbbbbbk...', '..kbbnbbbbnbbk..', '.kbbbbbbbbbbbbk.', '.kbnbbbbbbbbnbk.', '.kbbk......kbbk.',
+      '.kbk........kbk.', '.kbk........kbk.', '.kbk........kbk.', '.kbk........kbk.', '.kbbk......kbbk.', '.kbbk......kbbk.', '.kbnbk....kbnbk.',
+      'kbbbbbkkkkbbbbbk', 'kbbbbbbbbbbbbbbk']), { hides: true, ears: false }),
+    C('Headwrap', layer(0, ['....kkkkkkkk....', '..kkbbbnnbbbkk..', '.kbbbnbbbbnbbbk.', '.kbnbbbbbbbbnbk.', '..kbbnnbbnnbbk..', '..knbbbnnbbbnk..', '..kkbbbbbbbbkk..']), { hides: true }),
+    C('Turban', layer(0, ['......kkkk......', '....kkbbnbkk....', '...kbbnbbbnbk...', '..kbnbbbbbbbnbk.', '..kbbbnbbnbbbk..', '..knbbbbbbbbnk..', '..kkbbnnnnbbkk..']), { hides: true }),
+    C('Beanie', layer(0, ['......kwwk......', '.....kwwwwk.....', '....kkbbbbkk....', '...kbbnbbnbbk...', '..kbbnbbnbbnbk..', '..knnnnnnnnnnk..', '..kkkkkkkkkkkk..']), { hides: 'front' }),
+    C('Cap', layer(1, ['....kkkkkkkk....', '...kbbbbbbbbk...', '..kbbbbwwbbbbk..', '..kbbbbbbbbbbk..', 'kkkkkkkkkkkkkk..', 'knnnnnnnnnkk....']), { hides: 'front' }),
+    C('Cap, backwards', layer(1, ['....kkkkkkkk....', '...kbbbbbbbbk...', '..kbbbbbbbbbbk..', '..kkkkkkkkkkkbbk', '.............kk.']), { hides: 'front' }),
+    C('Crown', layer(0, ['...k..k.', '..kxk.kx', '..kxxkxx', '..kxxxxb', '..kkkkkk'])),
+    C('Wizard hat', layer(0, ['..........kk....', '.........kbbk...', '........kbxbk...', '......kkbbbbk...', '....kkbbbbbbbk..', '...kbbbxbbbbbbk.', 'kbbbbbbbbbbbbbbk', 'kkkkkkkkkkkkkkkk']), { hides: 'front' }),
+    C('Headband', layer(5, ['..kbbbbb', '..kbbbbb']), { tails: true }),
+    C('Headphones', layer(1, ['...kkkkkkkkkk...', '..knnnnnnnnnnk..', '.kn..........nk.', '.kn..........nk.', '.kn..........nk.', 'kbbk........kbbk', 'kbbk........kbbk', 'kbnk........knbk', 'kbbk........kbbk', '.kk..........kk.'])),
+    C('Flower crown', layer(3, ['...wbw.w', '....w.xb'])),
+    C('Hood', layer(1, ['....kkkkkkkk....', '...kbbbbbbbbk...', '..kbbbbbbbbbbk..', '.kbbnnnnnnnnbbk.', '.kbnk......knbk.', '.kbk........kbk.', '.kbk........kbk.', '.kbk........kbk.', '.kbk........kbk.', '.kbk........kbk.',
+      '.kbk........kbk.', '.kbbk......kbbk.', '.kbbbk....kbbbk.', 'kbbbbk....kbbbbk']), { hides: true, ears: false }),
+    C('Helmet', layer(0, ['......kxxk......', '....kkkxxkkk....', '...kbbbbbbbbk...', '..kbwwbbbbbbbk..', '..kbbbbbbbbbbk..', '..kkkkkkkkkkkk..', '..knknnkknnknk..']), { hides: 'front' }),
+    C('Durag', layer(2, ['....kkkkkkkk....', '...kbbbbbbbbk...', '..kbbnbbbbnbbk..', '..kbbbbbbbbbbk..', '..kkbbbbbbbbkk..']), { hides: true, tail: true }),
+    C('Bandana', layer(2, ['....kkkkkkkk....', '...kbbbbbbbbk...', '..kbwbbbbwbbbk..', '..kbbbbwbbbbwk..', '..kkkkkkkkkkkk..']), { hides: 'front', tails: true }),
+  ];
+  const EYES = [
+    ['Glint', layer(8, ['....Ee..', '....kk..'], { pair: true })],
+    ['Dot', layer(8, ['....ee..', '....kk..'])],
+    ['Big', layer(7, ['....ee..', '....Ee..', '....kk..'], { pair: true })],
+    ['Happy', layer(8, ['.....k..', '....k.k.'])],
+    ['Sleepy', layer(8, ['....hh..', '....kk..'])],
+    ['Lashes', layer(7, ['...k....', '....Ee..', '....kk..'], { pair: true })],
+    ['Wide', layer(7, ['....EE..', '....Ee..', '....kk..'], { pair: true })],
+  ];
+  const BROWS = [
+    ['None', null],
+    ['Soft', layer(7, ['....BB..'])],
+    ['Bold', layer(6, ['...BBBB.'])],
+    ['Arched', layer(6, ['....BB..', '...B....'])],
+    ['Fierce', layer(6, ['....B...', '.....BB.'])],
+    ['Worried', layer(6, ['.....BB.', '....B...'])],
+  ];
+  const MOUTHS = [['Small', [7, 12, 2]], ['Wide', [6, 12, 4]], ['Tiny', [7, 12, 1]], ['Smirk', [8, 12, 2]]];
+  const CHEEKS = [
+    ['None', null], ['Blush', layer(10, ['...r....'], { clip: true })], ['Freckles', layer(10, ['....h.h.'], { clip: true })],
+    ['Both', layer(10, ['...rh.h.'], { clip: true })], ['Beauty mark', layer(11, ['..........h.....'], { clip: true })],
+  ];
+  const AGES = [['Any', null], ['Laugh lines', layer(8, ['...h....', '........', '........', '...h....'], { clip: true })]];
+  const FACIAL = [
+    ['None', null],
+    ['Stubble', layer(11, ['...hhhhh', '...hhhhh', '....hhhh'], { clip: true })],
+    ['Mustache', layer(11, ['.....aaa'], { clip: true })],
+    ['Beard', layer(10, ['...a....', '...aa...', '...aaa..', '....aaaa'], { clip: true })],
+    ['Full beard', layer(10, ['...a....', '...aaaaa', '...aaa..', '....aaaa'], { clip: true })],
+    ['Goatee', layer(13, ['......aa'], { clip: true })],
+  ];
+  const GLASSES = [
+    ['None', null],
+    ['Round', layer(7, ['....ff..', '...f..ff', '...f..f.', '....ff..'], { color: '#2a2024' })],
+    ['Square', layer(7, ['...ffff.', '...f..ff', '...f..f.', '...ffff.'], { color: '#1a1820' })],
+    ['Red frames', layer(7, ['...ffff.', '...f..ff', '...f..f.', '...ffff.'], { color: '#e0484a' })],
+    ['Shades', layer(8, ['..kjjjjk', '...kjjk.'], { lens: '#1f2a44' })],
+    ['Visor', layer(8, ['..kjjjjj', '..kkkkkk'], { lens: '#59f0c8' })],
+    ['Eye patch', layer(6, ['..k.............', '...k......k.....', '....k....kkk....', '.....kkkkkkk....', '..........k.....'])],
+    ['Gold rims', layer(7, ['....ff..', '...f..ff', '...f..f.', '....ff..'], { color: '#e3b04b' })],
+  ];
+  const EARRINGS = [['None', null], ['Gold hoops', '#f2c14e'], ['Silver hoops', '#dfe4ea'], ['Studs', '#ffffff']];
+  const OUTFITS = [
+    ['Tee', layer(14, ['..kooooo', '.koooooo'])],
+    ['Collar', layer(14, ['..kooowk', '.koooowk'])],
+    ['Suit', layer(14, ['..kdddww', '.kddddwx'])],
+    ['Hoodie', layer(13, ['.koooooo', '..kooooo', '.koooowo'])],
+    ['Robe', layer(14, ['..kooooo', '.kooooxs'])],
+    ['Armor', layer(14, ['..kowooo', '.kooowdo'])],
+    ['Overalls', layer(14, ['..kwwwww', '.kwowwoo'])],
+    ['Stripes', layer(14, ['..kodwdo', '.kodwdod'])],
+  ];
+  const LOOK_PARTS = {
+    skin: SKIN_TONES, head: HEADS, hair: HAIRS, hairColor: HAIR_COLORS, cover: COVERS, coverColor: CLOTH_COLORS,
+    eyes: EYES, brows: BROWS, mouth: MOUTHS, lips: LIP_COLORS, cheeks: CHEEKS, age: AGES, facial: FACIAL,
+    glasses: GLASSES, earrings: EARRINGS, outfit: OUTFITS, outfitColor: CLOTH_COLORS, pin: PINS, bg: BACKDROPS,
+  };
+  const LOOK_KEYS = Object.keys(LOOK_PARTS);
+
+  function hexShade(hex, k) {
+    const n = parseInt(hex.slice(1), 16);
+    const f = (v) => Math.round(clamp(k < 1 ? v * k : v + (255 - v) * (k - 1), 0, 255)).toString(16).padStart(2, '0');
+    return '#' + f(n >> 16) + f((n >> 8) & 255) + f(n & 255);
+  }
+  function mixHex(a, b, t) {
+    const p = parseInt(a.slice(1), 16), q = parseInt(b.slice(1), 16);
+    const f = (s) => Math.round(lerp((p >> s) & 255, (q >> s) & 255, t)).toString(16).padStart(2, '0');
+    return '#' + f(16) + f(8) + f(0);
+  }
+  // Fills in anything missing, and accepts names, indexes or a code.
+  function normLook(look) {
+    if (typeof look === 'string') look = decodeLook(look);
+    const out = {};
+    for (const k of LOOK_KEYS) {
+      const list = LOOK_PARTS[k];
+      let v = look ? look[k] : undefined;
+      if (typeof v === 'string') v = list.findIndex((p) => p[0].toLowerCase() === v.toLowerCase());
+      out[k] = Number.isInteger(v) && v >= 0 && v < list.length ? v : 0;
+    }
+    return out;
+  }
+  // A look as a short code for links: a version digit, then one base-36
+  // character per part.
+  function encodeLook(look) {
+    const L = normLook(look);
+    return '1' + LOOK_KEYS.map((k) => L[k].toString(36)).join('');
+  }
+  function decodeLook(code) {
+    const out = {};
+    if (typeof code !== 'string' || code[0] !== '1') return out;
+    LOOK_KEYS.forEach((k, i) => {
+      const v = parseInt(code[i + 1], 36);
+      if (!isNaN(v)) out[k] = v;
+    });
+    return out;
+  }
+  // A random look from the whole range. `keep` holds parts not to change.
+  function randomLook(seed, keep) {
+    const rnd = mulberry(typeof seed === 'number' ? seed : hash32(String(seed)));
+    const pick = (n) => Math.floor(rnd() * n);
+    const often = (n, pNone) => (rnd() < pNone ? 0 : 1 + pick(n - 1));
+    const L = {
+      skin: rnd() < 0.12 ? 12 + pick(6) : pick(12),
+      head: pick(HEADS.length),
+      hair: pick(HAIRS.length),
+      hairColor: rnd() < 0.7 ? pick(10) : 10 + pick(5),
+      cover: often(COVERS.length, 0.55),
+      coverColor: pick(CLOTH_COLORS.length),
+      eyes: pick(EYES.length),
+      brows: pick(BROWS.length),
+      mouth: pick(MOUTHS.length),
+      lips: often(LIP_COLORS.length, 0.6),
+      cheeks: pick(CHEEKS.length),
+      age: rnd() < 0.2 ? 1 : 0,
+      facial: often(FACIAL.length, 0.75),
+      glasses: often(GLASSES.length, 0.6),
+      earrings: often(EARRINGS.length, 0.5),
+      outfit: pick(OUTFITS.length),
+      outfitColor: pick(CLOTH_COLORS.length),
+      pin: often(PINS.length, 0.55),
+      bg: pick(BACKDROPS.length),
+    };
+    if (keep) for (const k of LOOK_KEYS) if (keep[k] != null) L[k] = keep[k];
+    return normLook(L);
+  }
+  // Paints a look into a face: { bg, pal, mouth, rows } like the cast's.
+  const lookCache = new Map();
+  function buildFace(look) {
+    const L = normLook(look);
+    const code = encodeLook(L);
+    if (lookCache.has(code)) return lookCache.get(code);
+    const grid = Array.from({ length: 16 }, () => new Array(16).fill('.'));
+    const paint = (ly, map, clip) => {
+      if (!ly) return;
+      ly.rows.forEach((row, i) => {
+        const y = ly.top + i;
+        if (y < 0 || y > 15) return;
+        for (let x = 0; x < 16; x++) {
+          let ch = row[x];
+          if (ch === '.' || ch === ' ') continue;
+          if (map && map[ch]) ch = map[ch];
+          if ((clip || ly.clip) && grid[y][x] !== 's' && grid[y][x] !== 'h') continue;
+          grid[y][x] = ch;
+        }
+      });
+    };
+    const skin = SKIN_TONES[L.skin][1];
+    const hairC = HAIR_COLORS[L.hairColor][1];
+    const cover = COVERS[L.cover][1];
+    const hair = HAIRS[L.hair][1];
+    const hidden = cover && cover.hides;
+    const hiddenBack = hidden === true;
+    // back to front
+    paint(OUTFITS[L.outfit][1]);
+    if (hair.back && !hiddenBack) paint(hair.back);
+    paint(HEADS[L.head][1]);
+    paint(CHEEKS[L.cheeks][1]);
+    paint(AGES[L.age][1]);
+    const eyes = EYES[L.eyes][1];
+    paint(eyes);
+    if (eyes.pair) {
+      // mirroring turned the right eye's 'Ee' into 'eE'; put it back
+      for (const row of grid) for (let x = 8; x < 15; x++) if (row[x] === 'e' && row[x + 1] === 'E') { row[x] = 'E'; row[x + 1] = 'e'; }
+    }
+    paint(BROWS[L.brows][1]);
+    paint(FACIAL[L.facial][1]);
+    if (!hidden) paint(hair.front);
+    const glasses = GLASSES[L.glasses][1];
+    paint(glasses);
+    if (cover) {
+      paint(cover);
+      if (cover.tails) paint(layer(cover.top + 1, ['.............kbb', '..............kb']));
+      if (cover.tail) paint(layer(cover.top + 4, ['..............kb', '..............kb', '...............k']));
+    }
+    // earrings hang below the ears when nothing covers them
+    const ears = hair.ears && !(cover && cover.ears === false);
+    if (L.earrings && ears) for (const x of [1, 14]) if (grid[10][x] === '.') grid[10][x] = 'i';
+    if (L.pin) { grid[15][10] = '1'; grid[15][11] = '2'; grid[15][12] = '3'; }
+    const pal = {
+      k: '#141218', s: skin, h: hexShade(skin, 0.84), a: hairC, g: hexShade(hairC, 1.28), B: L.hair === 0 ? hexShade(skin, 0.6) : hexShade(hairC, 0.8),
+      b: CLOTH_COLORS[L.coverColor][1], n: hexShade(CLOTH_COLORS[L.coverColor][1], 0.78),
+      o: CLOTH_COLORS[L.outfitColor][1], d: hexShade(CLOTH_COLORS[L.outfitColor][1], 0.72), x: '#f2c14e', w: '#ffffff',
+      f: (glasses && glasses.color) || '#1a1820', j: (glasses && glasses.lens) || '#4b8bd6', i: L.earrings ? EARRINGS[L.earrings][1] : '#f2c14e',
+      r: mixHex(skin, '#ff6b7a', 0.45), l: LIP_COLORS[L.lips][1] || '#141218',
+    };
+    if (L.pin) PINS[L.pin][1].forEach((c, i) => { pal[i + 1] = c; });
+    const used = new Set(grid.flat());
+    const [mx, my, mw] = MOUTHS[L.mouth][1];
+    const face = {
+      bg: BACKDROPS[L.bg][1],
+      pal: Object.keys(pal).filter((k) => used.has(k) || k === 'l' || k === 's' || k === 'w').map((k) => k + pal[k].slice(1)).join(' '),
+      mouth: [mx, my, mw, L.lips ? 'l' : 'k'],
+      rows: grid.map((r) => r.join('')).join('/'),
+    };
+    lookCache.set(code, face);
+    if (lookCache.size > 200) lookCache.delete(lookCache.keys().next().value);
+    return face;
+  }
+
+  // The cast as looks, for starting points in a creator.
+  const STARTER_LOOKS = {
+    hero: { skin: 'Espresso', head: 'Round', hair: 'Puffs', hairColor: 'Black', cover: 'Headband', coverColor: 'Red', eyes: 'Glint', brows: 'Bold', mouth: 'Wide', earrings: 'Gold hoops', outfit: 'Tee', outfitColor: 'Gold', bg: 'Forest' },
+    narrator: { skin: 'Bronze', head: 'Round', hair: 'Curls', hairColor: 'Dark brown', cover: 'Headphones', coverColor: 'Charcoal', eyes: 'Glint', brows: 'Soft', mouth: 'Small', outfit: 'Hoodie', outfitColor: 'Teal', pin: 'Nonbinary', bg: 'Indigo' },
+    wizard: { skin: 'Golden', head: 'Long', hair: 'Long', hairColor: 'Silver', cover: 'Wizard hat', coverColor: 'Navy', eyes: 'Glint', brows: 'Soft', mouth: 'Smirk', age: 'Laugh lines', glasses: 'Gold rims', outfit: 'Robe', outfitColor: 'Purple', bg: 'Night' },
+    villain: { skin: 'Lilac', head: 'Heart', hair: 'Long', hairColor: 'Black', cover: 'Crown', coverColor: 'Red', eyes: 'Lashes', brows: 'Arched', mouth: 'Smirk', lips: 'Berry', outfit: 'Collar', outfitColor: 'Black', bg: 'Wine' },
+    sidekick: { skin: 'Rose', head: 'Round', hair: 'Braids', hairColor: 'Ginger', cover: 'Cap', coverColor: 'Green', eyes: 'Big', brows: 'Soft', mouth: 'Wide', cheeks: 'Freckles', outfit: 'Overalls', outfitColor: 'Blue', pin: 'Trans', bg: 'Teal' },
+    agent: { skin: 'Umber', head: 'Square', hair: 'Buzz', hairColor: 'Black', eyes: 'Glint', brows: 'Fierce', mouth: 'Small', facial: 'Beard', glasses: 'Shades', outfit: 'Suit', outfitColor: 'Black', pin: 'Trans', bg: 'Slate' },
+    guard: { skin: 'Ivory', head: 'Square', hair: 'Short', hairColor: 'Ginger', cover: 'Helmet', coverColor: 'Silver', eyes: 'Happy', brows: 'Bold', mouth: 'Wide', facial: 'Full beard', outfit: 'Armor', outfitColor: 'Silver', bg: 'Brick' },
+    fairy: { skin: 'Caramel', head: 'Heart', hair: 'Pixie', hairColor: 'Mint', cover: 'Flower crown', coverColor: 'Pink', eyes: 'Lashes', brows: 'Soft', mouth: 'Small', cheeks: 'Blush', outfit: 'Tee', outfitColor: 'Pink', bg: 'Plum' },
+  };
+
   const LINE_H = 11;
   const TAB_H = 15;
 
@@ -2509,6 +2846,14 @@
     FACES,
     FACE_ORDER,
     drawFace,
+    LOOK_PARTS,
+    LOOK_KEYS,
+    STARTER_LOOKS,
+    normLook,
+    encodeLook,
+    decodeLook,
+    randomLook,
+    buildFace,
     glyph,
     layoutText,
     measureDialog,
