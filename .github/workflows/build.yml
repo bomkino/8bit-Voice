@@ -1,0 +1,243 @@
+# Tests the engine, builds the desktop apps on each system, proves the Mac
+# app's in-app updates work, and on main publishes everything as a GitHub
+# Release when desktop/package.json has a version that hasn't been released
+# yet, with the Mac update feeds signed by pitch.dog's update key
+# (docs/UPDATES.md).
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  engine:
+    name: Engine tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm test
+      - name: Command line makes a clip
+        run: |
+          node cli.mjs "(offended) I never said I'd call." --voice heist-producer --phone --out clip.wav
+          test "$(head -c 4 clip.wav)" = RIFF
+
+  desktop:
+    name: ${{ matrix.name }}
+    needs: engine
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS
+            os: macos-14
+            script: dist:mac
+          - name: Windows
+            os: windows-latest
+            script: dist:win
+          - name: Linux
+            os: ubuntu-latest
+            script: dist:linux
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - run: npm ci
+      - run: npm run ${{ matrix.script }}
+        env:
+          # No certificates: the Mac app is signed ad hoc (build/after-pack.cjs),
+          # Windows is unsigned.
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+          REQUIRE_SPARKLE: "1"
+
+      - name: Check the Mac apps' signatures and updater
+        if: runner.os == 'macOS'
+        run: |
+          for arch in arm64 x64; do
+            if [ $arch = arm64 ]; then app="dist/mac-arm64/8-bit Voice.app"; else app="dist/mac/8-bit Voice.app"; fi
+            codesign --verify --deep --strict --verbose=2 "$app"
+            lipo -archs "$app/Contents/MacOS/8-bit Voice"
+            plist="$app/Contents/Info.plist"
+            feed="$(/usr/libexec/PlistBuddy -c 'Print :SUFeedURL' "$plist")"
+            echo "$feed"
+            [ "$feed" = "https://github.com/bomkino/8bit-Voice/releases/latest/download/appcast-$arch.xml" ]
+            [ "$(/usr/libexec/PlistBuddy -c 'Print :SUPublicEDKey' "$plist")" = "P43E8I+FgVyAW3QkS4J9bnDRRhAnsS4y3dT2WDce1lQ=" ]
+            codesign --verify --strict "$app/Contents/Frameworks/Sparkle.framework"
+            test -f "$app/Contents/Resources/sparkle.node"
+            hdiutil verify "dist/8-bit-Voice-mac-$arch.dmg"
+            unzip -l "dist/8-bit-Voice-mac-$arch.zip" | tail -1
+          done
+      - name: Open the Mac app
+        if: runner.os == 'macOS'
+        run: |
+          "dist/mac-arm64/8-bit Voice.app/Contents/MacOS/8-bit Voice" &
+          sleep 15
+          kill -0 $! || { echo "The app quit within 15 s"; exit 1; }
+          echo "still running after 15 s"
+          kill $!
+      - name: Test in-app updates (a test copy updates itself from a local feed)
+        if: runner.os == 'macOS'
+        timeout-minutes: 15
+        run: bash build/test-update.sh
+
+      - name: Open the Linux app
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb > /dev/null
+          xvfb-run -a dist/linux-unpacked/8bit-voice &
+          sleep 15
+          pgrep -f 8bit-voice.bin > /dev/null || { echo "The app quit within 15 s"; exit 1; }
+          echo "still running after 15 s"
+          pkill -f 8bit-voice.bin || true
+      - name: Check the Linux packages
+        if: runner.os == 'Linux'
+        run: |
+          dpkg-deb --info dist/8-bit-Voice-linux-amd64.deb | grep -E 'Package|Architecture|Version'
+          dpkg-deb --info dist/8-bit-Voice-linux-arm64.deb | grep -E 'Package|Architecture|Version'
+
+      - name: Open the Windows app
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath "dist\win-unpacked\8-bit Voice.exe" -PassThru
+          Start-Sleep -Seconds 15
+          if ($p.HasExited) { throw "The app quit within 15 s (exit $($p.ExitCode))" }
+          "still running after 15 s"
+          Stop-Process -Id $p.Id -Force
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: 8-bit-Voice-${{ matrix.name }}
+          if-no-files-found: error
+          path: |
+            desktop/dist/8-bit-Voice-*.dmg
+            desktop/dist/8-bit-Voice-*.zip
+            desktop/dist/8-bit-Voice-*.exe
+            desktop/dist/8-bit-Voice-*.AppImage
+            desktop/dist/8-bit-Voice-*.deb
+
+  release:
+    name: Release
+    needs: desktop
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # A Mac, for Sparkle's tools. The `release` environment holds the update
+    # key (SPARKLE_PRIVATE_KEY) and only main may use it; it is written to a
+    # file only the runner can read, used once by build/sign-update.sh, and
+    # deleted.
+    runs-on: macos-14
+    environment: release
+    permissions:
+      contents: write
+    concurrency:
+      group: release
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Is this version released yet?
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v=$(node -p "require('./desktop/package.json').version")
+          echo "tag=v$v" >> "$GITHUB_OUTPUT"
+          echo "VERSION=$v" >> "$GITHUB_ENV"
+          LATEST="$(gh release list --json tagName,isLatest --jq '.[] | select(.isLatest) | .tagName')"
+          echo "LATEST=$LATEST" >> "$GITHUB_ENV"
+          if gh release view "v$v" > /dev/null 2>&1; then
+            echo "v$v is already out; nothing to do."
+            echo "new=false" >> "$GITHUB_OUTPUT"
+          else
+            awk -v v="## $v" 'index($0, v) == 1 { on = 1; next } /^## / { on = 0 } on' CHANGELOG.md > changes.md
+            [ -s changes.md ] || { echo "::error::CHANGELOG.md has no section for $v"; exit 1; }
+            echo "Publishing $v after ${LATEST:-nothing}"
+            echo "new=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/download-artifact@v4
+        if: steps.version.outputs.new == 'true'
+        with:
+          path: out
+          merge-multiple: true
+      - name: Sign the Mac update feeds
+        if: steps.version.outputs.new == 'true'
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          bash desktop/build/sparkle.sh
+          URL="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/"
+          if [ -n "$SPARKLE_PRIVATE_KEY" ]; then
+            umask 077
+            printf '%s' "$SPARKLE_PRIVATE_KEY" | tr -d '[:space:]' > "$RUNNER_TEMP/update.key"
+            for arch in arm64 x64; do
+              SPARKLE_KEY="$RUNNER_TEMP/update.key" bash desktop/build/sign-update.sh \
+                "out/8-bit-Voice-mac-$arch.zip" "$URL" "out/appcast-$arch.xml" changes.md
+            done
+            rm -f "$RUNNER_TEMP/update.key"
+          elif [ -z "$LATEST" ]; then
+            # The first release with updates: nothing can update to it, so its
+            # feeds only name it, unsigned, and nobody is offered anything.
+            echo "::warning::No SPARKLE_PRIVATE_KEY in the release environment yet. Fine for the first release; run scripts/auto-signing-setup.sh before the next (docs/UPDATES.md)."
+            for arch in arm64 x64; do
+              node desktop/build/appcast.mjs first "$VERSION" "$URL" "out/8-bit-Voice-mac-$arch.zip" "out/appcast-$arch.xml"
+            done
+          else
+            echo "::error::The release environment has no SPARKLE_PRIVATE_KEY secret, so Mac copies couldn't update to $VERSION. docs/UPDATES.md has the one-time command that sets it."
+            exit 1
+          fi
+      - name: Publish the release
+        if: steps.version.outputs.new == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          cd out
+          shasum -a 256 8-bit-Voice-* appcast-*.xml > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+          {
+            echo "**$(awk 'NF { print; exit }' ../changes.md)**"
+            echo
+            echo "### What's new"
+            awk 'NF && !seen { seen = 1; next } seen' ../changes.md
+            echo
+            sed "s/{{version}}/$VERSION/g" ../.github/release-notes.md
+          } > notes.md
+          cat notes.md
+          gh release create "$TAG" --target "$GITHUB_SHA" --title "8-bit Voice $VERSION" --notes-file notes.md --latest \
+            8-bit-Voice-* appcast-*.xml SHA256SUMS.txt
+      - name: Wait for the live update feeds
+        if: steps.version.outputs.new == 'true'
+        run: |
+          for arch in arm64 x64; do
+            for i in $(seq 24); do
+              if curl -fsSL "https://github.com/$GITHUB_REPOSITORY/releases/latest/download/appcast-$arch.xml" \
+                  | grep -Eq "shortVersionString(>|=\")${VERSION}[<\"]"; then
+                echo "appcast-$arch.xml names $VERSION"; continue 2
+              fi
+              sleep 5
+            done
+            echo "::error::releases/latest/download/appcast-$arch.xml doesn't name $VERSION"; exit 1
+          done
+      - name: Forget the key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/update.key"

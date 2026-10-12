@@ -1,0 +1,119 @@
+{
+  "name": "8bit-voice",
+  "productName": "8-bit Voice",
+  "version": "1.1.0",
+  "description": "Type a line and hear it as an 8-bit video-game voice.",
+  "author": "pitch.dog <hello@pitch.dog>",
+  "homepage": "https://bomkino.github.io/8bit-Voice/",
+  "license": "MIT",
+  "main": "main.js",
+  "desktopName": "8bit-voice.desktop",
+  "scripts": {
+    "start": "electron .",
+    "dist:mac": "bash build/sparkle.sh && electron-builder --mac dmg --arm64 --x64 --publish never && node build/zip-mac.cjs",
+    "dist:win": "electron-builder --win nsis --x64 --publish never && electron-builder --win nsis --arm64 --publish never",
+    "dist:linux": "electron-builder --linux AppImage deb --x64 --arm64 --publish never",
+    "dist:mac-off-mac": "electron-builder --mac dir --arm64 --x64 --publish never && node build/zip-mac.cjs",
+    "test:update": "bash build/test-update.sh"
+  },
+  "devDependencies": {
+    "electron": "44.5.1",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "dog.pitch.8bitvoice",
+    "productName": "8-bit Voice",
+    "copyright": "© 2026 pitch.dog · MIT License",
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      {
+        "from": "..",
+        "to": "web",
+        "filter": [
+          "index.html",
+          "chipvoice.js",
+          "manifest.webmanifest",
+          "fonts/*.woff2",
+          "icons/**/*"
+        ]
+      }
+    ],
+    "asar": true,
+    "afterPack": "build/after-pack.cjs",
+    "artifactName": "8-bit-Voice-${os}-${arch}.${ext}",
+    "publish": null,
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.music",
+      "icon": "build/icon.icns",
+      "identity": null,
+      "hardenedRuntime": false,
+      "darkModeSupport": true,
+      "minimumSystemVersion": "12.0",
+      "artifactName": "8-bit-Voice-mac-${arch}.${ext}"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "AudioVideo",
+      "icon": "build/icons",
+      "executableName": "8bit-voice",
+      "synopsis": "Type a line, hear it as an 8-bit video-game voice",
+      "maintainer": "pitch.dog <hello@pitch.dog>",
+      "syncDesktopName": true,
+      "artifactName": "8-bit-Voice-linux-${arch}.${ext}"
+    },
+    "deb": {
+      "appArmorProfile": "build/apparmor-profile.tpl"
+    },
+    "dmg": {
+      "artifactName": "8-bit-Voice-mac-${arch}.${ext}",
+      "background": "build/background.png",
+      "window": {
+        "width": 600,
+        "height": 400
+      },
+      "iconSize": 112,
+      "contents": [
+        {
+          "x": 150,
+          "y": 190,
+          "type": "file"
+        },
+        {
+          "x": 450,
+          "y": 190,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "title": "8-bit Voice"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "8-bit-Voice-windows-${arch}-setup.${ext}",
+      "legalTrademarks": "pitch.dog"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "deleteAppDataOnUninstall": false,
+      "shortcutName": "8-bit Voice",
+      "uninstallDisplayName": "8-bit Voice",
+      "artifactName": "8-bit-Voice-windows-${arch}-setup.${ext}"
+    }
+  },
+  "repository": "github:bomkino/8bit-Voice",
+  "private": true
+}

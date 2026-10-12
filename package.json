@@ -1,0 +1,16 @@
+{
+  "name": "8bit-voice-engine",
+  "version": "1.1.0",
+  "private": true,
+  "description": "8-bit Voice: type a line and hear it as a video-game voice. The engine, the web app and the CLI.",
+  "license": "MIT",
+  "homepage": "https://bomkino.github.io/8bit-Voice/",
+  "repository": "github:bomkino/8bit-Voice",
+  "type": "commonjs",
+  "bin": { "8bit-voice": "cli.mjs" },
+  "scripts": {
+    "test": "node --test",
+    "start": "npx --yes serve@14 -l 8080 ."
+  },
+  "engines": { "node": ">=18" }
+}
