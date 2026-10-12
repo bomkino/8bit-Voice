@@ -115,6 +115,63 @@ declare namespace ChipVoice {
     /** Overrides the stage direction in the line. */
     mood?: MoodId | MoodId[] | { keys: MoodId[]; very?: Partial<Record<MoodId, boolean>> };
   }
+  /** One syllable found in a recording. Times are seconds from the start of the trimmed recording. */
+  interface RecordingSyllable {
+    t: number;
+    d: number;
+    /** When it is loudest. */
+    peak: number;
+    /** Level, about 0.6 to 1.4, 1 is typical for this recording. */
+    a: number;
+    /** Pitch at the start and end, in semitones from the speaker's middle pitch. */
+    p0: number;
+    p1: number;
+    /** The nearest of the machines' vowels ('a', 'e', 'i', 'o', 'u', '@'), two for a glide. */
+    vowels: string[];
+    /** A guess at the consonant before and after the vowel, if any. */
+    onset: string[];
+    coda: string[];
+    stressed: boolean;
+    /** The last syllable before a pause. */
+    end: boolean;
+  }
+  /**
+   * What analyzeRecording heard: a hundred frames a second of pitch, voicing,
+   * level and mouth shape, and the syllables. Plain numbers and typed arrays,
+   * so it can be posted to a worker or stored.
+   */
+  interface Recording {
+    version: string;
+    /** Frames per second (100). */
+    fps: number;
+    /** Seconds, after trimming the silence at each end. */
+    duration: number;
+    frames: number;
+    /** Reflection coefficients per frame. */
+    order: number;
+    /** The speaker's middle pitch, in Hz. */
+    pitch: number;
+    /** Hardly any of it was voiced. */
+    whisper: boolean;
+    /** Pitch per frame in Hz, 0 where it isn't voiced. */
+    f0: Float32Array;
+    /** 0 (hiss) to 1 (pure buzz) per frame. */
+    voicing: Float32Array;
+    /** Level per frame, with the room's noise taken out. */
+    rms: Float32Array;
+    /** Level of what the filter leaves unpredicted, per frame. */
+    gain: Float32Array;
+    /** frames × order reflection coefficients: the shape of the mouth. */
+    k: Float32Array;
+    syllables: RecordingSyllable[];
+  }
+  interface RecordingOptions {
+    sampleRate?: number;
+    /** The words that were said, for the dialogue box. They are spread over the syllables in order. */
+    text?: string;
+    /** Accepted for symmetry with render(); a recording keeps its own delivery. */
+    mood?: RenderOptions['mood'];
+  }
   interface Glyph {
     w: number;
     rows: string[];
@@ -203,6 +260,10 @@ declare const ChipVoice: {
   analyze(text: string): unknown;
   plan(input: string | ChipVoice.ParsedLine, voice?: ChipVoice.VoiceInput, opts?: ChipVoice.RenderOptions): unknown;
   render(input: string | ChipVoice.ParsedLine, voice?: ChipVoice.VoiceInput, opts?: ChipVoice.RenderOptions): ChipVoice.Rendered;
+  /** Listens to mono samples at any rate: trims the silence, levels it, and finds the pitch, the mouth shapes and the syllables. */
+  analyzeRecording(samples: Float32Array | ArrayLike<number>, sampleRate: number): ChipVoice.Recording;
+  /** Says a recording again in a character's voice. The same result as render(), with events timed to the new audio. */
+  renderRecording(rec: ChipVoice.Recording, voice?: ChipVoice.VoiceInput, opts?: ChipVoice.RecordingOptions): ChipVoice.Rendered;
   encodeWav(samples: Float32Array, sampleRate?: number): Uint8Array;
   zip(files: { name: string; data: Uint8Array }[], date?: Date): Uint8Array;
   slug(text: string, max?: number): string;

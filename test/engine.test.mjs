@@ -91,3 +91,90 @@ test("the Mouth copes with words that have no vowels, digits and odd spelling", 
     assert.ok(peak > 0.05 && peak <= 1, line);
   }
 });
+
+// A stand-in for a person: the narrator, resampled the way a 44.1 kHz file would be.
+const SAID = "Hello there, how are you today?";
+function recording(rate = 44100) {
+  const r = CV.render(SAID, "narrator");
+  const n = Math.round((r.samples.length * rate) / r.sampleRate);
+  const x = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const p = (i * r.sampleRate) / rate;
+    const j = Math.floor(p);
+    x[i] = r.samples[j] + ((r.samples[j + 1] || 0) - r.samples[j]) * (p - j);
+  }
+  return { x, rate, duration: r.duration };
+}
+
+test("listening to a recording finds its syllables, its length and its pitch", () => {
+  const { x, rate, duration } = recording();
+  const rec = CV.analyzeRecording(x, rate);
+  assert.ok(Math.abs(rec.duration - duration) < 0.3, `duration ${rec.duration} vs ${duration}`);
+  assert.ok(rec.syllables.length >= 6 && rec.syllables.length <= 10, `${rec.syllables.length} syllables, 8 said`);
+  assert.ok(rec.pitch > 70 && rec.pitch < 200, `pitch ${rec.pitch}`);
+  assert.equal(rec.k.length, rec.frames * rec.order);
+  for (const s of rec.syllables) assert.ok(s.d > 0 && s.t >= 0 && s.t + s.d <= rec.duration + 1e-6);
+});
+
+test("every machine says a recording back, as long as it was, scaled by speed", () => {
+  const { x, rate } = recording();
+  const rec = CV.analyzeRecording(x, rate);
+  for (const style of CV.STYLE_ORDER) {
+    for (const speed of [1, 2]) {
+      const r = CV.renderRecording(rec, { style, speed });
+      let peak = 0;
+      for (const s of r.samples) peak = Math.max(peak, Math.abs(s));
+      assert.ok(peak > 0.05 && peak <= 1, `${style} peak ${peak}`);
+      const want = rec.duration / speed;
+      assert.ok(r.duration >= want - 0.05 && r.duration < want * 1.15 + (style === "boss" ? 0.8 : 0.2), `${style} ${r.duration} vs ${want}`);
+      assert.equal(r.samples.length, Math.round(r.duration * r.sampleRate));
+      assert.ok(r.events.length >= rec.syllables.length, `${style} events`);
+      assert.deepEqual(r.mood, []);
+    }
+  }
+});
+
+test("a recording comes back the same every time, and a new take is different", () => {
+  const { x, rate } = recording();
+  const rec = CV.analyzeRecording(x, rate);
+  for (const style of ["mouth", "chip", "babble"]) {
+    const a = CV.renderRecording(rec, { style, take: 1 }).samples;
+    const b = CV.renderRecording(CV.analyzeRecording(x, rate), { style, take: 1 }).samples;
+    const c = CV.renderRecording(rec, { style, take: 2 }).samples;
+    assert.ok(a.length === b.length && a.every((s, i) => s === b[i]), `${style} isn't repeatable`);
+    assert.ok(a.length !== c.length || a.some((s, i) => s !== c[i]), `${style} take 2 is the same`);
+  }
+  const preset = CV.renderRecording(rec, "narrator");
+  assert.equal(preset.voice.style, "mouth");
+});
+
+test("the box types along with a recording", () => {
+  const { x, rate } = recording();
+  const rec = CV.analyzeRecording(x, rate);
+  const r = CV.renderRecording(rec, "hero", { text: SAID });
+  assert.equal(r.text, SAID);
+  let last = 0;
+  for (const e of r.events) {
+    assert.ok(e.c0 >= last && e.c1 >= e.c0 && e.c1 <= SAID.length);
+    last = e.c0;
+  }
+  assert.equal(r.events[0].c0, 0);
+  assert.ok(r.events[r.events.length - 1].c1 >= SAID.lastIndexOf("y"));
+  assert.ok(CV.revealTimes(r.text, r.events).every((t) => t >= 0 && t <= r.duration));
+  const bare = CV.renderRecording(rec, "hero");
+  assert.equal(bare.text, "");
+  assert.ok(bare.events.every((e) => e.c0 === 0 && e.c1 === 0));
+});
+
+test("silence and very short recordings don't throw", () => {
+  const inputs = [new Float32Array(0), new Float32Array(10), new Float32Array(24000), recording().x.slice(0, 1300)];
+  for (const x of inputs) {
+    const rec = CV.analyzeRecording(x, 44100);
+    for (const style of CV.STYLE_ORDER) {
+      const r = CV.renderRecording(rec, { style }, { text: "" });
+      assert.ok(r.samples.length > 0 && r.samples.every((s) => Number.isFinite(s) && Math.abs(s) <= 1));
+      assert.ok(Array.isArray(r.events));
+      assert.equal(CV.talkLevel(r.events, 0.1) >= 0, true);
+    }
+  }
+});
