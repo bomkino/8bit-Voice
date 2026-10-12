@@ -1,6 +1,6 @@
 {
-  "name": "8-bit Voice",
-  "short_name": "8-bit Voice",
+  "name": "BleepBloop",
+  "short_name": "BleepBloop",
   "description": "Type a line and hear it as a video-game voice.",
   "id": "./",
   "start_url": "./",

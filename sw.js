@@ -1,4 +1,4 @@
-// Keeps 8-bit Voice working offline. Everything the page needs is cached on
+// Keeps BleepBloop working offline. Everything the page needs is cached on
 // the first visit; after that the cached copy opens at once while a fresh one
 // is fetched in the background for next time.
 const CACHE = '8bit-voice-v1.2.0';

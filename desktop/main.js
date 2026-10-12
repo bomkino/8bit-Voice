@@ -1,8 +1,12 @@
-// 8-bit Voice as a desktop app: the same page as ../index.html in its own
+// BleepBloop as a desktop app: the same page as ../index.html in its own
 // window. Nothing here talks to the network; every sound is made on the page.
 const { app, BrowserWindow, Menu, nativeTheme, screen, session, shell, systemPreferences } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
+
+// Until 1.2 the app was called 8-bit Voice. Its lines, characters, recordings
+// and window place are in that folder, so it keeps using it under the new name.
+if (app.getName() === 'BleepBloop') app.setPath('userData', path.join(app.getPath('appData'), '8-bit Voice'));
 
 const PAGE = app.isPackaged
   ? path.join(__dirname, 'web', 'index.html')
@@ -43,7 +47,7 @@ function startUpdater() {
     const bridge = require(path.join(process.resourcesPath, 'sparkle.node'));
     if (bridge.start()) updater = bridge;
   } catch (err) {
-    console.error('8-bit Voice: no updater:', err.message);
+    console.error('BleepBloop: no updater:', err.message);
   }
   // Release testing (docs/UPDATES.md): a copy told where to write says which
   // version is running, once it is up.
@@ -61,7 +65,7 @@ function createWindow() {
     ...bounds,
     minWidth: 380,
     minHeight: 560,
-    title: '8-bit Voice',
+    title: 'BleepBloop',
     backgroundColor: groundColor(),
     show: false,
     autoHideMenuBar: true,
@@ -152,7 +156,7 @@ app.whenReady().then(() => {
     {
       role: 'help',
       submenu: [
-        { label: '8-bit Voice on the Web', click: open('https://bomkino.github.io/8bit-Voice/') },
+        { label: 'BleepBloop on the Web', click: open('https://bomkino.github.io/8bit-Voice/') },
         { label: 'Source Code', click: open('https://github.com/bomkino/8bit-Voice') },
         { label: 'Report a Problem', click: open('https://github.com/bomkino/8bit-Voice/issues/new') },
         ...(updater ? [] : [{ label: 'Check for a New Version', click: open('https://github.com/bomkino/8bit-Voice/releases/latest') }]),
@@ -160,7 +164,7 @@ app.whenReady().then(() => {
     },
   ]));
   app.setAboutPanelOptions({
-    applicationName: '8-bit Voice',
+    applicationName: 'BleepBloop',
     applicationVersion: app.getVersion(),
     copyright: '© 2026 pitch.dog · MIT License',
     credits: 'Every sound is made on the spot, on your computer. No samples, no accounts, nothing sent anywhere.',

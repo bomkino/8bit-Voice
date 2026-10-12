@@ -4,7 +4,7 @@ Each release's section becomes its notes on GitHub and in the Mac app's update w
 
 ## 1.2.0
 
-Make anything talk like a video game, then make it a video. Make your own characters, and lend them your voice.
+8-bit Voice is now BleepBloop. Make anything talk like a video game, then make it a video. Make your own characters, and lend them your voice.
 
 - **Videos for Reels, TikTok, Shorts and YouTube.** 9:16, 4:5, 1:1 and 16:9, with the character talking above a dialogue box that types along, kept inside each app's safe area. Colour, dark, green or clear backgrounds.
 - **A cast with faces.** Fourteen characters, a real mix of people, each with a portrait that talks and blinks. New: the Narrator, whose voice is almost human, and the Henchling, who sings everything.
@@ -13,6 +13,7 @@ Make anything talk like a video game, then make it a video. Make your own charac
 - **The Mouth,** a new machine: 80s home-computer speech, from happy gibberish to almost words.
 - A new look and a simpler way in: pick a character, type or speak, hear it, save it.
 - Links carry your lines, voice and character, and tell no server anything.
+- **A new name.** BleepBloop. Your lines, characters and settings come with you, and old links still work.
 
 ## 1.1.0
 

@@ -10,7 +10,7 @@ const dist = path.join(__dirname, '..', 'dist');
 for (const [dir, arch] of [['mac-arm64', 'arm64'], ['mac', 'x64']]) {
   const app = path.join(dist, dir, `${pkg.build.productName}.app`);
   if (!fs.existsSync(app)) continue;
-  const out = path.join(dist, `8-bit-Voice-mac-${arch}.zip`);
+  const out = path.join(dist, `BleepBloop-mac-${arch}.zip`);
   fs.rmSync(out, { force: true });
   if (process.platform === 'darwin') {
     execFileSync('ditto', ['-c', '-k', '--sequesterRsrc', '--keepParent', app, out]);

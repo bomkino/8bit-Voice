@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Makes 8-bit Voice clips from the command line, with the same engine
+// Makes BleepBloop clips from the command line, with the same engine
 // as the app (chipvoice.js), so a line sounds identical in both.
 //
 //   node cli.mjs "(offended) You said WHAT about my hat?" --voice wizard --out hat.wav

@@ -38,7 +38,7 @@ if (cmd === 'keygen') {
   writeFileSync(out, `<?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
   <channel>
-    <title>8-bit Voice</title>
+    <title>BleepBloop</title>
     <item>
       <title>${esc(version)}</title>
       <pubDate>${new Date().toUTCString()}</pubDate>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>8-bit Voice</title>
+<title>BleepBloop</title>
 <meta name="description" content="Make anything talk like a video game. Type a line, pick a character, and get a retro game voice with a talking dialogue box, as a video for Reels, TikTok, Shorts or YouTube. Free, offline and open source.">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#e3e0d9" media="(prefers-color-scheme: light)">
@@ -12,13 +12,13 @@
 <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<meta name="apple-mobile-web-app-title" content="8-bit Voice">
+<meta name="apple-mobile-web-app-title" content="BleepBloop">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="format-detection" content="telephone=no">
 <meta property="og:type" content="website">
-<meta property="og:title" content="8-bit Voice">
+<meta property="og:title" content="BleepBloop">
 <meta property="og:description" content="Make anything talk like a video game. Type a line, pick a character, export a video. Free, offline, open source.">
 <meta property="og:url" content="https://bomkino.github.io/8bit-Voice/">
 <meta property="og:image" content="https://bomkino.github.io/8bit-Voice/icons/social.png">
@@ -634,7 +634,7 @@
   <header class="masthead">
     <div class="masthead-text">
       <div class="wordmark-row">
-        <canvas class="wordmark" id="wordmark" role="img" aria-label="8-bit Voice"></canvas>
+        <canvas class="wordmark" id="wordmark" role="img" aria-label="BleepBloop"></canvas>
         <a class="by" href="https://pitch.dog" data-pd-ui="badge">by pitch.dog</a>
       </div>
       <h1 data-pd-ui="hero-title">Make anything talk like a <em>video game</em>.</h1>
@@ -803,7 +803,7 @@
               <button type="button" class="btn" id="shareLink" data-pd-ui="action" title="A link that opens these lines in this voice"></button>
             </div>
             <span class="muted dl-only" id="dlNote" data-pd-ui="caption"></span>
-            <span class="muted" id="dlOff" data-pd-ui="caption" hidden>Downloads aren’t available in this view. Open <a href="https://bomkino.github.io/8bit-Voice/">8-bit Voice</a> on its own to save files.</span>
+            <span class="muted" id="dlOff" data-pd-ui="caption" hidden>Downloads aren’t available in this view. Open <a href="https://bomkino.github.io/8bit-Voice/">BleepBloop</a> on its own to save files.</span>
           </div>
           <details class="code" id="codeBox">
             <summary><span data-pd-ui="label">Make it from the command line</span><svg class="px chev" width="10" height="6" viewBox="0 0 5 3" aria-hidden="true"><path d="M0 0h1v1H0zM4 0h1v1H4zM1 1h1v1H1zM3 1h1v1H3zM2 2h1v1H2z"/></svg></summary>
@@ -858,7 +858,7 @@
     <ol class="steps">
       <li><span class="step-n" data-pd-ui="data">1</span><span data-pd-ui="body-compact">Tap <b>Share</b> <span class="step-ic" id="shareGlyph"></span> in Safari’s toolbar.</span></li>
       <li><span class="step-n" data-pd-ui="data">2</span><span data-pd-ui="body-compact">Scroll down and tap <b>Add to Home Screen</b>.</span></li>
-      <li><span class="step-n" data-pd-ui="data">3</span><span data-pd-ui="body-compact">Tap <b>Add</b>. 8-bit Voice is on your Home Screen.</span></li>
+      <li><span class="step-n" data-pd-ui="data">3</span><span data-pd-ui="body-compact">Tap <b>Add</b>. BleepBloop is on your Home Screen.</span></li>
     </ol>
     <button class="btn solid" value="close" data-pd-ui="action">Got it</button>
   </form>
@@ -1246,25 +1246,28 @@
     CV.drawFace(ctx, id, 0, 0, o);
   }
 
-  // ── the wordmark, in the same pixel letters as the box ──
+  // ── the wordmark, in the same pixel letters as the box: BLEEP, then BLOOP
+  // a pixel higher, like the second note of a two-note blip ──
   function drawWordmark() {
     const cv = $('#wordmark');
-    const text = '8-BIT VOICE';
+    const text = 'BLEEPBLOOP';
     let w = 0;
     for (const ch of text) { const g = CV.glyph(ch, 'latin'); w += g ? g.w + 1 : 3; }
-    w += 1;
+    w += 2;
     const cssPx = innerWidth < 640 ? 3 : 4;
-    const ctx = sizeCanvas(cv, w + 1, 9, Math.round(cssPx * dpr()));
-    ctx.clearRect(0, 0, w + 1, 9);
+    const ctx = sizeCanvas(cv, w + 1, 10, Math.round(cssPx * dpr()));
+    ctx.clearRect(0, 0, w + 1, 10);
     const paint = (dx, dy, color) => {
       let x = dx;
-      for (const ch of text) {
+      [...text].forEach((ch, i) => {
         const g = CV.glyph(ch, 'latin');
-        if (!g) { x += 3; continue; }
+        if (!g) { x += 3; return; }
+        if (i === 5) x += 1;
+        const y = dy + (i < 5 ? 1 : 0);
         ctx.fillStyle = color;
-        g.rows.forEach((row, r) => { for (let c = 0; c < row.length; c++) if (row[c] === '#') ctx.fillRect(x + c, dy + r, 1, 1); });
+        g.rows.forEach((row, r) => { for (let c = 0; c < row.length; c++) if (row[c] === '#') ctx.fillRect(x + c, y + r, 1, 1); });
         x += g.w + 1;
-      }
+      });
     };
     paint(1, 1, css('--accent'));
     paint(0, 0, css('--ink'));
@@ -2962,7 +2965,7 @@
     }
     files.push({ name: 'sound.wav', data: CV.encodeWav(mixAudio(L), 48000) });
     files.push({ name: 'README.txt', data: new TextEncoder().encode(
-      `8-bit Voice ${APP_VERSION}: ${frames} frames, ${L.W} x ${L.H}, ${fps} frames per second, transparent background.\n` +
+      `BleepBloop ${APP_VERSION}: ${frames} frames, ${L.W} x ${L.H}, ${fps} frames per second, transparent background.\n` +
       `Import the frames as an image sequence at ${fps} fps and put sound.wav under them; frame 1 starts at 0:00.\n`) });
     return { blob: new Blob([CV.zip(files)], { type: 'application/zip' }), ext: 'zip', codec: `${frames} PNG frames + WAV` };
   }
@@ -3181,7 +3184,7 @@
   }
   function downloadZip(files) {
     const info = {
-      made_with: '8-bit Voice ' + APP_VERSION + ' (chipvoice ' + CV.VERSION + ')',
+      made_with: 'BleepBloop ' + APP_VERSION + ' (chipvoice ' + CV.VERSION + ')',
       character: state.face,
       look: state.look || undefined,
       voice: state.voice,
@@ -3190,7 +3193,7 @@
     };
     files.push({ name: 'voice.json', data: new TextEncoder().encode(JSON.stringify(info, null, 2) + '\n') });
     const pid = matchingPreset();
-    const name = `8-bit-voice-${CV.slug(whoName(), 16)}-${pid || state.voice.style}.zip`;
+    const name = `bleepbloop-${CV.slug(whoName(), 16)}-${pid || state.voice.style}.zip`;
     saveBytes(name, CV.zip(files), 'application/zip');
   }
 
@@ -3402,18 +3405,18 @@
   };
   const APPS = [
     { os: 'mac', name: 'macOS', req: '12 Monterey or later', links: [
-      { arch: 'arm', label: 'Apple silicon', file: '8-bit-Voice-mac-arm64.dmg' },
-      { arch: 'x64', label: 'Intel', file: '8-bit-Voice-mac-x64.dmg' },
+      { arch: 'arm', label: 'Apple silicon', file: 'BleepBloop-mac-arm64.dmg' },
+      { arch: 'x64', label: 'Intel', file: 'BleepBloop-mac-x64.dmg' },
     ] },
     { os: 'windows', name: 'Windows', req: '10 or 11, 64-bit', links: [
-      { arch: 'x64', label: 'Installer', file: '8-bit-Voice-windows-x64-setup.exe' },
-      { arch: 'arm', label: 'Arm installer', file: '8-bit-Voice-windows-arm64-setup.exe', minor: true },
+      { arch: 'x64', label: 'Installer', file: 'BleepBloop-windows-x64-setup.exe' },
+      { arch: 'arm', label: 'Arm installer', file: 'BleepBloop-windows-arm64-setup.exe', minor: true },
     ] },
     { os: 'linux', name: 'Linux', req: '64-bit, x64 or Arm', links: [
-      { arch: 'x64', label: 'AppImage', file: '8-bit-Voice-linux-x86_64.AppImage' },
-      { arch: 'x64', label: 'Debian, Ubuntu', file: '8-bit-Voice-linux-amd64.deb' },
-      { arch: 'arm', label: 'AppImage', file: '8-bit-Voice-linux-arm64.AppImage', minor: true },
-      { arch: 'arm', label: '.deb', file: '8-bit-Voice-linux-arm64.deb', minor: true },
+      { arch: 'x64', label: 'AppImage', file: 'BleepBloop-linux-x86_64.AppImage' },
+      { arch: 'x64', label: 'Debian, Ubuntu', file: 'BleepBloop-linux-amd64.deb' },
+      { arch: 'arm', label: 'AppImage', file: 'BleepBloop-linux-arm64.AppImage', minor: true },
+      { arch: 'arm', label: '.deb', file: 'BleepBloop-linux-arm64.deb', minor: true },
     ] },
     { os: 'browser', name: 'Phone or browser', req: 'Any computer or phone', links: [] },
   ];
@@ -3540,7 +3543,7 @@
     const url = shareUrl();
     if (url.length > MAX_LINK) { toast('Too many lines for one link. Download them instead.'); return; }
     if (dlMode === 'share' && navigator.share) {
-      try { await navigator.share({ title: '8-bit Voice', url }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+      try { await navigator.share({ title: 'BleepBloop', url }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
     }
     try {
       await navigator.clipboard.writeText(url);

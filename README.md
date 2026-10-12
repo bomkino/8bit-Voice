@@ -1,12 +1,12 @@
-# 8-bit Voice
+# BleepBloop
 
 Make anything talk like a video game. Type a line, or say it, pick a character, and hear it in a retro game voice with a talking dialogue box. Then save it as a video for Reels, TikTok, Shorts or YouTube.
 
 **[Open it in your browser](https://bomkino.github.io/8bit-Voice/)** · **[Download the app](https://github.com/bomkino/8bit-Voice/releases/latest)**
 
-![8-bit Voice](icons/social.png)
+![BleepBloop](icons/social.png)
 
-It's free and open source, made by [pitch.dog](https://pitch.dog) and anyone who'd like to join in. There are no accounts, ads or tracking. Everything happens on your own device: every sound is made on the spot from chip-style oscillators, filters and noise, with no samples. That means there's nothing to license, and what you make is yours.
+BleepBloop used to be called 8-bit Voice. Old links still work, and the Mac app updates itself to the new name. It's free and open source, made by [pitch.dog](https://pitch.dog) and anyone who'd like to join in. There are no accounts, ads or tracking. Everything happens on your own device: every sound is made on the spot from chip-style oscillators, filters and noise, with no samples. That means there's nothing to license, and what you make is yours.
 
 ## Get it
 
@@ -14,11 +14,11 @@ It's free and open source, made by [pitch.dog](https://pitch.dog) and anyone who
 | --- | --- |
 | iPhone and iPad | Open [the web app](https://bomkino.github.io/8bit-Voice/) in Safari, tap **Share**, then **Add to Home Screen**. It opens full screen and works offline. |
 | Android | Open [the web app](https://bomkino.github.io/8bit-Voice/) in Chrome and tap **Install** (or **Add to Home screen** in the menu). |
-| Mac with Apple silicon | [`8-bit-Voice-mac-arm64.dmg`](https://github.com/bomkino/8bit-Voice/releases/latest/download/8-bit-Voice-mac-arm64.dmg) |
-| Mac with an Intel chip | [`8-bit-Voice-mac-x64.dmg`](https://github.com/bomkino/8bit-Voice/releases/latest/download/8-bit-Voice-mac-x64.dmg) |
-| Windows 10 or 11 | [`8-bit-Voice-windows-x64-setup.exe`](https://github.com/bomkino/8bit-Voice/releases/latest/download/8-bit-Voice-windows-x64-setup.exe) ([Arm](https://github.com/bomkino/8bit-Voice/releases/latest/download/8-bit-Voice-windows-arm64-setup.exe)) |
-| Linux, any distro | [`8-bit-Voice-linux-x86_64.AppImage`](https://github.com/bomkino/8bit-Voice/releases/latest/download/8-bit-Voice-linux-x86_64.AppImage) ([Arm](https://github.com/bomkino/8bit-Voice/releases/latest/download/8-bit-Voice-linux-arm64.AppImage)) |
-| Debian and Ubuntu | [`8-bit-Voice-linux-amd64.deb`](https://github.com/bomkino/8bit-Voice/releases/latest/download/8-bit-Voice-linux-amd64.deb) ([Arm](https://github.com/bomkino/8bit-Voice/releases/latest/download/8-bit-Voice-linux-arm64.deb)) |
+| Mac with Apple silicon | [`BleepBloop-mac-arm64.dmg`](https://github.com/bomkino/8bit-Voice/releases/latest/download/BleepBloop-mac-arm64.dmg) |
+| Mac with an Intel chip | [`BleepBloop-mac-x64.dmg`](https://github.com/bomkino/8bit-Voice/releases/latest/download/BleepBloop-mac-x64.dmg) |
+| Windows 10 or 11 | [`BleepBloop-windows-x64-setup.exe`](https://github.com/bomkino/8bit-Voice/releases/latest/download/BleepBloop-windows-x64-setup.exe) ([Arm](https://github.com/bomkino/8bit-Voice/releases/latest/download/BleepBloop-windows-arm64-setup.exe)) |
+| Linux, any distro | [`BleepBloop-linux-x86_64.AppImage`](https://github.com/bomkino/8bit-Voice/releases/latest/download/BleepBloop-linux-x86_64.AppImage) ([Arm](https://github.com/bomkino/8bit-Voice/releases/latest/download/BleepBloop-linux-arm64.AppImage)) |
+| Debian and Ubuntu | [`BleepBloop-linux-amd64.deb`](https://github.com/bomkino/8bit-Voice/releases/latest/download/BleepBloop-linux-amd64.deb) ([Arm](https://github.com/bomkino/8bit-Voice/releases/latest/download/BleepBloop-linux-arm64.deb)) |
 
 The Mac, Windows and Linux apps are the same tool in its own window, with menus and save dialogs.
 
@@ -26,9 +26,9 @@ The Mac, Windows and Linux apps are the same tool in its own window, with menus 
 
 The apps aren't signed with an Apple or Microsoft developer certificate, so each system asks once before it opens one.
 
-- **macOS (12 or later).** Open the .dmg and drag 8-bit Voice to Applications. The first time you open it, macOS says it can't verify the app: click **Done**. Then go to **System Settings › Privacy & Security**, scroll down and click **Open Anyway** next to 8-bit Voice. After that it opens normally. In Terminal, `xattr -dr com.apple.quarantine "/Applications/8-bit Voice.app"` does the same thing. From then on the app updates itself (**8-bit Voice › Check for Updates…**): [docs/UPDATES.md](docs/UPDATES.md).
-- **Windows.** If SmartScreen says "Windows protected your PC", click **More info**, then **Run anyway**. The installer puts 8-bit Voice in your Start menu. No admin rights are needed.
-- **Linux.** For the AppImage, run `chmod +x 8-bit-Voice-linux-x86_64.AppImage` and open it. Some distros need `libfuse2` first. For the .deb, run `sudo apt install ./8-bit-Voice-linux-amd64.deb`, then find it in your app menu.
+- **macOS (12 or later).** Open the .dmg and drag BleepBloop to Applications. The first time you open it, macOS says it can't verify the app: click **Done**. Then go to **System Settings › Privacy & Security**, scroll down and click **Open Anyway** next to BleepBloop. After that it opens normally. In Terminal, `xattr -dr com.apple.quarantine "/Applications/BleepBloop.app"` does the same thing. From then on the app updates itself (**BleepBloop › Check for Updates…**): [docs/UPDATES.md](docs/UPDATES.md).
+- **Windows.** If SmartScreen says "Windows protected your PC", click **More info**, then **Run anyway**. The installer puts BleepBloop in your Start menu. No admin rights are needed.
+- **Linux.** For the AppImage, run `chmod +x BleepBloop-linux-x86_64.AppImage` and open it. Some distros need `libfuse2` first. For the .deb, run `sudo apt install ./BleepBloop-linux-amd64.deb`, then find it in your app menu.
 
 `SHA256SUMS.txt` on each release has a checksum for every file.
 
@@ -133,7 +133,7 @@ Building the Mac app off a Mac needs [rcodesign](https://github.com/indygreg/app
 - `desktop/` is the Electron wrapper. Its `build/make_icon.py` draws every icon and the disk image background, and `build/social.html` renders `icons/social.png`.
 - `desktop/build/sparkle.sh`, `desktop/native/sparkle/` and `desktop/build/sign-update.sh` are the Mac app's updater: [docs/UPDATES.md](docs/UPDATES.md).
 - `.github/workflows/build.yml` tests the engine, builds and opens the apps on macOS, Windows and Linux, and tests the Mac updater, for every pull request. On `main`, when `desktop/package.json` has a new version, it publishes them as a release with signed update feeds.
-- `.github/workflows/pages.yml` puts the web app on GitHub Pages from `main`.
+- `.github/workflows/pages.yml` puts the web app on GitHub Pages once the Build workflow on `main` has finished, so the site never links to a release that isn't out yet.
 
 To ship a new version, raise `version` in `desktop/package.json` (and `APP_VERSION` in `index.html`, `VERSION` in `chipvoice.js`, the cache name in `sw.js` and `version` in `package.json` to match), add a section to `CHANGELOG.md`, then merge to `main`.
 
@@ -141,7 +141,7 @@ To ship a new version, raise `version` in `desktop/package.json` (and `APP_VERSI
 
 Bug reports, ideas, new parts for the character creator, translations and fixes are all welcome, and you don't need to be a programmer to help. [CONTRIBUTING.md](CONTRIBUTING.md) explains how, and the [Code of Conduct](CODE_OF_CONDUCT.md) says how we treat each other. Security problems go to [SECURITY.md](SECURITY.md).
 
-The character creator learned from open-source avatar makers that came before it; [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) credits them and everything else 8-bit Voice uses.
+The character creator learned from open-source avatar makers that came before it; [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) credits them and everything else BleepBloop uses.
 
 ## License
 

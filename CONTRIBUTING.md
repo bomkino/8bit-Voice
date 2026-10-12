@@ -1,6 +1,6 @@
-# Contributing to 8-bit Voice
+# Contributing to BleepBloop
 
-Thank you for being here. 8-bit Voice is a small, free tool, and it gets better every time someone tells us what broke, what's missing or what made them laugh. You don't need to be a programmer to help, and there are no silly questions.
+Thank you for being here. BleepBloop is a small, free tool, and it gets better every time someone tells us what broke, what's missing or what made them laugh. You don't need to be a programmer to help, and there are no silly questions.
 
 ## Ways to help
 

@@ -1,6 +1,6 @@
 # Third-party notices
 
-8-bit Voice's own code and art are under the [MIT License](LICENSE). It also uses these, with thanks.
+BleepBloop's own code and art are under the [MIT License](LICENSE). It also uses these, with thanks.
 
 ## In the web app and the desktop apps
 

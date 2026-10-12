@@ -1,5 +1,5 @@
 /*! mp4-muxer 5.2.2 · https://github.com/Vanilagy/mp4-muxer · MIT License · Copyright (c) 2023 Vanilagy
- * Vendored unchanged for 8-bit Voice video export. See vendor/LICENSE-mp4-muxer.txt. */
+ * Vendored unchanged for BleepBloop video export. See vendor/LICENSE-mp4-muxer.txt. */
 "use strict";
 var Mp4Muxer = (() => {
   var __defProp = Object.defineProperty;

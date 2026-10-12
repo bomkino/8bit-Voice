@@ -1,6 +1,6 @@
 # Code of Conduct
 
-8-bit Voice is made by and for a lot of different people. We want everyone who shows up here, in issues, pull requests, discussions or anywhere else the project lives, to feel welcome and safe.
+BleepBloop is made by and for a lot of different people. We want everyone who shows up here, in issues, pull requests, discussions or anywhere else the project lives, to feel welcome and safe.
 
 ## What we ask
 

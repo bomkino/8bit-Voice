@@ -1,4 +1,4 @@
-# Draws the 8-bit Voice icons: the app's pixel speech bubble, in its gold, on
+# Draws the BleepBloop icons: the app's pixel speech bubble, in its gold, on
 # the dark stage with its dot grid.
 #
 #   python3 desktop/build/make_icon.py

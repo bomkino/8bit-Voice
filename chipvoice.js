@@ -1,5 +1,5 @@
 /*!
- * chipvoice.js · the engine behind 8-bit Voice, by pitch.dog
+ * chipvoice.js · the engine behind BleepBloop, by pitch.dog
  * https://github.com/bomkino/8bit-Voice · MIT License
  *
  * Type a line and get it back as a video-game voice. The words stay unreadable;
