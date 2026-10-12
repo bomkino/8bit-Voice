@@ -1,7 +1,7 @@
 {
   "name": "8bit-voice",
   "productName": "8-bit Voice",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Type a line and hear it as an 8-bit video-game voice.",
   "author": "pitch.dog <hello@pitch.dog>",
   "homepage": "https://bomkino.github.io/8bit-Voice/",
@@ -38,6 +38,8 @@
           "chipvoice.js",
           "manifest.webmanifest",
           "fonts/*.woff2",
+          "vendor/*.js",
+          "vendor/*.txt",
           "icons/**/*"
         ]
       }

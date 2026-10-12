@@ -129,6 +129,7 @@ app.whenReady().then(() => {
         { type: 'separator' },
         { label: 'Save This Line…', accelerator: 'CmdOrCtrl+S', click: press('dlOne') },
         { label: 'Save All Lines…', accelerator: 'CmdOrCtrl+Shift+S', click: press('dlAll') },
+        { label: 'Make a Video…', accelerator: 'CmdOrCtrl+E', click: press('makeVideo') },
         { type: 'separator' },
         isMac ? { role: 'close' } : { role: 'quit' },
       ],
@@ -138,9 +139,11 @@ app.whenReady().then(() => {
       label: 'Voice',
       submenu: [
         { label: 'Play or Stop', accelerator: 'CmdOrCtrl+Return', click: press('play') },
-        { label: 'Hear All Six Machines', accelerator: 'CmdOrCtrl+Shift+Return', click: press('hearAll') },
+        { label: 'Hear Every Machine', accelerator: 'CmdOrCtrl+Shift+Return', click: press('hearAll') },
         { label: 'New Take', accelerator: 'CmdOrCtrl+T', click: press('newTake') },
         { label: 'Speakerphone On or Off', click: press('phone') },
+        { type: 'separator' },
+        { label: 'Make a Character…', accelerator: 'CmdOrCtrl+Shift+N', click: press('makeOwn') },
       ],
     },
     { label: 'View', submenu: [{ role: 'resetZoom' }, { role: 'zoomIn' }, { role: 'zoomOut' }, { type: 'separator' }, { role: 'togglefullscreen' }] },
@@ -159,19 +162,27 @@ app.whenReady().then(() => {
     applicationName: '8-bit Voice',
     applicationVersion: app.getVersion(),
     copyright: '© 2026 pitch.dog · MIT License',
-    credits: 'Every sound is synthesized on the spot. No samples, nothing to license.',
+    credits: 'Every sound is made on the spot, on your computer. No samples, no accounts, nothing sent anywhere.',
     website: 'https://bomkino.github.io/8bit-Voice/',
   });
 
-  // The page's downloads (one WAV, or a zip of every line) ask where to save,
-  // starting in Downloads with the name the tool picked.
+  // The page's downloads (a WAV, a video, a picture, or a zip of several)
+  // ask where to save, starting in Downloads with the name the tool picked.
+  const KINDS = {
+    wav: ['Save clip', 'WAV audio'],
+    zip: ['Save all', 'Zip archive'],
+    mp4: ['Save video', 'MP4 video'],
+    webm: ['Save video', 'WebM video'],
+    png: ['Save picture', 'PNG image'],
+  };
   session.defaultSession.on('will-download', (_e, item) => {
     const name = item.getFilename();
-    const zip = name.toLowerCase().endsWith('.zip');
+    const ext = path.extname(name).slice(1).toLowerCase();
+    const [title, kind] = KINDS[ext] || ['Save', 'File'];
     item.setSaveDialogOptions({
-      title: zip ? 'Save all clips' : 'Save clip',
+      title,
       defaultPath: path.join(app.getPath('downloads'), name),
-      filters: [zip ? { name: 'Zip archive', extensions: ['zip'] } : { name: 'WAV audio', extensions: ['wav'] }],
+      filters: [{ name: kind, extensions: [ext || '*'] }],
     });
   });
 
