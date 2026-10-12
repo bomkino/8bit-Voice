@@ -30,8 +30,10 @@ jobs:
       - run: npm test
       - name: Command line makes a clip
         run: |
-          node cli.mjs "(offended) I never said I'd call." --voice heist-producer --phone --out clip.wav
-          test "$(head -c 4 clip.wav)" = RIFF
+          for v in $(node -p "require('./chipvoice.js').PRESET_ORDER.join(' ')"); do
+            node cli.mjs "(offended) You said WHAT about my hat?" --voice "$v" --out "clip-$v.wav"
+            test "$(head -c 4 "clip-$v.wav")" = RIFF
+          done
 
   desktop:
     name: ${{ matrix.name }}
@@ -72,9 +74,9 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           for arch in arm64 x64; do
-            if [ $arch = arm64 ]; then app="dist/mac-arm64/8-bit Voice.app"; else app="dist/mac/8-bit Voice.app"; fi
+            if [ $arch = arm64 ]; then app="dist/mac-arm64/BleepBloop.app"; else app="dist/mac/BleepBloop.app"; fi
             codesign --verify --deep --strict --verbose=2 "$app"
-            lipo -archs "$app/Contents/MacOS/8-bit Voice"
+            lipo -archs "$app/Contents/MacOS/BleepBloop"
             plist="$app/Contents/Info.plist"
             feed="$(/usr/libexec/PlistBuddy -c 'Print :SUFeedURL' "$plist")"
             echo "$feed"
@@ -82,13 +84,13 @@ jobs:
             [ "$(/usr/libexec/PlistBuddy -c 'Print :SUPublicEDKey' "$plist")" = "P43E8I+FgVyAW3QkS4J9bnDRRhAnsS4y3dT2WDce1lQ=" ]
             codesign --verify --strict "$app/Contents/Frameworks/Sparkle.framework"
             test -f "$app/Contents/Resources/sparkle.node"
-            hdiutil verify "dist/8-bit-Voice-mac-$arch.dmg"
-            unzip -l "dist/8-bit-Voice-mac-$arch.zip" | tail -1
+            hdiutil verify "dist/BleepBloop-mac-$arch.dmg"
+            unzip -l "dist/BleepBloop-mac-$arch.zip" | tail -1
           done
       - name: Open the Mac app
         if: runner.os == 'macOS'
         run: |
-          "dist/mac-arm64/8-bit Voice.app/Contents/MacOS/8-bit Voice" &
+          "dist/mac-arm64/BleepBloop.app/Contents/MacOS/BleepBloop" &
           sleep 15
           kill -0 $! || { echo "The app quit within 15 s"; exit 1; }
           echo "still running after 15 s"
@@ -110,14 +112,14 @@ jobs:
       - name: Check the Linux packages
         if: runner.os == 'Linux'
         run: |
-          dpkg-deb --info dist/8-bit-Voice-linux-amd64.deb | grep -E 'Package|Architecture|Version'
-          dpkg-deb --info dist/8-bit-Voice-linux-arm64.deb | grep -E 'Package|Architecture|Version'
+          dpkg-deb --info dist/BleepBloop-linux-amd64.deb | grep -E 'Package|Architecture|Version'
+          dpkg-deb --info dist/BleepBloop-linux-arm64.deb | grep -E 'Package|Architecture|Version'
 
       - name: Open the Windows app
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $p = Start-Process -FilePath "dist\win-unpacked\8-bit Voice.exe" -PassThru
+          $p = Start-Process -FilePath "dist\win-unpacked\BleepBloop.exe" -PassThru
           Start-Sleep -Seconds 15
           if ($p.HasExited) { throw "The app quit within 15 s (exit $($p.ExitCode))" }
           "still running after 15 s"
@@ -125,14 +127,14 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: 8-bit-Voice-${{ matrix.name }}
+          name: BleepBloop-${{ matrix.name }}
           if-no-files-found: error
           path: |
-            desktop/dist/8-bit-Voice-*.dmg
-            desktop/dist/8-bit-Voice-*.zip
-            desktop/dist/8-bit-Voice-*.exe
-            desktop/dist/8-bit-Voice-*.AppImage
-            desktop/dist/8-bit-Voice-*.deb
+            desktop/dist/BleepBloop-*.dmg
+            desktop/dist/BleepBloop-*.zip
+            desktop/dist/BleepBloop-*.exe
+            desktop/dist/BleepBloop-*.AppImage
+            desktop/dist/BleepBloop-*.deb
 
   release:
     name: Release
@@ -191,7 +193,7 @@ jobs:
             printf '%s' "$SPARKLE_PRIVATE_KEY" | tr -d '[:space:]' > "$RUNNER_TEMP/update.key"
             for arch in arm64 x64; do
               SPARKLE_KEY="$RUNNER_TEMP/update.key" bash desktop/build/sign-update.sh \
-                "out/8-bit-Voice-mac-$arch.zip" "$URL" "out/appcast-$arch.xml" changes.md
+                "out/BleepBloop-mac-$arch.zip" "$URL" "out/appcast-$arch.xml" changes.md
             done
             rm -f "$RUNNER_TEMP/update.key"
           elif [ -z "$LATEST" ]; then
@@ -199,7 +201,7 @@ jobs:
             # feeds only name it, unsigned, and nobody is offered anything.
             echo "::warning::No SPARKLE_PRIVATE_KEY in the release environment yet. Fine for the first release; run scripts/auto-signing-setup.sh before the next (docs/UPDATES.md)."
             for arch in arm64 x64; do
-              node desktop/build/appcast.mjs first "$VERSION" "$URL" "out/8-bit-Voice-mac-$arch.zip" "out/appcast-$arch.xml"
+              node desktop/build/appcast.mjs first "$VERSION" "$URL" "out/BleepBloop-mac-$arch.zip" "out/appcast-$arch.xml"
             done
           else
             echo "::error::The release environment has no SPARKLE_PRIVATE_KEY secret, so Mac copies couldn't update to $VERSION. docs/UPDATES.md has the one-time command that sets it."
@@ -212,7 +214,13 @@ jobs:
           TAG: ${{ steps.version.outputs.tag }}
         run: |
           cd out
-          shasum -a 256 8-bit-Voice-* appcast-*.xml > SHA256SUMS.txt
+          # Until 1.2 the app was 8-bit Voice and its files 8-bit-Voice-*. The
+          # installers go up under both names, so links people already have to
+          # releases/latest/download/8-bit-Voice-... keep working.
+          for f in BleepBloop-*.dmg BleepBloop-*.exe BleepBloop-*.AppImage BleepBloop-*.deb; do
+            cp "$f" "8-bit-Voice-${f#BleepBloop-}"
+          done
+          shasum -a 256 BleepBloop-* 8-bit-Voice-* appcast-*.xml > SHA256SUMS.txt
           cat SHA256SUMS.txt
           {
             echo "**$(awk 'NF { print; exit }' ../changes.md)**"
@@ -223,8 +231,8 @@ jobs:
             sed "s/{{version}}/$VERSION/g" ../.github/release-notes.md
           } > notes.md
           cat notes.md
-          gh release create "$TAG" --target "$GITHUB_SHA" --title "8-bit Voice $VERSION" --notes-file notes.md --latest \
-            8-bit-Voice-* appcast-*.xml SHA256SUMS.txt
+          gh release create "$TAG" --target "$GITHUB_SHA" --title "BleepBloop $VERSION" --notes-file notes.md --latest \
+            BleepBloop-* 8-bit-Voice-* appcast-*.xml SHA256SUMS.txt
       - name: Wait for the live update feeds
         if: steps.version.outputs.new == 'true'
         run: |

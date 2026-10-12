@@ -1,4 +1,4 @@
-// The bridge between 8-bit Voice's main process and Sparkle, the macOS
+// The bridge between BleepBloop's main process and Sparkle, the macOS
 // updater pitch.dog's other Mac apps use. It loads Sparkle.framework from the
 // app bundle at run time (so nothing links against it at build time), starts
 // SPUStandardUpdaterController, and exposes three calls to JavaScript:
@@ -49,7 +49,7 @@ static napi_value Start(napi_env env, napi_callback_info info) {
   NSBundle *framework = [NSBundle bundleWithPath:path];
   NSError *error = nil;
   if (!framework || ![framework loadAndReturnError:&error]) {
-    NSLog(@"8-bit Voice: Sparkle didn't load: %@", error);
+    NSLog(@"BleepBloop: Sparkle didn't load: %@", error);
     return Bool(env, false);
   }
   Class Controller = NSClassFromString(@"SPUStandardUpdaterController");

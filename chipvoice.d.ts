@@ -1,15 +1,25 @@
-// Types for chipvoice.js, so TypeScript projects (like the Remotion one in
-// ./remotion) can import it: `import CV from '../../chipvoice'`.
+// Types for chipvoice.js, so TypeScript projects (a Remotion video, say) can
+// import it: `import CV from './chipvoice'`.
 
 declare namespace ChipVoice {
-  type StyleId = 'square' | 'pocket' | 'babble' | 'typewriter' | 'boss' | 'chip';
+  type StyleId = 'square' | 'pocket' | 'babble' | 'typewriter' | 'boss' | 'chip' | 'mouth';
   type PresetId =
-    | 'horror-director'
-    | 'romcom-director'
-    | 'heist-producer'
-    | 'space-director'
-    | 'period-director'
-    | 'studio-exec';
+    | 'hero'
+    | 'narrator'
+    | 'henchling'
+    | 'wizard'
+    | 'villain'
+    | 'sidekick'
+    | 'agent'
+    | 'computer'
+    | 'robot'
+    | 'fairy'
+    | 'ghost'
+    | 'golem'
+    | 'guard'
+    | 'critter';
+  type FaceId = PresetId;
+  type ThemeId = 'ink' | 'paper' | 'royal' | 'pocket' | 'amber' | 'candy';
   type MoodId =
     | 'whisper'
     | 'quiet'
@@ -34,7 +44,7 @@ declare namespace ChipVoice {
     speed: number;
     /** 0 is monotone, 1 is sing-song. */
     melody: number;
-    /** The machine's own knob (Bite, Nasal, Squeak, Click, Menace, Buzz), 0 to 1. */
+    /** The machine's own knob (Bite, Nasal, Squeak, Click, Menace, Buzz, Clarity), 0 to 1. */
     character: number;
     /** Bit-crush, 0 to 1. */
     grit: number;
@@ -58,7 +68,10 @@ declare namespace ChipVoice {
   }
   interface Preset {
     name: string;
-    episode: string;
+    /** A short genre label, such as "Fantasy". */
+    tag: string;
+    /** Which portrait in FACES is theirs. */
+    face: FaceId;
     note: string;
     voice: Partial<Voice> & { style: StyleId };
   }
@@ -102,11 +115,69 @@ declare namespace ChipVoice {
     /** Overrides the stage direction in the line. */
     mood?: MoodId | MoodId[] | { keys: MoodId[]; very?: Partial<Record<MoodId, boolean>> };
   }
+  /** One syllable found in a recording. Times are seconds from the start of the trimmed recording. */
+  interface RecordingSyllable {
+    t: number;
+    d: number;
+    /** When it is loudest. */
+    peak: number;
+    /** Level, about 0.6 to 1.4, 1 is typical for this recording. */
+    a: number;
+    /** Pitch at the start and end, in semitones from the speaker's middle pitch. */
+    p0: number;
+    p1: number;
+    /** The nearest of the machines' vowels ('a', 'e', 'i', 'o', 'u', '@'), two for a glide. */
+    vowels: string[];
+    /** A guess at the consonant before and after the vowel, if any. */
+    onset: string[];
+    coda: string[];
+    stressed: boolean;
+    /** The last syllable before a pause. */
+    end: boolean;
+  }
+  /**
+   * What analyzeRecording heard: a hundred frames a second of pitch, voicing,
+   * level and mouth shape, and the syllables. Plain numbers and typed arrays,
+   * so it can be posted to a worker or stored.
+   */
+  interface Recording {
+    version: string;
+    /** Frames per second (100). */
+    fps: number;
+    /** Seconds, after trimming the silence at each end. */
+    duration: number;
+    frames: number;
+    /** Reflection coefficients per frame. */
+    order: number;
+    /** The speaker's middle pitch, in Hz. */
+    pitch: number;
+    /** Hardly any of it was voiced. */
+    whisper: boolean;
+    /** Pitch per frame in Hz, 0 where it isn't voiced. */
+    f0: Float32Array;
+    /** 0 (hiss) to 1 (pure buzz) per frame. */
+    voicing: Float32Array;
+    /** Level per frame, with the room's noise taken out. */
+    rms: Float32Array;
+    /** Level of what the filter leaves unpredicted, per frame. */
+    gain: Float32Array;
+    /** frames × order reflection coefficients: the shape of the mouth. */
+    k: Float32Array;
+    syllables: RecordingSyllable[];
+  }
+  interface RecordingOptions {
+    sampleRate?: number;
+    /** The words that were said, for the dialogue box. They are spread over the syllables in order. */
+    text?: string;
+    /** Accepted for symmetry with render(); a recording keeps its own delivery. */
+    mood?: RenderOptions['mood'];
+  }
   interface Glyph {
     w: number;
     rows: string[];
   }
   interface Theme {
+    name?: string;
     key: string;
     border: string;
     fill: string;
@@ -122,7 +193,13 @@ declare namespace ChipVoice {
     width?: number;
     /** Minimum number of text lines. */
     lines?: number;
-    theme?: 'ink' | 'paper' | Theme;
+    /** Exactly this many text lines, paging through longer text from line `from`. */
+    rows?: number;
+    /** With `rows`, the first line showing. */
+    from?: number;
+    theme?: ThemeId | Theme;
+    /** A framed picture of the speaker at the left of the box: one of the cast, or your own drawing. */
+    portrait?: FaceOptions & { face: FaceId | Face } | { size: number; draw(ctx: CanvasRenderingContext2D, x: number, y: number): void };
     x?: number;
     y?: number;
     /** Whether character i of the text is showing. */
@@ -137,6 +214,51 @@ declare namespace ChipVoice {
     /** Dims the text. */
     whisper?: boolean;
   }
+  interface FaceOptions {
+    /** 0 to 1, how far the mouth is open. */
+    open?: number;
+    /** Closes the eyes. */
+    blink?: boolean;
+    /** false leaves the background out. */
+    bg?: boolean;
+  }
+  interface Face {
+    bg: string;
+    /** Space-separated palette entries: a letter, then a hex colour. */
+    pal: string;
+    /** x, y, width and palette letter of the mouth. */
+    mouth: [number, number, number, string];
+    /** Sixteen rows of sixteen palette letters, separated by "/". "." is the background, "e" an eye and "E" its glint, which close on a blink. */
+    rows: string;
+  }
+  type LookKey =
+    | 'skin'
+    | 'head'
+    | 'hair'
+    | 'hairColor'
+    | 'cover'
+    | 'coverColor'
+    | 'eyes'
+    | 'brows'
+    | 'mouth'
+    | 'lips'
+    | 'cheeks'
+    | 'age'
+    | 'facial'
+    | 'glasses'
+    | 'earrings'
+    | 'outfit'
+    | 'outfitColor'
+    | 'pin'
+    | 'bg'
+    | 'mirror'
+    | 'shine'
+    | 'pattern'
+    | 'light';
+  /** A made-up character: which option of each part, by index. */
+  type Look = Record<LookKey, number>;
+  /** Parts by name ("Umber", "Locs") or index; anything left out is the first option. */
+  type LookInput = Partial<Record<LookKey, number | string>> | string;
   interface DialogMetrics {
     width: number;
     height: number;
@@ -144,6 +266,9 @@ declare namespace ChipVoice {
     tab: number;
     lines: { items: { i: number; x: number; g: Glyph }[]; w: number }[];
     n: number;
+    /** Room taken by the portrait, in box pixels. */
+    pw: number;
+    ps: number;
   }
 }
 
@@ -163,10 +288,32 @@ declare const ChipVoice: {
   analyze(text: string): unknown;
   plan(input: string | ChipVoice.ParsedLine, voice?: ChipVoice.VoiceInput, opts?: ChipVoice.RenderOptions): unknown;
   render(input: string | ChipVoice.ParsedLine, voice?: ChipVoice.VoiceInput, opts?: ChipVoice.RenderOptions): ChipVoice.Rendered;
+  /** Listens to mono samples at any rate: trims the silence, levels it, and finds the pitch, the mouth shapes and the syllables. */
+  analyzeRecording(samples: Float32Array | ArrayLike<number>, sampleRate: number): ChipVoice.Recording;
+  /** Says a recording again in a character's voice. The same result as render(), with events timed to the new audio. */
+  renderRecording(rec: ChipVoice.Recording, voice?: ChipVoice.VoiceInput, opts?: ChipVoice.RecordingOptions): ChipVoice.Rendered;
   encodeWav(samples: Float32Array, sampleRate?: number): Uint8Array;
   zip(files: { name: string; data: Uint8Array }[], date?: Date): Uint8Array;
   slug(text: string, max?: number): string;
-  THEMES: Record<'ink' | 'paper', ChipVoice.Theme>;
+  THEMES: Record<ChipVoice.ThemeId, ChipVoice.Theme>;
+  THEME_ORDER: ChipVoice.ThemeId[];
+  FACES: Record<ChipVoice.FaceId, ChipVoice.Face>;
+  FACE_ORDER: ChipVoice.FaceId[];
+  /** Draws a 16×16 face, one of the cast or your own, with its top-left corner at x, y. Returns false for an unknown face. */
+  drawFace(ctx: CanvasRenderingContext2D, id: ChipVoice.FaceId | ChipVoice.Face, x: number, y: number, o?: ChipVoice.FaceOptions): boolean;
+  /** Every part of the character creator and its options, as [name, data] pairs. Lists only grow at the end, so codes stay valid. */
+  LOOK_PARTS: Record<ChipVoice.LookKey, [string, ...unknown[]][]>;
+  LOOK_KEYS: ChipVoice.LookKey[];
+  /** The human cast as looks, to start from. */
+  STARTER_LOOKS: Partial<Record<ChipVoice.PresetId, ChipVoice.LookInput>>;
+  normLook(look?: ChipVoice.LookInput): ChipVoice.Look;
+  /** A short code for links, such as "1a060900210000010200". */
+  encodeLook(look: ChipVoice.LookInput): string;
+  decodeLook(code: string): Partial<ChipVoice.Look>;
+  /** A random look from the whole range; `keep` holds parts to leave as they are. */
+  randomLook(seed: number | string, keep?: Partial<ChipVoice.Look>): ChipVoice.Look;
+  /** Paints a look into a face drawFace() and portraits can use. */
+  buildFace(look: ChipVoice.LookInput): ChipVoice.Face;
   glyph(ch: string, script?: 'alien' | 'latin'): ChipVoice.Glyph | null;
   layoutText(text: string, width: number, script?: 'alien' | 'latin'): ChipVoice.DialogMetrics['lines'];
   measureDialog(o: ChipVoice.DialogOptions): ChipVoice.DialogMetrics;

@@ -6,9 +6,9 @@ No Apple Developer account is involved. The app is signed ad hoc. Updates are tr
 
 ## How it works
 
-1. Each release carries, per Mac architecture, `8-bit-Voice-mac-<arch>.dmg` (for people), `8-bit-Voice-mac-<arch>.zip` (for the updater) and `appcast-<arch>.xml` (the feed), where `<arch>` is `arm64` or `x64`.
+1. Each release carries, per Mac architecture, `BleepBloop-mac-<arch>.dmg` (for people), `BleepBloop-mac-<arch>.zip` (for the updater) and `appcast-<arch>.xml` (the feed), where `<arch>` is `arm64` or `x64`.
 2. The app's `Info.plist` names its feed, `https://github.com/bomkino/8bit-Voice/releases/latest/download/appcast-<arch>.xml`. GitHub redirects that to the feed of the release marked **Latest**, so Apple silicon and Intel copies each get their own build.
-3. Once a day, and whenever someone chooses **8-bit Voice › Check for Updates…**, Sparkle reads the feed. If it lists a newer version, it shows the release notes and an Install button.
+3. Once a day, and whenever someone chooses **BleepBloop › Check for Updates…**, Sparkle reads the feed. If it lists a newer version, it shows the release notes and an Install button.
 4. Sparkle downloads the ZIP, checks its signature against `SUPublicEDKey`, swaps the app in place and relaunches it. A ZIP that doesn't match is refused.
 
 | | |
@@ -55,8 +55,12 @@ Things that break updates:
 
 Nothing can update *to* a first release, so if the key isn't set up yet, 1.1.0's feeds only name 1.1.0, with no signature: Sparkle reads them, finds nothing newer and downloads nothing. Every later release needs the key, and the workflow stops with a clear message if it's missing.
 
+## The new name
+
+Until 1.2 the app was called 8-bit Voice. The bundle identifier (`dog.pitch.8bitvoice`), the feed address and this repository's name are unchanged, so Mac copies of 1.1 find 1.2 as usual. Sparkle recognises the renamed app by its bundle identifier and installs it in place, so an updated copy keeps its old file name, `8-bit Voice.app`, until someone renames it. That's harmless, and later updates work either way. The desktop apps also keep their data in the old `8-bit Voice` folder, so nobody loses their lines, characters or recordings.
+
 ## Testing
 
-`desktop/build/test-update.sh` runs in CI on every change. It makes a throwaway key, builds test copies at 9.0.0 and 9.0.1 under another name and bundle identifier (`8-bit Voice Update Test`, `dog.pitch.8bitvoice.updatetest`) that trust only that key, signs 9.0.1 with `sign-update.sh` and serves it from a local feed. It passes when 9.0.0 installs 9.0.1, 9.0.1 starts as a new process and is still running three seconds later, and a ZIP with one changed byte is fetched and refused.
+`desktop/build/test-update.sh` runs in CI on every change. It makes a throwaway key, builds test copies at 9.0.0 (`8-bit Voice Update Test`) and 9.0.1 (`BleepBloop Update Test`) with their own bundle identifier (`dog.pitch.8bitvoice.updatetest`) that trust only that key, signs 9.0.1 with `sign-update.sh` and serves it from a local feed. It passes when 9.0.0 installs 9.0.1 under its new name, 9.0.1 starts as a new process and is still running three seconds later, and a ZIP with one changed byte is fetched and refused.
 
 The test hooks are environment variables read only at launch: `STUDIO_UPDATE_TEST` (check now and install as soon as an update is ready) and `STUDIO_UPDATE_FEED` (use another feed). A relaunch doesn't keep the environment, so the new version reads `UpdateTestReadyFile` from its defaults instead and writes its version and process number there a second after it starts. A feed can't install anything unless it is signed with the key the app trusts.

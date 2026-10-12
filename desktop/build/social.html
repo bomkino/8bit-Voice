@@ -1,7 +1,7 @@
 <!doctype html>
 <!-- The link preview image (icons/social.png, 1200×630). Rendered from this
-     page with a headless browser at 1200×630; see README › Building. It uses
-     the app's own engine to draw the dialogue box, so it matches the app. -->
+     page with a headless browser at 1200×630. It uses the app's own engine
+     to draw the faces and the dialogue box, so it matches the app. -->
 <html><head><meta charset="utf-8">
 <style>
   @font-face { font-family: "PD Body"; src: url("../../fonts/pd-body.woff2") format("woff2"); font-weight: 100 900; }
@@ -12,20 +12,25 @@
     background-image: radial-gradient(rgba(241, 234, 219, 0.075) 1.5px, transparent 1.8px), linear-gradient(#1a1b24, #08090d);
     background-size: 18px 18px, 100% 100%; background-position: 9px 9px, 0 0;
     color: #f1eadb; font-family: "PD Body", sans-serif; -webkit-font-smoothing: antialiased;
-    display: grid; grid-template-columns: 1fr; align-content: center; padding: 0 92px; box-sizing: border-box;
+    display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 56px; padding: 0 80px; box-sizing: border-box;
   }
+  .cast { display: grid; grid-template-columns: repeat(3, 108px); gap: 16px; }
+  .cast canvas { width: 108px; height: 108px; image-rendering: pixelated; border-radius: 12px; box-shadow: 0 0 0 4px #0c0d12, 0 0 0 6px rgba(241, 234, 219, 0.22); }
   .eyebrow { font: 600 20px/1 "PD Eyebrow", monospace; letter-spacing: 0.08em; text-transform: uppercase; color: #a39f97; display: flex; align-items: center; gap: 14px; }
   .eyebrow canvas { image-rendering: pixelated; }
-  h1 { margin: 22px 0 0; font: 700 112px/0.95 "PD Body"; letter-spacing: -0.035em; }
-  p { margin: 22px 0 0; font: 400 30px/1.35 "PD Body"; color: #b9b3a8; max-width: 22em; }
-  #box { margin-top: 44px; image-rendering: pixelated; }
+  h1 { margin: 22px 0 0; font: 700 104px/0.95 "PD Body"; letter-spacing: -0.035em; }
+  p { margin: 20px 0 0; font: 400 30px/1.3 "PD Body"; color: #b9b3a8; max-width: 17em; }
+  #box { margin-top: 36px; image-rendering: pixelated; }
   .gold { color: #e9b44c; }
 </style></head>
 <body>
-  <div class="eyebrow"><canvas id="mark"></canvas><span>pitch.dog · Mac · Windows · Linux · Web</span></div>
-  <h1>8-bit Voice</h1>
-  <p>Type a line. Hear it as a video-game voice.</p>
-  <canvas id="box"></canvas>
+  <div>
+    <div class="eyebrow"><canvas id="mark"></canvas><span>pitch.dog · free and open source</span></div>
+    <h1>BleepBloop</h1>
+    <p>Make anything talk like a video game. Then make it a video.</p>
+    <canvas id="box"></canvas>
+  </div>
+  <div class="cast" id="cast"></div>
 <script src="../../chipvoice.js"></script>
 <script>
   const CV = window.ChipVoice;
@@ -34,9 +39,17 @@
   mark.width = 13 * 3; mark.height = 8 * 3;
   const m = mark.getContext('2d'); m.fillStyle = '#e9b44c';
   rows.forEach((r, y) => { for (let x = 0; x < r.length; x++) if (r[x] === '#') m.fillRect(x * 3, y * 3, 3, 3); });
-  const o = { text: 'I never said I’d call.', speaker: 'PRODUCER', script: 'alien', width: 200, lines: 1, theme: 'ink' };
+  const o = { text: 'Ready when you are!', speaker: 'HERO', script: 'latin', width: 150, lines: 1, theme: 'ink', portrait: { face: 'hero' } };
   const M = CV.measureDialog(o);
-  const s = 5, cv = document.getElementById('box');
+  const s = 4, cv = document.getElementById('box');
+  // a few of the cast, and two made in the character creator
+  const faces = ['narrator', 'villain', 'sidekick', CV.buildFace(CV.randomLook('social-1')), 'agent', 'fairy', 'wizard', CV.buildFace(CV.randomLook('social-7')), 'guard'];
+  for (const f of faces) {
+    const c = document.createElement('canvas');
+    c.width = c.height = 16;
+    CV.drawFace(c.getContext('2d'), f, 0, 0, {});
+    document.getElementById('cast').appendChild(c);
+  }
   cv.width = M.width * s; cv.height = M.height * s;
   const ctx = cv.getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.setTransform(s, 0, 0, s, 0, 0);
   CV.drawDialog(ctx, Object.assign(o, { cursor: true, level: 0 }));

@@ -5,10 +5,16 @@
 #   "GitHub Actions"            the deploy job below
 #   "Deploy from a branch"      the gh-pages branch, which this workflow keeps
 #                               up to date (choose gh-pages, / (root))
+#
+# It waits for the Build workflow on main to finish, so a release's apps are
+# out before the site's download buttons point at them. If Build fails, the
+# site stays as it was; run this by hand (workflow_dispatch) to publish anyway.
 name: Website
 
 on:
-  push:
+  workflow_run:
+    workflows: [Build]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
@@ -21,14 +27,17 @@ concurrency:
 
 jobs:
   build:
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - name: Gather the site
         run: |
           mkdir -p _site
           cp index.html chipvoice.js sw.js manifest.webmanifest LICENSE _site/
-          cp -r fonts icons _site/
+          cp -r fonts icons vendor _site/
           touch _site/.nojekyll
           find _site -type f | sort
       - uses: actions/upload-pages-artifact@v3
@@ -46,6 +55,8 @@ jobs:
         with:
           name: github-pages
       - name: Push the site, as one commit
+        env:
+          SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
         run: |
           mkdir site && tar -xf artifact.tar -C site
           cd site
@@ -53,7 +64,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -q -m "Website from ${GITHUB_SHA::7}"
+          git commit -q -m "Website from ${SHA::7}"
           git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
 
   deploy:

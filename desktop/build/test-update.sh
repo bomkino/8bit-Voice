@@ -7,7 +7,9 @@
 #   bash build/test-update.sh
 #
 #   1. 9.0.0 reads the feed and installs 9.0.1, and 9.0.1 starts as a new
-#      process, says it is running, and keeps running.
+#      process, says it is running, and keeps running. 9.0.1 has a new name,
+#      the way 8-bit Voice 1.1 became BleepBloop 1.2, so this also proves an
+#      update can rename the app: Sparkle finds it by its bundle identifier.
 #   2. With one byte of the served ZIP changed, 9.0.0 refuses it and stays.
 #
 # Needs a logged-in session (the app opens a window) and build/sparkle.sh run.
@@ -15,6 +17,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 T="$(mktemp -d)"
 NAME="8-bit Voice Update Test"
+NEW_NAME="BleepBloop Update Test"
 ID="dog.pitch.8bitvoice.updatetest"
 PORT=8766
 ARCH="$(uname -m | sed 's/x86_64/x64/')"
@@ -23,7 +26,7 @@ cleanup() {
   pkill -f "$NAME.app/Contents/MacOS/" 2>/dev/null || true
   [ -n "${SERVER:-}" ] && kill "$SERVER" 2>/dev/null || true
   defaults delete "$ID" 2>/dev/null || true
-  rm -rf "$HOME/Library/Application Support/$NAME"
+  rm -rf "$HOME/Library/Application Support/$NAME" "$HOME/Library/Application Support/$NEW_NAME"
 }
 trap cleanup EXIT
 
@@ -34,13 +37,13 @@ export REQUIRE_SPARKLE=1 CSC_IDENTITY_AUTO_DISCOVERY=false
 
 build() {
   npx electron-builder --mac dir "--$ARCH" --publish never \
-    -c.productName="$NAME" -c.appId="$ID" -c.extraMetadata.version="$1" \
+    -c.productName="$2" -c.appId="$ID" -c.extraMetadata.version="$1" \
     -c.directories.output="$T/build-$1" > "$T/build-$1.log" 2>&1 || { tail -40 "$T/build-$1.log"; exit 1; }
-  ls -d "$T/build-$1"/mac*/"$NAME.app"
+  ls -d "$T/build-$1"/mac*/"$2.app"
 }
-echo "== Test copies at 9.0.0 (installed) and 9.0.1 (on the feed)"
-OLD_APP="$(build 9.0.0)"
-NEW_APP="$(build 9.0.1)"
+echo "== Test copies at 9.0.0 (installed) and 9.0.1, renamed (on the feed)"
+OLD_APP="$(build 9.0.0 "$NAME")"
+NEW_APP="$(build 9.0.1 "$NEW_NAME")"
 mkdir -p "$T/install" "$T/feed"
 ZIP="8-bit-Voice-Update-Test-$ARCH.zip"
 ditto -c -k --sequesterRsrc --keepParent "$NEW_APP" "$T/feed/$ZIP"
@@ -53,6 +56,7 @@ sleep 1
 
 APP="$T/install/$NAME.app"
 version() { /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP/Contents/Info.plist"; }
+bundle_name() { /usr/libexec/PlistBuddy -c "Print :CFBundleName" "$APP/Contents/Info.plist"; }
 
 # A running copy writes "version process" here once it is up. It reads the
 # path from its defaults, which a relaunch keeps; it doesn't keep the environment.
@@ -93,7 +97,8 @@ done
 sleep 3
 kill -0 "$NEW" 2>/dev/null || { echo "FAIL: 9.0.1 started (process $NEW) but stopped within three seconds"; exit 1; }
 codesign --verify --deep --strict "$APP" || { echo "FAIL: the updated app's signature doesn't hold"; exit 1; }
-echo "   9.0.0 (process $OLD) fetched $ZIP, and 9.0.1 relaunched as process $NEW and kept running"
+[ "$(bundle_name)" = "$NEW_NAME" ] || { echo "FAIL: the update kept the old name ($(bundle_name))"; exit 1; }
+echo "   9.0.0 (process $OLD) fetched $ZIP, and 9.0.1, now called $(bundle_name), relaunched as process $NEW and kept running"
 stop
 
 echo "== 2. A ZIP with one byte changed is refused"

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Lets 8-bit Voice's release workflow sign the Mac app's updates, once, from
+# Lets BleepBloop's release workflow sign the Mac app's updates, once, from
 # the Mac that holds pitch.dog's update key (the same key OOO, Backdrop, Deck
 # Beat, Drift and Galileo use):
 #
@@ -25,4 +25,4 @@ if ! gh api "repos/$REPO/environments/release/deployment-branch-policies" --jq '
 fi
 gh secret set SPARKLE_PRIVATE_KEY --env release -R "$REPO" < "$KEY"
 echo
-echo "Done. 8-bit Voice's releases now sign their own Mac updates."
+echo "Done. BleepBloop's releases now sign their own Mac updates."
