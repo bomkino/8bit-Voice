@@ -1,11 +1,11 @@
 {
   "name": "8bit-voice",
   "productName": "BleepBloop",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Type a line and hear it as an 8-bit video-game voice.",
   "author": "pitch.dog <hello@pitch.dog>",
   "homepage": "https://bomkino.github.io/8bit-Voice/",
-  "license": "MIT",
+  "license": "CC0-1.0",
   "main": "main.js",
   "desktopName": "8bit-voice.desktop",
   "scripts": {
@@ -23,7 +23,7 @@
   "build": {
     "appId": "dog.pitch.8bitvoice",
     "productName": "BleepBloop",
-    "copyright": "© 2026 pitch.dog · MIT License",
+    "copyright": "pitch.dog · Public domain (CC0)",
     "directories": {
       "buildResources": "build",
       "output": "dist"

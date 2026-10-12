@@ -1,6 +1,6 @@
 # Third-party notices
 
-BleepBloop's own code and art are under the [MIT License](LICENSE). It also uses these, with thanks.
+BleepBloop's own code, art and sounds are in the public domain under [CC0 1.0](LICENSE). It also uses these, which keep their own licences, with thanks.
 
 ## In the web app and the desktop apps
 

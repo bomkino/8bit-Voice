@@ -166,7 +166,7 @@ app.whenReady().then(() => {
   app.setAboutPanelOptions({
     applicationName: 'BleepBloop',
     applicationVersion: app.getVersion(),
-    copyright: '© 2026 pitch.dog · MIT License',
+    copyright: 'pitch.dog · Public domain (CC0)',
     credits: 'Every sound is made on the spot, on your computer. No samples, no accounts, nothing sent anywhere.',
     website: 'https://bomkino.github.io/8bit-Voice/',
   });

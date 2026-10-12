@@ -2,6 +2,13 @@
 
 Each release's section becomes its notes on GitHub and in the Mac app's update window. The first paragraph is the headline.
 
+## 1.2.1
+
+BleepBloop is now in the public domain, and the Hero says hello first.
+
+- **Public domain.** The code, art, sounds and fonts are now CC0: copy them, change them, sell them or build on them, with no permission or credit needed. The few parts made by others keep their own licences.
+- **A new first scene.** BleepBloop opens on the Hero and a short Adventure. The Narrator is still in the cast and still tells the Story.
+
 ## 1.2.0
 
 8-bit Voice is now BleepBloop. Make anything talk like a video game, then make it a video. Make your own characters, and lend them your voice.

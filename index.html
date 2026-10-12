@@ -834,7 +834,7 @@
   </section>
 
   <footer>
-    <p data-pd-ui="caption">Every sound is synthesized here, on your device, from square, triangle and wavetable oscillators, a little model of a throat, formant filters and noise. There are no samples, so there is nothing to license, and what you make is yours. The same line, voice and take always give the same clip. Made by <a href="https://pitch.dog">pitch.dog</a>, open source under the <a href="https://github.com/bomkino/8bit-Voice/blob/main/LICENSE">MIT License</a>.</p>
+    <p data-pd-ui="caption">Every sound is synthesized here, on your device, from square, triangle and wavetable oscillators, a little model of a throat, formant filters and noise. There are no samples, so there is nothing to license, and what you make is yours. The same line, voice and take always give the same clip. Made by <a href="https://pitch.dog">pitch.dog</a> and given to the <a href="https://github.com/bomkino/8bit-Voice/blob/main/LICENSE">public domain</a>: copy it, change it, make it yours.</p>
     <p class="foot-meta" data-pd-ui="metadata"><span id="version"></span> · <a href="https://github.com/bomkino/8bit-Voice">Source</a> · <a href="https://github.com/bomkino/8bit-Voice/issues/new/choose">Report a problem</a></p>
   </footer>
 </div>
@@ -951,15 +951,16 @@
   const $ = (s) => document.querySelector(s);
   const $$ = (s) => Array.from(document.querySelectorAll(s));
   const STORE = '8bit-voice/v2';
-  const APP_VERSION = '1.2.0';
+  const APP_VERSION = '1.2.1';
   const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // ── scenes: somewhere to start, one per kind of character ──
   const SCENES = [
-    { id: 'story', label: 'Story', preset: 'narrator', speaker: 'Narrator', lines: [
-      'Once upon a time, in a kingdom made of pixels...',
-      'there lived a very small hero with a very big sword.',
-      '(slow) And this is where our story begins.',
+    { id: 'adventure', label: 'Adventure', preset: 'hero', speaker: 'Hero', lines: [
+      'Okay. Deep breath. I can do this.',
+      '(excited) I found the key! I found the key!',
+      '(flat) ...It opens the door I just came through.',
+      '(shouting) Fine! We go through the window!',
     ] },
     { id: 'quest', label: 'Quest', preset: 'wizard', speaker: 'Wizard', lines: [
       'Ah, you have come at last.',
@@ -990,6 +991,11 @@
       'Did you know peaches grow on trees? I just found out!',
       '(whisper) Don’t tell anyone, but I sold the bridge.',
       'Okay, bye! Come back tomorrow!',
+    ] },
+    { id: 'story', label: 'Story', preset: 'narrator', speaker: 'Narrator', lines: [
+      'Once upon a time, in a kingdom made of pixels...',
+      'there lived a very small hero with a very big sword.',
+      '(slow) And this is where our story begins.',
     ] },
   ];
   const NEW_CAST = new Set(CV.PRESET_ORDER.filter((id) => !['hero'].includes(id)));
@@ -1030,12 +1036,12 @@
   };
 
   // ── state ──
-  const FIRST = 'narrator';
   const firstScene = SCENES[0];
+  const FIRST = firstScene.preset;
   const defaults = () => ({
     text: firstScene.lines.join('\n'),
     voice: Object.assign({}, CV.DEFAULT_VOICE, CV.PRESETS[FIRST].voice, { take: 1 }),
-    face: FIRST, speaker: 'Narrator', script: 'latin', theme: 'ink', portrait: true, active: 0,
+    face: FIRST, speaker: firstScene.speaker, script: 'latin', theme: 'ink', portrait: true, active: 0,
     // a character you made: their look's code, and everyone you've made
     look: null, mine: [],
     exp: { format: 'story', bg: 'color', layout: 'face', scope: 'line' },
@@ -1046,6 +1052,12 @@
     const saved = JSON.parse(localStorage.getItem(STORE) || 'null');
     if (saved && typeof saved.text === 'string' && saved.voice) {
       state = Object.assign(defaults(), saved, { voice: CV.normVoice(saved.voice), exp: Object.assign(defaults().exp, saved.exp || {}) });
+      // 1.2.0 opened on the Narrator's story. Anyone still on it, untouched, starts with the new first scene.
+      const story = SCENES.find((sc) => sc.id === 'story');
+      if (saved.face === 'narrator' && !saved.look && saved.text === story.lines.join('\n')) {
+        const d = defaults();
+        Object.assign(state, { text: d.text, voice: d.voice, face: d.face, speaker: d.speaker, active: 0 });
+      }
     }
   } catch (e) { /* storage blocked: start fresh */ }
   if (!CV.FACES[state.face]) state.face = FIRST;
