@@ -48,7 +48,8 @@ mkdir -p "$T/install" "$T/feed"
 ZIP="8-bit-Voice-Update-Test-$ARCH.zip"
 ditto -c -k --sequesterRsrc --keepParent "$NEW_APP" "$T/feed/$ZIP"
 printf 'Test notes.\n' > "$T/notes.md"
-bash build/sign-update.sh "$T/feed/$ZIP" "http://127.0.0.1:$PORT/" "$T/feed/appcast.xml" "$T/notes.md"
+# Relative paths from another folder, the way the release workflow calls it.
+(cd "$T" && bash "$OLDPWD/build/sign-update.sh" "feed/$ZIP" "http://127.0.0.1:$PORT/" feed/appcast.xml notes.md)
 
 python3 -m http.server "$PORT" --bind 127.0.0.1 --directory "$T/feed" 2> "$T/server.log" &
 SERVER=$!

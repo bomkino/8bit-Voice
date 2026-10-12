@@ -9,7 +9,9 @@
 # signature is checked with the public key inside the app in the ZIP, as
 # Sparkle will check it, so a wrong key fails here. Never prints the key.
 set -euo pipefail
-ZIP="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"; URL="$2"; OUT="$3"; NOTES="${4:-}"
+# Paths are taken from where it was run, before it moves to desktop/.
+abs() { echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"; }
+ZIP="$(abs "$1")"; URL="$2"; OUT="$(abs "$3")"; NOTES="${4:+$(abs "$4")}"
 cd "$(dirname "$0")/.."
 SPARKLE_BIN="${SPARKLE_BIN:-$(pwd)/vendor/sparkle/bin}"
 [ -x "$SPARKLE_BIN/generate_appcast" ] || { echo "Sparkle's tools aren't at $SPARKLE_BIN (run build/sparkle.sh)"; exit 1; }
