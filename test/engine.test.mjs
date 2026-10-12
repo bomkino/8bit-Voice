@@ -146,6 +146,9 @@ test("a recording comes back the same every time, and a new take is different", 
   }
   const preset = CV.renderRecording(rec, "narrator");
   assert.equal(preset.voice.style, "mouth");
+  // It survives a trip through JSON, to a file or a worker and back.
+  const back = CV.renderRecording(JSON.parse(JSON.stringify(rec)), "narrator").samples;
+  assert.ok(back.length === preset.samples.length && back.every((s, i) => s === preset.samples[i]));
 });
 
 test("the box types along with a recording", () => {

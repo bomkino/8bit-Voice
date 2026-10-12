@@ -76,8 +76,11 @@ The same engine runs in Node 18 or later, with nothing to install:
 node cli.mjs "(offended) I never said I'd call." --voice heist-producer --phone --out line.wav
 node cli.mjs --file lines.txt --voice space-director --phone --dir clips --speaker Director
 node cli.mjs --file lines.txt --compare --dir compare --lineup compare/all.wav
+node cli.mjs --in me.wav --voice robot --out robot.wav
 node cli.mjs --list
 ```
+
+`--in` says a recording again in the voice instead of speaking a line: a 16-bit, 24-bit or float WAV, mono or stereo. Every knob works on it, and a line given with it is what the dialogue box types and `--json` lists.
 
 `--json` writes each clip's timing next to its WAV: every syllable's start, length and pitch, and the characters it voices, for syncing animation to it. The app's **Make it from the command line** panel gives you the exact command for the line and voice on screen. `node stings.mjs` makes the little game-over sting.
 
@@ -90,6 +93,13 @@ const fs = require('node:fs');
 const CV = require('./chipvoice.js');
 const clip = CV.render('(excited) We got the vault!', CV.normVoice({ style: 'babble', phone: true }));
 fs.writeFileSync('vault.wav', CV.encodeWav(clip.samples, clip.sampleRate));
+```
+
+A recording works the same way. `analyzeRecording` takes mono samples at any rate and listens once; `renderRecording` says it again in any voice and returns the same shape as `render`. The Mouth keeps the words, with Clarity running from almost clear down to cheerful gibberish. Every other machine turns the person's syllables, rhythm and melody into its own blips.
+
+```js
+const rec = CV.analyzeRecording(samples, 44100);
+const robot = CV.renderRecording(rec, 'robot', { text: 'What I said, for the dialogue box' });
 ```
 
 ## Working on it

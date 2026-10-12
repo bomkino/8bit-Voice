@@ -2927,13 +2927,27 @@
     return out;
   }
 
+  // A recording that went through JSON has its arrays as plain objects;
+  // this puts them back.
+  function asRecording(rec) {
+    if (!rec || !(rec.frames >= 0)) return silentRecording();
+    const out = Object.assign({}, rec);
+    for (const key of ['f0', 'voicing', 'rms', 'gain', 'k']) {
+      if (!rec[key] || typeof rec[key].length !== 'number') out[key] = Float32Array.from(Object.values(rec[key] || {}));
+    }
+    if (!(out.order > 0) || out.k.length < out.frames * out.order || out.f0.length < out.frames || !Array.isArray(out.syllables)) {
+      return silentRecording();
+    }
+    return out;
+  }
+
   // Says a recording again in a character's voice. Same result as render():
   // the samples, and events timed to them for mouths, meters and the box.
   // Give the line's text and the box types it along with the syllables.
   function renderRecording(rec, voice, opts) {
     opts = opts || {};
     const sr = opts.sampleRate || SAMPLE_RATE;
-    rec = rec && rec.frames != null ? rec : silentRecording();
+    rec = asRecording(rec);
     return voiceClip(planRecording(rec, voice, opts.text), sr, rec);
   }
 
